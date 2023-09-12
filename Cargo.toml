@@ -1,0 +1,30 @@
+[package]
+name = "test_parry"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = "1.0.188"
+serde_json = "1.0.106"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies.bevy]
+version = "*"
+features = ["dynamic_linking"]
+
+
+
+[dependencies.bevy_rapier2d]
+version = "*"
+features = ["debug-render-2d", "simd-stable"]
+
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold"]
