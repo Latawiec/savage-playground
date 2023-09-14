@@ -81,8 +81,74 @@
 //     }
 // }
 
-use framework::*;
+use std::sync::mpsc::{channel, sync_channel};
 
-fn main () {
+use bevy::{prelude::*, time::TimePlugin, ecs::schedule::AnonymousSet};
+use bevy_rapier2d::{control, na::Quaternion, prelude::*};
 
+use framework::{*, resources::{io::input::{NewInput, InputManager}, world::environment::{self, EnvironmentConfig}}, debug::local_input::{LocalInput, self, local_input_system}, types::player::new_player_id, blueprints::player::spawn_player, components::player::{jobs::PALADIN, raid_roles::RaidRole}};
+
+fn main() {
+
+
+
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(0.01))
+        .add_plugin(RapierDebugRenderPlugin::default())
+        .add_startup_system(setup_graphics)
+        .add_startup_system(create_test_stuff)
+        .add_systems(Update, framework::systems::player::player_rigid_body_system::player_rigid_body_system)
+        .add_systems(PreUpdate, framework::systems::player::player_input_system::player_input_system)
+        .add_systems(PostUpdate, local_input_system)
+        .add_systems(Update, spin_wall)
+        // .add_systems(Update, check_path)
+        .insert_resource(RapierConfiguration {
+            gravity: Vec2::ZERO,
+            ..Default::default()
+        })
+        .run();
+}
+
+fn setup_graphics(mut commands: Commands) {
+    // Add a camera so we can see the debug-render.
+    commands.spawn(Camera2dBundle::default());
+}
+
+#[derive(Component)]
+struct TestWall;
+
+fn create_test_stuff(mut commands: Commands) {
+
+    let player_id = new_player_id();
+    let (tx, rx) = sync_channel::<NewInput>(10);
+
+    let local_input_res = LocalInput::new(player_id, tx);
+    let input_manager = InputManager::new(rx);
+    let environment = EnvironmentConfig {
+        north: Vec2::new(0.0, 1.0),
+        east: Vec2::new(1.0, 0.0),
+        environment_scale: 1.0,
+        movement_speed: 200.0,
+    };
+
+    commands.insert_resource(environment);
+    commands.insert_resource(input_manager);
+    commands.insert_resource(local_input_res);
+    spawn_player(&mut commands, player_id, "Henry".to_string(), PALADIN, RaidRole::MT);
+
+    let mut ground_transform = Transform::from_xyz(0.0, 0.0, 0.0);
+
+    commands.spawn(RigidBody::Fixed)
+    .insert(Collider::cuboid(100.0, 50.0))
+    .insert(TransformBundle::from(ground_transform))
+    .insert(TestWall);
+}
+
+fn spin_wall(
+    mut wall: Query<(&TestWall, &mut Transform)>,
+) {
+    for (_, mut transform) in wall.iter_mut() {
+        transform.rotate_local_z(std::f32::consts::PI / 120.0);
+    }
 }

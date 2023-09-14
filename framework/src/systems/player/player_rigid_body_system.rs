@@ -1,15 +1,7 @@
-use bevy::prelude::{
-    Component, Entity, FixedTime, GlobalTransform, Query, Res, Transform, Vec2, Vec3,
-};
-use bevy_rapier2d::prelude::{Collider, QueryFilter, RapierContext, TOIStatus, Vect};
+use bevy::prelude::{Entity, FixedTime, GlobalTransform, Query, Res, Transform, Vec2, Vec3};
+use bevy_rapier2d::prelude::{Collider, QueryFilter, RapierContext, TOIStatus};
 
-/// Player Rigid Body works similarly to bevy RigidBody::KinematicVelocityBased.
-/// The only difference is that [PlayerRigidBody] reacts to environment.
-/// If a solid wall moves towards [PlayerRigidBody], [PlayerRigidBody] will be pushed without any impact on the wall.
-#[derive(Component, Default)]
-pub struct PlayerRigidBody {
-    pub velocity: Vect,
-}
+use crate::components::collision::player::PlayerRigidBody;
 
 pub fn player_rigid_body_system(
     fixed_time: Res<FixedTime>,
@@ -37,28 +29,36 @@ pub fn player_rigid_body_system(
             .exclude_sensors(); // Only consider Solids.
 
         let delta_time = fixed_time.period.as_secs_f32();
-        let player_velocity = player_rigid_body.velocity;
+        let shape_vel = player_rigid_body.velocity;
+
+        let shape_pos = Vec2::new(global_translation.x, global_translation.y);
+        let shape_rot = global_rotation_euler.2;
+        let shape = collider;
+        
+        // Check if we're not already penetrating other collider.
+        // TODO: How?... Check rapier Contacts. And implementation of KinematicCharacterController. It uses Impulse somehow to push player back.
+        //let contacts = rapier_context.contacts_with(entity);
 
         if let Some((_, toi)) = rapier_context.cast_shape(
-            Vec2::new(global_translation.x, global_translation.y),
-            global_rotation_euler.2,
-            player_rigid_body.velocity,
-            &collider,
+            shape_pos,
+            shape_rot,
+            shape_vel,
+            shape,
             delta_time,
             shape_cast_query_filter,
         ) {
-            let collision_proj = toi.normal1 * player_velocity.dot(toi.normal1);
-            let collision_rej = player_velocity - collision_proj;
+            let collision_proj = toi.normal1 * shape_vel.dot(toi.normal1);
+            let collision_rej = shape_vel - collision_proj;
 
             // Avoid penetration. If we're gonna hit in less than a frame, we won't be moving.
             let toi_offset = delta_time;
 
-            // If we have penetration, we have to fix it.
-            // We can't entirely avoid penetration - for example if wall pushes the player, it is not player's input that causes penetration.
             let collision_offset = 0.1;
             if toi.status == TOIStatus::Penetrating {
-                let push_off = toi.witness2.normalize() * collision_offset;
+                // Push off if penetrating, but it also allows free movement (in case they need to get out)
+                let push_off = toi.normal1.normalize() * (shape_vel.dot(toi.normal1) + collision_offset) * delta_time;
                 local_transform.translation += Vec3::new(push_off.x, push_off.y, 0.0);
+                // println!("Toi: {:?}", toi);
             }
 
             let motion_update = (collision_rej * delta_time)
@@ -67,7 +67,7 @@ pub fn player_rigid_body_system(
             local_transform.translation += Vec3::new(motion_update.x, motion_update.y, 0.0);
         } else {
             local_transform.translation +=
-                Vec3::new(player_velocity.x, player_velocity.y, 0.0) * delta_time;
+                Vec3::new(shape_vel.x, shape_vel.y, 0.0) * delta_time;
         }
     }
 }

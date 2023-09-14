@@ -29,14 +29,14 @@ pub enum State {
     Released,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct NewInput {
     pub player_id: PlayerID,
     pub new_state: InputStateFlags,
     pub timestamp: std::time::Duration, // Since Epoch of course.
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct InputState {
     state: InputStateFlags,
     changed: InputDiffFlags,
@@ -50,19 +50,19 @@ impl InputState {
         }
     }
     pub fn is_key_down(&self, key: KeyFlag) -> bool {
-        self.state & key as InputStateFlags == 1
+        self.state & key as InputStateFlags != 0
     }
     pub fn is_key_up(&self, key: KeyFlag) -> bool {
         self.state & key as InputStateFlags == 0
     }
     pub fn is_just_pressed(&self, key: KeyFlag) -> bool {
-        self.is_key_down(key) && (self.changed & key as InputDiffFlags == 1)
+        self.is_key_down(key) && (self.changed & key as InputDiffFlags != 0)
     }
     pub fn is_just_released(&self, key: KeyFlag) -> bool {
-        self.is_key_up(key) && (self.changed & key as InputDiffFlags == 1)
+        self.is_key_up(key) && (self.changed & key as InputDiffFlags != 0)
     }
     pub fn changed(&self) -> bool {
-        self.changed == 0
+        self.changed != 0
     }
     pub fn apply_state(&mut self, new_state: InputStateFlags) {
         self.changed = self.state ^ new_state;

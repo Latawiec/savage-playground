@@ -19,7 +19,7 @@ struct PlayerRigidBodyBundle {
 }
 
 impl PlayerRigidBodyBundle {
-    const PLAYER_COLLISION_RADIUS: f32 = 0.25;
+    const PLAYER_COLLISION_RADIUS: f32 = 12.25;
 
     pub fn new() -> Self {
         PlayerRigidBodyBundle {
@@ -35,22 +35,25 @@ impl PlayerRigidBodyBundle {
 struct PlayerHitboxBundle {
     sensor_tag: Sensor,
     collider: Collider,
+    transform: Transform,
+    global_transform: GlobalTransform,
 }
 
 impl PlayerHitboxBundle {
-    const PLAYER_HITBOX_RADIUS: f32 = 0.5;
+    const PLAYER_HITBOX_RADIUS: f32 = 25.5;
 
     pub fn new() -> Self {
         PlayerHitboxBundle {
             sensor_tag: Sensor::default(),
             collider: Collider::ball(Self::PLAYER_HITBOX_RADIUS),
+            transform: Transform::default(),
+            global_transform: GlobalTransform::default(),
         }
     }
 }
 
-
 pub fn spawn_player(
-    mut commands: Commands,
+    commands: &mut Commands,
     id: PlayerID,
     name: String,
     job_bundle: (Class, Role, Job),
@@ -60,7 +63,7 @@ pub fn spawn_player(
         .spawn(PlayerHitboxBundle::new())
         .id();
 
-    let player_rigid_body_entity = commands
+    let _player_rigid_body_entity = commands
         .spawn(Identity::new(name, id))
         .insert(job_bundle)
         .insert(role)

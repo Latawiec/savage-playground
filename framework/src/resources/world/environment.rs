@@ -1,6 +1,4 @@
-use std::collections::BTreeMap;
-
-use bevy::prelude::{Vec2, Resource};
+use bevy::prelude::{Resource, Vec2};
 
 #[derive(Resource)]
 pub struct EnvironmentConfig {
