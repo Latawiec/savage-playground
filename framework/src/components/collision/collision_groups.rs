@@ -1,4 +1,5 @@
 
+pub type CollisionGroup = u32;
 
 pub const COLLISION_PLAYER: u32      = 1u32 << 0;
 pub const COLLISION_OBSTACLES: u32   = 1u32 << 1;
