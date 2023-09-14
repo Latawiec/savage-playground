@@ -1,18 +1,18 @@
-use std::default::Default;
-use uuid;
 use bevy::ecs::component::Component;
+
+use crate::types::player::PlayerID;
 
 #[derive(Component, PartialEq, Eq)]
 pub struct Identity {
-    name: String,
-    uuid: uuid::Uuid,
+    pub name: String,
+    pub id: PlayerID,
 }
 
 impl Identity {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: String, id: PlayerID) -> Self {
         Identity {
             name,
-            uuid: uuid::Uuid::now_v1(&[1, 2, 3, 4, 5, 6]),
+            id,
         }
     }
 }
