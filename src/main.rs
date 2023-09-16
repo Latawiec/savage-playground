@@ -38,6 +38,7 @@ fn main() {
             Update,
             framework::systems::player::player_input_system::player_input_system,
         )
+        .add_systems(Update, framework::systems::player::rendering::player_sprite_update)
         .add_systems(PreUpdate, local_input_system)
         .add_systems(Update, spin_wall)
         .insert_resource(RapierConfiguration {
@@ -62,8 +63,8 @@ fn create_test_stuff(mut commands: Commands) {
     let local_input_res = LocalInput::new(player_id, tx);
     let input_manager = InputManager::new(rx);
     let environment = EnvironmentConfig {
-        north: Vec2::new(0.0, 1.0),
-        east: Vec2::new(1.0, 0.0),
+        forward: Vec2::new(0.0, 1.0),
+        right: Vec2::new(1.0, 0.0),
         environment_scale: 1.0,
         movement_speed: 200.0,
     };

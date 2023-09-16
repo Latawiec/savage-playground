@@ -28,16 +28,16 @@ pub fn player_input_system(
                 // Motion.
                 let mut new_direction = Vec2::new(0.0, 0.0);
                 if input.is_key_down(KeyFlag::Up) {
-                    new_direction += environment.north;
+                    new_direction += environment.forward;
                 }
                 if input.is_key_down(KeyFlag::Down) {
-                    new_direction -= environment.north;
+                    new_direction -= environment.forward;
                 }
                 if input.is_key_down(KeyFlag::Right) {
-                    new_direction += environment.east;
+                    new_direction += environment.right;
                 }
                 if input.is_key_down(KeyFlag::Left) {
-                    new_direction -= environment.east;
+                    new_direction -= environment.right;
                 }
 
                 rigid_body.velocity =

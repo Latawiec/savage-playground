@@ -4,3 +4,4 @@ pub mod drawable;
 pub mod gl_types;
 pub mod layers;
 pub mod shader;
+pub mod sprites;

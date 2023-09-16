@@ -1,19 +1,19 @@
-use bevy::prelude::{Entity, FixedTime, Query, Res, Transform, Vec3, With, Without};
+use bevy::prelude::{FixedTime, Parent, Query, Res, Transform, Vec3, With, Without};
 
 use crate::components::collision::probed_rigid_body::{PhysicsProbe, ProbedRigidBody};
 
 pub fn post_physics_update(
-    mut player_rigid_bodies: Query<(&ProbedRigidBody, &mut Transform, Without<PhysicsProbe>)>,
-    mut physics_probes: Query<(Entity, &mut Transform, With<PhysicsProbe>)>,
+    mut player_rigid_bodies: Query<(&mut Transform, With<ProbedRigidBody>, Without<PhysicsProbe>)>,
+    mut physics_probes: Query<(&Parent, &mut Transform, With<PhysicsProbe>)>,
 ) {
-    for (rigid_body, mut main_transform, _) in player_rigid_bodies.iter_mut() {
-        match physics_probes.get_mut(rigid_body.probe) {
+    for (probe_parent, mut probe_transform, _) in physics_probes.iter_mut() {
+        match player_rigid_bodies.get_mut(probe_parent.get()) {
             Err(e) => {
-                tracing::warn!("Error fetching Probe for ProbedRigidBody: {e}");
+                tracing::warn!("Failed to get Probe's parent ProbedRigidBody. {e}");
                 return;
             }
-            Ok((_, mut probe_transform, _)) => {
-                *main_transform = main_transform.mul_transform(*probe_transform);
+            Ok((mut rigid_body_transform, _, _)) => {
+                *rigid_body_transform = rigid_body_transform.mul_transform(*probe_transform);
                 *probe_transform = Transform::default();
             }
         }

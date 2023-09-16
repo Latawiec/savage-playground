@@ -7,7 +7,7 @@ use super::shader::{UniformProperties, VertexAttributes};
 
 type Map<K, V> = std::collections::BTreeMap<K, V>;
 
-#[derive(Serialize)]
+#[derive(Default, Serialize)]
 pub struct Assets {
     vertex_shader_path: String,
     pixel_shader_path: String,
@@ -16,7 +16,7 @@ pub struct Assets {
     textures_paths: Map<u32, String>,
 }
 
-#[derive(Component, Serialize)]
+#[derive(Component, Default, Serialize)]
 pub struct Drawable {
     assets: Assets,
     uniform_properties: UniformProperties,
@@ -26,10 +26,10 @@ pub struct Drawable {
     billboard_xyz: (bool, bool, bool),
 }
 
-#[derive(Component, Serialize)]
+#[derive(Component, Default, Serialize)]
 pub struct Sprite {
-    texture_index: u32,
-    columns: u32,
-    rows: u32,
-    active_tile: (u32, u32),
+    pub texture_index: u32,
+    pub columns: u32,
+    pub rows: u32,
+    pub active_tile: (u32, u32),
 }

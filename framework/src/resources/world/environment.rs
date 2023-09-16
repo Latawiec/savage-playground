@@ -6,6 +6,6 @@ pub struct EnvironmentConfig {
     pub movement_speed: f32,
     /// If the player presses "Up" button, where is Up?
     /// This field maps Up to an in-world vector for movement.
-    pub north: Vec2,
-    pub east: Vec2,
+    pub forward: Vec2,
+    pub right: Vec2,
 }

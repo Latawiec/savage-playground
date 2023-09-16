@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use bevy::prelude::{BuildChildren, Commands, Entity};
 use bevy::transform::TransformBundle;
 
@@ -9,6 +11,8 @@ use crate::components::player::jobs::*;
 use crate::components::player::raid_roles::RaidRole;
 use crate::components::player::roles::Role;
 
+use crate::components::rendering::drawable::Sprite;
+use crate::components::rendering::sprites::{MovementDirection, PlayerSprite};
 use crate::types::player::PlayerID;
 
 pub struct Player();
@@ -30,15 +34,25 @@ impl Player {
         let hitbox = commands
             .spawn(HitboxBundle::new(Self::PLAYER_HITBOX_RADIUS))
             .id();
+        let drawing: Entity = commands
+            .spawn(Sprite::default())
+            .insert(PlayerSprite::new(BTreeMap::from([
+                (MovementDirection::Forward, (0, 0)),
+                (MovementDirection::Back, (0, 1)),
+                (MovementDirection::Left, (1, 0)),
+                (MovementDirection::Right, (1, 1)),
+            ])))
+            .id();
 
         commands
-            .spawn(ProbedRigidBody::new(probe))
+            .spawn(ProbedRigidBody::default())
             .insert(TransformBundle::default())
             .insert(Identity::new(name, id))
             .insert(job_bundle)
             .insert(role)
             .add_child(probe)
             .add_child(hitbox)
+            .add_child(drawing)
             .id()
     }
 }

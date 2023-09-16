@@ -1,4 +1,4 @@
-use bevy::prelude::{Bundle, Component, Entity, GlobalTransform, Transform};
+use bevy::prelude::{Bundle, Component, GlobalTransform, Transform};
 use bevy_rapier2d::prelude::{Collider, Damping, LockedAxes, RigidBody, Vect};
 
 #[derive(Component, Default)]
@@ -32,17 +32,7 @@ impl PhysicsProbeBundle {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ProbedRigidBody {
     pub velocity: Vect,
-    pub probe: Entity,
-}
-
-impl ProbedRigidBody {
-    pub fn new(probe: Entity) -> Self {
-        ProbedRigidBody {
-            velocity: Default::default(),
-            probe,
-        }
-    }
 }
