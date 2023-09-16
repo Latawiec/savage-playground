@@ -1,13 +1,13 @@
 use bevy::prelude::{ResMut, Query, Res, Vec2};
 
-use crate::{resources::{io::input::{InputManager, KeyFlag}, world::environment::EnvironmentConfig}, components::{player::identity::Identity, collision::player::PlayerRigidBody}};
+use crate::{resources::{io::input::{InputManager, KeyFlag}, world::environment::EnvironmentConfig}, components::{player::identity::Identity, collision::probed_rigid_body::ProbedRigidBody}};
 
 
 pub fn player_input_system(
     environment: Res<EnvironmentConfig>,
     mut input_manager: ResMut<InputManager>,
     mut players: Query<(
-        &mut PlayerRigidBody,
+        &mut ProbedRigidBody,
         &Identity
     )>,
 ) {
