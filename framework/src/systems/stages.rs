@@ -1,4 +1,3 @@
-
 /// Process user input.
 const INPUT: &str = "input";
 

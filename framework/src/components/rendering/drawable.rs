@@ -1,9 +1,9 @@
 use bevy::prelude::Component;
 use serde::Serialize;
 
-use super::layers::Layer;
 use super::blending::BlendingMode;
-use super::shader::{ UniformProperties, VertexAttributes };
+use super::layers::Layer;
+use super::shader::{UniformProperties, VertexAttributes};
 
 type Map<K, V> = std::collections::BTreeMap<K, V>;
 

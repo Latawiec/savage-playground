@@ -10,9 +10,6 @@ pub struct Identity {
 
 impl Identity {
     pub fn new(name: String, id: PlayerID) -> Self {
-        Identity {
-            name,
-            id,
-        }
+        Identity { name, id }
     }
 }

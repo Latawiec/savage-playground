@@ -34,29 +34,30 @@ pub fn local_input_system(keys: Res<Input<KeyCode>>, local_input: Res<LocalInput
         .expect("Time went backwards");
 
     let mut keys_state = InputStateFlags::default();
-    let mut changed = false;
 
-
-    if !(keys.just_released(KeyCode::W) || keys.just_released(KeyCode::A) || keys.just_released(KeyCode::S) || keys.just_released(KeyCode::D) ||
-         keys.just_pressed(KeyCode::W)  || keys.just_pressed(KeyCode::A)  || keys.just_pressed(KeyCode::S)  || keys.just_pressed(KeyCode::D)) {
+    if !(keys.just_released(KeyCode::W)
+        || keys.just_released(KeyCode::A)
+        || keys.just_released(KeyCode::S)
+        || keys.just_released(KeyCode::D)
+        || keys.just_pressed(KeyCode::W)
+        || keys.just_pressed(KeyCode::A)
+        || keys.just_pressed(KeyCode::S)
+        || keys.just_pressed(KeyCode::D))
+    {
         return;
     }
 
     if keys.pressed(KeyCode::W) {
         keys_state |= KeyFlag::Up as InputStateFlags;
-        changed = true;
     }
     if keys.pressed(KeyCode::A) {
         keys_state |= KeyFlag::Left as InputStateFlags;
-        changed = true;
     }
     if keys.pressed(KeyCode::S) {
         keys_state |= KeyFlag::Down as InputStateFlags;
-        changed = true;
     }
     if keys.pressed(KeyCode::D) {
         keys_state |= KeyFlag::Right as InputStateFlags;
-        changed = true;
     }
 
     let mut new_input = NewInput::default();

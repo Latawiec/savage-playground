@@ -1,5 +1,5 @@
 use bevy::prelude::{Bundle, Component, Entity, GlobalTransform, Transform};
-use bevy_rapier2d::prelude::{Collider, RigidBody, Vect, Damping, LockedAxes};
+use bevy_rapier2d::prelude::{Collider, Damping, LockedAxes, RigidBody, Vect};
 
 #[derive(Component, Default)]
 pub struct PhysicsProbe;
@@ -21,10 +21,13 @@ impl PhysicsProbeBundle {
             rigid_body: RigidBody::Dynamic,
             collider: Collider::ball(radius),
             transform: Transform::default(),
-            global_transform: GlobalTransform::default(), 
+            global_transform: GlobalTransform::default(),
             tag: PhysicsProbe::default(),
             lock: LockedAxes::ROTATION_LOCKED,
-            damping: Damping { linear_damping: 50.0, angular_damping: 0.0 }
+            damping: Damping {
+                linear_damping: 50.0,
+                angular_damping: 0.0,
+            },
         }
     }
 }

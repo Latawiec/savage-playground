@@ -1,5 +1,5 @@
-use serde::Serialize;
 use super::gl_types;
+use serde::Serialize;
 
 type Map<K, V> = std::collections::HashMap<K, V>;
 
