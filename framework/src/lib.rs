@@ -4,6 +4,7 @@ pub mod resources;
 pub mod systems;
 pub mod types;
 pub mod utils;
+pub mod events;
 
 #[cfg(debug_assertions)]
 #[path = "./.debug/mod.rs"]
