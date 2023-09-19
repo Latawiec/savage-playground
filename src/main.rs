@@ -14,6 +14,7 @@ use framework::{
     },
     types::player::new_player_id,
 };
+use worlds::mechanics::towers::{TowersMechanicPlugin, Towers};
 
 fn main() {
     App::new()
@@ -21,6 +22,7 @@ fn main() {
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(0.01))
         .add_plugins(RapierDebugRenderPlugin::default())
         .add_plugins(LogDiagnosticsPlugin::default())
+        .add_plugins(TowersMechanicPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin::default())
         .add_systems(Startup, setup_graphics)
         .add_systems(Startup, create_test_stuff)
@@ -51,6 +53,8 @@ fn main() {
 fn setup_graphics(mut commands: Commands) {
     // Add a camera so we can see the debug-render.
     commands.spawn(Camera2dBundle::default());
+
+    Towers::spawn(&mut commands);
 }
 
 #[derive(Component)]

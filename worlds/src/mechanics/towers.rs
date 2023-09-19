@@ -1,16 +1,22 @@
 use bevy::{
     prelude::{
         BuildChildren, Bundle, Children, Commands, Component, Entity, Event, EventReader,
-        EventWriter, GlobalTransform, Query, Res, Transform, Vec2, Vec3, Plugin, Update,
+        EventWriter, GlobalTransform, Local, Plugin, Query, Res, Transform, Update, Vec2, Vec3,
     },
-    time::{Time, Timer, TimerMode},
+    time::{Time, Timer, TimerMode}, transform::TransformBundle, 
 };
 use bevy_rapier2d::prelude::{
     Collider, CollisionGroups, Group, QueryFilter, RapierContext, Sensor,
 };
-use framework::{components::collision::collision_groups::*, types::environment::WorldDirection, blueprints::player::Player};
+use framework::{
+    components::collision::collision_groups::*,
+    types::environment::WorldDirection,
+};
 use rand::{seq::SliceRandom, thread_rng};
-use std::time::Duration;
+use std::{
+    collections::BTreeSet,
+    time::Duration,
+};
 
 #[derive(Component)]
 pub struct TowerComponent {
@@ -36,22 +42,30 @@ impl TowerComponent {
 #[derive(Bundle)]
 struct TowerBundle {
     tower_component: TowerComponent,
-    transform: Transform,
-    global_transform: GlobalTransform,
+    transform: TransformBundle,
+    // global_transform: GlobalTransform,
     collider: Collider,
     sensor: Sensor,
+    collision_groups: CollisionGroups,
 }
 
 impl TowerBundle {
-    const TOWER_COLLIDER_RADIUS: f32 = 1.0;
+    pub const TOWER_COLLIDER_RADIUS: f32 = 60.0;
 
     fn new(position_tag: WorldDirection, translation: &Vec2) -> Self {
         Self {
             tower_component: TowerComponent::new(position_tag),
-            transform: Transform::from_translation(Vec3::new(translation.x, translation.y, 0.0)),
-            global_transform: GlobalTransform::default(),
+            transform: TransformBundle::from(Transform::from_xyz(translation.x, translation.y, 0.0)),
             collider: Collider::ball(Self::TOWER_COLLIDER_RADIUS),
             sensor: Sensor::default(),
+            collision_groups: Self::collision_groups(),
+        }
+    }
+
+    fn collision_groups() -> CollisionGroups {
+        CollisionGroups {
+            memberships: Group::from(Group::from_bits_truncate(SENSOR_AOE_HITBOX)),
+            filters: Group::from(Group::from_bits_truncate(SENSOR_PLAYER_HITBOX)),
         }
     }
 }
@@ -64,7 +78,7 @@ pub struct Towers {
 impl Towers {
     const WARMUP_DURATION: Duration = Duration::new(1, 0);
 
-    const INNER_DISTANCE: f32 = 0.5;
+    const INNER_DISTANCE: f32 = 70.5;
     const INNER_POSITIONS_DIR: [WorldDirection; 4] = [
         WorldDirection::North,
         WorldDirection::South,
@@ -72,7 +86,7 @@ impl Towers {
         WorldDirection::West,
     ];
 
-    const OUTER_DISTANCE: f32 = 1.0;
+    const OUTER_DISTANCE: f32 = 300.0;
     const OUTER_POSITIONS_DIR: [WorldDirection; 4] = [
         WorldDirection::NorthWest,
         WorldDirection::NorthEast,
@@ -86,7 +100,7 @@ impl Towers {
     }
 
     pub fn spawn(commands: &mut Commands) {
-        let main = commands.spawn(Towers::default()).id();
+        let main = commands.spawn(Towers::default()).insert(TransformBundle::default()).id();
 
         // Inner
         for pos in Self::rnd_two_of_vec(&mut Self::INNER_POSITIONS_DIR.clone()) {
@@ -124,27 +138,73 @@ struct PlayerPoisonEvent {
     pub position: WorldDirection,
 }
 
-
+#[derive(Default)]
 pub struct TowersMechanicPlugin;
 
 impl Plugin for TowersMechanicPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app
-            .add_event::<PlayerHitEvent>()
+        app.add_event::<PlayerHitEvent>()
             .add_event::<PlayerPoisonEvent>()
             .add_systems(Update, check)
             .add_systems(Update, update);
     }
 }
 
+#[derive(Default)]
+struct PoisonedPlayersTracker {
+    pub recently_poisoned: BTreeSet<Entity>,
+    pub poisoned_players: BTreeSet<Entity>,
+    pub recently_cured: BTreeSet<Entity>,
+}
+
+impl PoisonedPlayersTracker {
+    pub fn is_poisoned(&self, player: Entity) -> bool {
+        self.poisoned_players.contains(&player)
+    }
+
+    pub fn just_poisoned(&self, player: Entity) -> bool {
+        self.recently_poisoned.contains(&player)
+    }
+
+    pub fn just_cured(&self, player: Entity) -> bool {
+        self.recently_cured.contains(&player)
+    }
+
+    pub fn update(&mut self, poisoned_players: BTreeSet<Entity>) {
+        self.recently_poisoned = &poisoned_players - &self.poisoned_players;
+        self.recently_cured = &self.poisoned_players - &poisoned_players;
+        self.poisoned_players = poisoned_players;
+    }
+}
+
+#[derive(Component, Default)]
+struct PoisonDebuff {}
+
 fn check(
     mut commands: Commands,
+    mut poisoned_players_tracker: Local<PoisonedPlayersTracker>,
     mut ev_player_hit: EventReader<PlayerHitEvent>,
     mut ev_player_poison: EventReader<PlayerPoisonEvent>,
 ) {
-    for ev_poison in ev_player_poison.iter() {}
+    poisoned_players_tracker.update(BTreeSet::from_iter(
+        ev_player_poison.iter().map(|ev| ev.player),
+    ));
 
-    for ev_hit in ev_player_hit.iter() {}
+    for poisoned_player in &poisoned_players_tracker.recently_poisoned {
+        commands
+            .entity(*poisoned_player)
+            .insert(PoisonDebuff::default());
+        tracing::info!("Poisoned");
+    }
+
+    for ev_hit in ev_player_hit.iter() {
+        tracing::info!("Hit!");
+    }
+
+    for cured_player in &poisoned_players_tracker.recently_cured {
+        commands.entity(*cured_player).remove::<PoisonDebuff>();
+        tracing::info!("Cured");
+    }
 }
 
 fn update(
@@ -197,10 +257,8 @@ fn update(
                 let shape = tower_collider;
                 let filter = QueryFilter::default()
                     .exclude_solids()
-                    .groups(CollisionGroups {
-                        memberships: Group::from(Group::from_bits_truncate(SENSOR_AOE_HITBOX)),
-                        filters: Group::from(Group::from_bits_truncate(SENSOR_PLAYER_HITBOX)),
-                    });
+                    .exclude_collider(tower)
+                    .groups(TowerBundle::collision_groups());
 
                 let mut players_touching = vec![];
                 rapier_context.intersections_with_shape(
