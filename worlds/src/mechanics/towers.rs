@@ -1,21 +1,21 @@
 use bevy::{
     prelude::{
         BuildChildren, Bundle, Children, Commands, Component, Entity, Event, EventReader,
-        EventWriter, GlobalTransform, Local, Plugin, Query, Res, Transform, Update, Vec2, Vec3,
+        EventWriter, GlobalTransform, Local, Plugin, Query, Res, Transform, Update, Vec2, Vec3, Parent, With,
     },
-    time::{Time, Timer, TimerMode}, transform::TransformBundle, 
+    time::{Time, Timer, TimerMode}, transform::TransformBundle, ecs::query, 
 };
 use bevy_rapier2d::prelude::{
     Collider, CollisionGroups, Group, QueryFilter, RapierContext, Sensor,
 };
 use framework::{
-    components::collision::collision_groups::*,
-    types::environment::WorldDirection,
+    components::{collision::{collision_groups::*, hitbox::PlayerHitboxTag}, player::identity::Identity},
+    types::environment::WorldDirection, blueprints::player, utils::locals::EntitySetTracket,
 };
 use rand::{seq::SliceRandom, thread_rng};
 use std::{
     collections::BTreeSet,
-    time::Duration,
+    time::Duration, ops::{Deref, DerefMut},
 };
 
 #[derive(Component)]
@@ -128,13 +128,13 @@ impl Default for Towers {
 
 #[derive(Event)]
 struct PlayerHitEvent {
-    pub player: Entity,
+    pub player_hitbox: Entity,
     pub position: WorldDirection,
 }
 
 #[derive(Event)]
 struct PlayerPoisonEvent {
-    pub player: Entity,
+    pub player_hitbox: Entity,
     pub position: WorldDirection,
 }
 
@@ -151,59 +151,66 @@ impl Plugin for TowersMechanicPlugin {
 }
 
 #[derive(Default)]
-struct PoisonedPlayersTracker {
-    pub recently_poisoned: BTreeSet<Entity>,
-    pub poisoned_players: BTreeSet<Entity>,
-    pub recently_cured: BTreeSet<Entity>,
-}
-
-impl PoisonedPlayersTracker {
-    pub fn is_poisoned(&self, player: Entity) -> bool {
-        self.poisoned_players.contains(&player)
-    }
-
-    pub fn just_poisoned(&self, player: Entity) -> bool {
-        self.recently_poisoned.contains(&player)
-    }
-
-    pub fn just_cured(&self, player: Entity) -> bool {
-        self.recently_cured.contains(&player)
-    }
-
-    pub fn update(&mut self, poisoned_players: BTreeSet<Entity>) {
-        self.recently_poisoned = &poisoned_players - &self.poisoned_players;
-        self.recently_cured = &self.poisoned_players - &poisoned_players;
-        self.poisoned_players = poisoned_players;
-    }
-}
+struct PlayersOnTowersTracker(EntitySetTracket);
 
 #[derive(Component, Default)]
 struct PoisonDebuff {}
 
 fn check(
     mut commands: Commands,
-    mut poisoned_players_tracker: Local<PoisonedPlayersTracker>,
-    mut ev_player_hit: EventReader<PlayerHitEvent>,
-    mut ev_player_poison: EventReader<PlayerPoisonEvent>,
+    mut poisoned_players_tracker: Local<PlayersOnTowersTracker>,
+    mut ev_hit: EventReader<PlayerHitEvent>,
+    mut ev_poison: EventReader<PlayerPoisonEvent>,
+    query_player_hitboxes: Query<(Entity, &Parent), With<PlayerHitboxTag>>,
+    query_player_identity: Query<&Identity>,
 ) {
-    poisoned_players_tracker.update(BTreeSet::from_iter(
-        ev_player_poison.iter().map(|ev| ev.player),
-    ));
+    let mut poisoned_players = BTreeSet::default();
+    for poison in ev_poison.iter() {
+        let player_hitbox = poison.player_hitbox;
+        match query_player_hitboxes.get(player_hitbox) {
+            Ok((_, hitbox_parent)) => {
+                let player_entity = hitbox_parent.get();
+                poisoned_players.insert(player_entity);
+            },
+            Err(e) => {
+                tracing::error!("Couldn't get parent entity from player hitbox: {}", e);
+            }
+        }
+    }
+    poisoned_players_tracker.0.update(poisoned_players);
 
-    for poisoned_player in &poisoned_players_tracker.recently_poisoned {
+    for poisoned_player in &poisoned_players_tracker.0.just_added {
         commands
             .entity(*poisoned_player)
             .insert(PoisonDebuff::default());
-        tracing::info!("Poisoned");
+
+        match query_player_identity.get(*poisoned_player) {
+            Ok(player_identity) => {
+                tracing::info!("Player \"{}\" poisoned!", player_identity.name);
+            },
+            Err(e) => {
+                tracing::error!("Couldn't get players identity: {}", e);
+            }
+        }
     }
 
-    for ev_hit in ev_player_hit.iter() {
-        tracing::info!("Hit!");
-    }
+    // for ev_hit in ev_player_hit.iter() {
+    //     if let Ok((_, player_id)) = query_players.get(ev_hit.player) {
+    //         tracing::info!("Hit: {}", player_id.name);
+    //     }
+    // }
 
-    for cured_player in &poisoned_players_tracker.recently_cured {
+    for cured_player in &poisoned_players_tracker.0.just_removed {
         commands.entity(*cured_player).remove::<PoisonDebuff>();
-        tracing::info!("Cured");
+        
+        match query_player_identity.get(*cured_player) {
+            Ok(player_identity) => {
+                tracing::info!("Player \"{}\" cured!", player_identity.name);
+            },
+            Err(e) => {
+                tracing::error!("Couldn't get players identity: {}", e);
+            }
+        }
     }
 }
 
@@ -260,31 +267,31 @@ fn update(
                     .exclude_collider(tower)
                     .groups(TowerBundle::collision_groups());
 
-                let mut players_touching = vec![];
+                let mut hitboxes_touching = vec![];
                 rapier_context.intersections_with_shape(
                     shape_pos,
                     shape_rot,
                     shape,
                     filter,
                     |entity| {
-                        players_touching.push(entity);
+                        hitboxes_touching.push(entity);
                         true
                     },
                 );
 
                 if !tower_timer.finished() {
-                    for &player in &players_touching {
+                    for &player_hitbox in &hitboxes_touching {
                         ev_player_poison.send(PlayerPoisonEvent {
-                            player,
+                            player_hitbox,
                             position: tower_component.position_tag,
                         })
                     }
                 }
 
                 if tower_timer.just_finished() {
-                    for &player in &players_touching {
+                    for &player_hitbox in &hitboxes_touching {
                         ev_player_hit.send(PlayerHitEvent {
-                            player,
+                            player_hitbox,
                             position: tower_component.position_tag,
                         })
                     }
