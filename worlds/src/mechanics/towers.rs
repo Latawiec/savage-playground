@@ -3,7 +3,7 @@ use bevy::{
     prelude::{
         BuildChildren, Bundle, Children, Commands, Component, Entity, Event, EventReader,
         EventWriter, GlobalTransform, Local, Parent, Plugin, Query, Res, Transform, Update, Vec2,
-        Vec3, With, World,
+        Vec3, With, World, PostUpdate,
     },
     time::{Time, Timer, TimerMode},
     transform::TransformBundle,
@@ -19,7 +19,7 @@ use framework::{
         player::identity::Identity,
     },
     types::environment::WorldDirection,
-    utils::locals::EntitySetTracket,
+    utils::locals::EntitySetTracket, systems::lifetime::self_destruct_system,
 };
 use rand::{seq::SliceRandom, thread_rng, Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -249,7 +249,8 @@ impl Plugin for TowersMechanicPlugin {
         app.add_event::<PlayerHitEvent>()
             .add_event::<PlayerPoisonEvent>()
             .add_systems(Update, check)
-            .add_systems(Update, update);
+            .add_systems(Update, update)
+            .add_systems(PostUpdate, self_destruct_system);
     }
 }
 
@@ -272,7 +273,7 @@ fn check(
         let player_hitbox = poison.player_hitbox;
         match query_player_hitboxes.get(player_hitbox) {
             Ok((_, hitbox_parent)) => {
-                let player_entity = hitbox_parent.get();
+                let player_entity =  hitbox_parent.get();
                 poisoned_players.insert(player_entity);
             }
             Err(e) => {
@@ -297,14 +298,13 @@ fn check(
         }
     }
 
-    // TODO: Try to separate poison pool and tower.
-    //       This way I might create reusable assets for these.
-
-    // for ev_hit in ev_player_hit.iter() {
-    //     if let Ok((_, player_id)) = query_players.get(ev_hit.player) {
-    //         tracing::info!("Hit: {}", player_id.name);
-    //     }
-    // }
+    for ev_hit in ev_hit.iter() {
+        if let Ok((_, player)) = query_player_hitboxes.get(ev_hit.player_hitbox) {
+            if let Ok(player_id) = query_player_identity.get(player.get()) {
+                tracing::info!("Hit: {}", player_id.name);
+            }
+        }
+    }
 
     for cured_player in &poisoned_players_tracker.0.just_removed {
         commands.entity(*cured_player).remove::<PoisonDebuff>();
@@ -328,7 +328,7 @@ fn update(
     mut ev_player_poison: EventWriter<PlayerPoisonEvent>,
     mut query_tower_sets: Query<(Entity, &Children), With<TowerSet>>,
     query_towers: Query<(&Tower, &TowerInfo)>,
-    mut query_poison_pools: Query<(Entity, &mut SelfDestruct), With<PoisonPool>>,
+    query_poison_pools: Query<(Entity), With<PoisonPool>>,
     mut query_tower_hits: Query<(Entity, &mut TowerHit)>,
 ) {
     let delta_time = time.delta();
@@ -344,13 +344,10 @@ fn update(
         for &tower in towers.iter() {
             if let Ok((tower_component, tower_info)) = query_towers.get(tower) {
                 // Poison pools
-                if let Ok((entity, mut self_destruct)) = query_poison_pools.get_mut(tower_component.poison_pool_entity) {
-                    self_destruct.tick(delta_time);
-
+                if let Ok(entity) = query_poison_pools.get(tower_component.poison_pool_entity) {
                     for (_, hitbox, intersecting) in rapier_context.intersections_with(entity) {
                         if intersecting {
-                            println!("Poison");
-                            ev_player_poison.send(PlayerPoisonEvent { player_hitbox: hitbox, position: tower_info.position })
+                            ev_player_poison.send(PlayerPoisonEvent { player_hitbox: hitbox, position: tower_info.position });
                         }
                     }
                 }
@@ -359,90 +356,18 @@ fn update(
                 if let Ok((entity, mut tower_hit_component)) = query_tower_hits.get_mut(tower_component.tower_hit_entity) {
                     tower_hit_component.tick(delta_time);
                     
-                    if (tower_hit_component.just_finished()) {
+                    if tower_hit_component.just_finished() {
+                        println!("Finished!");
                         for (_, hitbox, intersecting) in rapier_context.intersections_with(entity) {
                             if intersecting {
-                                println!("hits!");
-                                ev_player_hit.send(PlayerHitEvent { player_hitbox: hitbox, position: tower_info.position })
+                                ev_player_hit.send(PlayerHitEvent { player_hitbox: hitbox, position: tower_info.position });
                             }
                         }
+
+                        commands.entity(entity).despawn();
                     }
                 }
             }
-
-            // // Poison pools
-            // if let Ok((entity, mut self_destruct)) = query_poison_pools.get_mut(tower) {
-            //     self_destruct.tick(delta_time);
-            //     println!("Helo?");
-            //     for (collider1, collider2, intersecting) in rapier_context.intersections_with(entity) {
-            //         println!("hm?");
-            //         if intersecting {
-            //             tracing::info!("{:?} and {:?} intersect", collider1, collider2);
-            //         }
-            //     }
-            // }
-
-
-            // Hits
-
-
-            // if let Ok((mut tower_component, tower_global_transform, tower_collider)) =
-            //     query_towers.get_mut(tower)
-            // {
-            //     let tower_timer = &mut tower_component.countdown;
-            //     tower_timer.tick(delta_time);
-
-            //     let tower_timer = &tower_component.countdown;
-
-            //     if tower_timer.finished() && !tower_timer.just_finished() {
-            //         // We're past "just_finished". I don't think anything else is gonna happen.
-            //         commands.entity(tower).despawn();
-            //         continue;
-            //     }
-
-            //     let global_translation = tower_global_transform.translation();
-            //     let shape_pos = Vec2::new(global_translation.x, global_translation.y);
-            //     let shape_rot = tower_global_transform
-            //         .compute_transform()
-            //         .rotation
-            //         .to_euler(bevy::prelude::EulerRot::XYZ)
-            //         .2;
-            //     let shape = tower_collider;
-            //     let filter = QueryFilter::default()
-            //         .exclude_solids()
-            //         .exclude_collider(tower)
-            //         .groups(TowerBundle::collision_groups());
-
-            //     let mut hitboxes_touching = vec![];
-            //     rapier_context.intersections_with_shape(
-            //         shape_pos,
-            //         shape_rot,
-            //         shape,
-            //         filter,
-            //         |entity| {
-            //             hitboxes_touching.push(entity);
-            //             true
-            //         },
-            //     );
-
-            //     if !tower_timer.finished() {
-            //         for &player_hitbox in &hitboxes_touching {
-            //             ev_player_poison.send(PlayerPoisonEvent {
-            //                 player_hitbox,
-            //                 position: tower_component.position_tag,
-            //             })
-            //         }
-            //     }
-
-            //     if tower_timer.just_finished() {
-            //         for &player_hitbox in &hitboxes_touching {
-            //             ev_player_hit.send(PlayerHitEvent {
-            //                 player_hitbox,
-            //                 position: tower_component.position_tag,
-            //             })
-            //         }
-            //     }
-            // }
         }
     }
 }
