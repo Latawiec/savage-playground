@@ -8,6 +8,7 @@ serde = "1.0.188"
 serde_json = "1.0.106"
 framework = { path = "./framework" }
 worlds = { path = "./worlds" }
+rand_chacha = "0.3.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies.bevy]

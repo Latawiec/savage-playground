@@ -1,5 +1,7 @@
 use bevy::prelude::{Bundle, Component, GlobalTransform, Transform};
-use bevy_rapier2d::prelude::{Collider, Damping, LockedAxes, RigidBody, Vect};
+use bevy_rapier2d::prelude::{Collider, Damping, LockedAxes, RigidBody, Vect, CollisionGroups, Group};
+
+use super::collision_groups::*;
 
 #[derive(Component, Default)]
 pub struct PhysicsProbe;
@@ -8,6 +10,7 @@ pub struct PhysicsProbe;
 pub struct PhysicsProbeBundle {
     rigid_body: RigidBody,
     collider: Collider,
+    collision_groups: CollisionGroups,
     transform: Transform,
     global_transform: GlobalTransform,
     tag: PhysicsProbe,
@@ -20,6 +23,7 @@ impl PhysicsProbeBundle {
         PhysicsProbeBundle {
             rigid_body: RigidBody::Dynamic,
             collider: Collider::ball(radius),
+            collision_groups: Self::collision_groups(),
             transform: Transform::default(),
             global_transform: GlobalTransform::default(),
             tag: PhysicsProbe::default(),
@@ -28,6 +32,13 @@ impl PhysicsProbeBundle {
                 linear_damping: 50.0,
                 angular_damping: 0.0,
             },
+        }
+    }
+
+    fn collision_groups() -> CollisionGroups {
+        CollisionGroups {
+            memberships: Group::from(Group::from_bits_truncate(COLLISION_PLAYER)),
+            filters: Group::from(Group::from_bits_truncate(COLLISION_PLAYER | COLLISION_OBSTACLES)),
         }
     }
 }

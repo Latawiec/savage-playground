@@ -9,6 +9,7 @@ edition = "2021"
 framework = { path = "../framework" }
 tracing = { version = "0.1", features = ["log"] }
 rand = "*"
+rand_chacha = "0.3.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies.bevy]

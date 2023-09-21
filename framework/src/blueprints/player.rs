@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use bevy::prelude::{BuildChildren, Commands, Entity};
 use bevy::transform::TransformBundle;
+use bevy_rapier2d::prelude::Sensor;
 
 use crate::components::collision::hitbox::HitboxBundle;
 use crate::components::collision::probed_rigid_body::{PhysicsProbeBundle, ProbedRigidBody};

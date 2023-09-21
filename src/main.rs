@@ -14,7 +14,7 @@ use framework::{
     },
     types::player::new_player_id,
 };
-use worlds::mechanics::towers::{TowersMechanicPlugin, Towers};
+use worlds::mechanics::towers::{TowersMechanicPlugin, TowerSet};
 
 fn main() {
     App::new()
@@ -54,7 +54,7 @@ fn setup_graphics(mut commands: Commands) {
     // Add a camera so we can see the debug-render.
     commands.spawn(Camera2dBundle::default());
 
-    Towers::spawn(&mut commands);
+    TowerSet::spawn(&mut commands, None);
 }
 
 #[derive(Component)]
