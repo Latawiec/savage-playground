@@ -13,6 +13,20 @@ pub enum WorldDirection {
 }
 
 impl WorldDirection {
+    pub const CARDINALS: [WorldDirection; 4] = [
+        Self::North, 
+        Self::East,
+        Self::South,
+        Self::West,
+    ];
+
+    pub const INTERCARDINALS: [WorldDirection; 4] = [
+        Self::NorthEast, 
+        Self::SouthEast,
+        Self::SouthWest,
+        Self::NorthWest,
+    ];
+
     pub fn is_cardinal(self) -> bool {
         self == WorldDirection::North
             || self == WorldDirection::South
@@ -30,7 +44,7 @@ impl WorldDirection {
     pub fn vec(self) -> Vec2 {
         use std::f32::consts::FRAC_1_SQRT_2;
         match self {
-            WorldDirection::North => Vec2::new(0.0, -1.0),
+            WorldDirection::North => Vec2::new(0.0, 1.0),
             WorldDirection::South => Vec2::new(0.0, -1.0),
             WorldDirection::East => Vec2::new(1.0, 0.0),
             WorldDirection::West => Vec2::new(-1.0, 0.0),

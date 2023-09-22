@@ -1,121 +1,90 @@
 use bevy::{
-    ecs::query,
     prelude::{
-        BuildChildren, Bundle, Children, Commands, Component, Entity, Event, EventReader,
-        EventWriter, GlobalTransform, Local, Parent, Plugin, Query, Res, Transform, Update, Vec2,
-        Vec3, With, World, PostUpdate,
+        BuildChildren, Children, Commands, Entity, EventReader,
+        EventWriter, Local, Parent, Plugin, PostUpdate, Query, Res, Transform, Update, Vec3, With, Component, Bundle, Event,
     },
     time::{Time, Timer, TimerMode},
     transform::TransformBundle,
 };
-use bevy_rapier2d::prelude::{
-    Collider, CollisionGroups, Group, QueryFilter, RapierContext, Sensor,
-};
+use bevy_rapier2d::prelude::RapierContext;
 use framework::{
-    blueprints::player,
     components::{
-        collision::{collision_groups::*, hitbox::PlayerHitboxTag},
+        collision::{hitbox::PlayerHitboxTag, aoe::AreaOfEffectBundle},
         lifetime::SelfDestruct,
         player::identity::Identity,
     },
+    systems::lifetime::self_destruct_system,
     types::environment::WorldDirection,
-    utils::locals::EntitySetTracket, systems::lifetime::self_destruct_system,
+    utils::{locals::EntitySetTracket, rand::rnd_two_of_vec},
 };
-use rand::{seq::SliceRandom, thread_rng, Rng, SeedableRng};
+use rand::{seq::SliceRandom, Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
-use std::{
-    collections::BTreeSet,
-    ops::{Deref, DerefMut},
-    time::Duration, process::Child,
-};
+use std::{collections::BTreeSet, time::Duration};
 
 #[derive(Component, Default)]
 pub struct PoisonPool;
 
 #[derive(Bundle)]
-pub struct PoisonPoolBundle { 
+pub struct PoisonPoolBundle {
     pool: PoisonPool,
-    transform: TransformBundle,
-    collider: Collider,
-    sensor: Sensor,
+    aoe: AreaOfEffectBundle,
     destruct: SelfDestruct,
-    collision_groups: CollisionGroups,
 }
 
 impl PoisonPoolBundle {
     const POSION_POOL_RADIUS: f32 = 25.0;
-    const POISON_POOL_DURATION: Duration = Duration::new(10, 0);
-
-    fn collision_groups() -> CollisionGroups {
-        CollisionGroups {
-            memberships: Group::from(Group::from_bits_truncate(SENSOR_AOE_HITBOX)),
-            filters: Group::from(Group::from_bits_truncate(SENSOR_PLAYER_HITBOX)),
-        }
-    }
+    const POISON_POOL_LIFETIME: Duration = Duration::new(10, 0);
 }
 impl Default for PoisonPoolBundle {
     fn default() -> Self {
         Self {
             pool: PoisonPool::default(),
-            transform: TransformBundle::default(),
-            collider: Collider::ball(Self::POSION_POOL_RADIUS),
-            sensor: Sensor::default(),
-            destruct: SelfDestruct::new(Self::POISON_POOL_DURATION),
-            collision_groups: Self::collision_groups(),
+            aoe: AreaOfEffectBundle::circle(Self::POSION_POOL_RADIUS),
+            destruct: SelfDestruct::new(Self::POISON_POOL_LIFETIME),
         }
     }
 }
 
 #[derive(Component)]
 pub struct TowerHit {
-    timer_to_impact: Timer,
+    impact_timer: Timer,
 }
 impl TowerHit {
     pub fn new(countdown: Duration) -> Self {
         TowerHit {
-            timer_to_impact: Timer::new(countdown, TimerMode::Once),
+            impact_timer: Timer::new(countdown, TimerMode::Once),
         }
     }
     pub fn tick(&mut self, delta_time: Duration) {
-        self.timer_to_impact.tick(delta_time);
+        self.impact_timer.tick(delta_time);
     }
     pub fn finished(&self) -> bool {
-        self.timer_to_impact.finished()
+        self.impact_timer.finished()
     }
     pub fn just_finished(&self) -> bool {
-        self.timer_to_impact.just_finished()
+        self.impact_timer.just_finished()
     }
 }
 
 #[derive(Bundle)]
-pub struct TowerHitBundle { 
+pub struct TowerHitBundle {
     tower_hit: TowerHit,
-    transform: TransformBundle,
-    collider: Collider,
-    sensor: Sensor,
-    collision_groups: CollisionGroups,
+    aoe: AreaOfEffectBundle,
+    destruct: SelfDestruct,
 }
 
 impl TowerHitBundle {
     const TOWER_HIT_RADIUS: f32 = 25.0;
     const TOWER_HIT_COUNTDOWN: Duration = Duration::new(10, 0);
-
-    fn collision_groups() -> CollisionGroups {
-        CollisionGroups {
-            memberships: Group::from(Group::from_bits_truncate(SENSOR_AOE_HITBOX)),
-            filters: Group::from(Group::from_bits_truncate(SENSOR_PLAYER_HITBOX)),
-        }
-    }
+    const TOWER_HIT_LIFETIME: Duration = Duration::new(10, 0);
 }
 
 impl Default for TowerHitBundle {
     fn default() -> Self {
         Self {
             tower_hit: TowerHit::new(Self::TOWER_HIT_COUNTDOWN),
-            transform: TransformBundle::default(),
-            collider: Collider::ball(Self::TOWER_HIT_RADIUS),
-            sensor: Sensor::default(),
-            collision_groups: Self::collision_groups(),
+            aoe: AreaOfEffectBundle::circle(Self::TOWER_HIT_RADIUS),
+            destruct: SelfDestruct::new(Self::TOWER_HIT_LIFETIME),
         }
     }
 }
@@ -165,7 +134,11 @@ impl Tower {
         let poison_pool_entity = commands.spawn(PoisonPoolBundle::default()).id();
         let tower_hit_entity = commands.spawn(TowerHitBundle::default()).id();
 
-        commands.spawn(Tower {poison_pool_entity, tower_hit_entity} )
+        commands
+            .spawn(Tower {
+                poison_pool_entity,
+                tower_hit_entity,
+            })
             .insert(TowerInfo { position, circle })
             .insert(TransformBundle::from_transform(transform))
             .add_child(tower_hit_entity)
@@ -194,14 +167,6 @@ impl TowerSet {
         WorldDirection::SouthEast,
     ];
 
-    fn rnd_two_of_vec<'a, T>(
-        slice: &'a mut [T],
-        seed: &mut (impl SeedableRng + Rng),
-    ) -> [&'a T; 2] {
-        slice.shuffle(seed);
-        [&slice[0], &slice[1]]
-    }
-
     pub fn spawn(commands: &mut Commands, config_opt: Option<Config>) -> Entity {
         let mut seed = config_opt.unwrap_or(Config::default()).seed;
 
@@ -211,23 +176,32 @@ impl TowerSet {
             .id();
 
         // Inner
-        for pos in Self::rnd_two_of_vec(&mut Self::INNER_POSITIONS_DIR.clone(), &mut seed) {
+        for pos in rnd_two_of_vec(&mut Self::INNER_POSITIONS_DIR.clone(), &mut seed) {
             let translation = pos.vec() * Self::INNER_DISTANCE;
-            let tower = Tower::spawn(commands, Transform::from_translation(Vec3::new(translation.x, translation.y, 0.0)), *pos, TowerCircle::Inner);
+            let tower = Tower::spawn(
+                commands,
+                Transform::from_translation(Vec3::new(translation.x, translation.y, 0.0)),
+                *pos,
+                TowerCircle::Inner,
+            );
             commands.entity(main).add_child(tower);
         }
 
         // Outer
-        for pos in Self::rnd_two_of_vec(&mut Self::OUTER_POSITIONS_DIR.clone(), &mut seed) {
+        for pos in rnd_two_of_vec(&mut Self::OUTER_POSITIONS_DIR.clone(), &mut seed) {
             let translation = pos.vec() * Self::OUTER_DISTANCE;
-            let tower = Tower::spawn(commands, Transform::from_translation(Vec3::new(translation.x, translation.y, 0.0)), *pos, TowerCircle::Outer);
+            let tower = Tower::spawn(
+                commands,
+                Transform::from_translation(Vec3::new(translation.x, translation.y, 0.0)),
+                *pos,
+                TowerCircle::Outer,
+            );
             commands.entity(main).add_child(tower);
         }
 
         main
     }
 }
-
 
 #[derive(Event)]
 struct PlayerHitEvent {
@@ -273,7 +247,7 @@ fn check(
         let player_hitbox = poison.player_hitbox;
         match query_player_hitboxes.get(player_hitbox) {
             Ok((_, hitbox_parent)) => {
-                let player_entity =  hitbox_parent.get();
+                let player_entity = hitbox_parent.get();
                 poisoned_players.insert(player_entity);
             }
             Err(e) => {
@@ -328,13 +302,12 @@ fn update(
     mut ev_player_poison: EventWriter<PlayerPoisonEvent>,
     mut query_tower_sets: Query<(Entity, &Children), With<TowerSet>>,
     query_towers: Query<(&Tower, &TowerInfo)>,
-    query_poison_pools: Query<(Entity), With<PoisonPool>>,
+    query_poison_pools: Query<Entity, With<PoisonPool>>,
     mut query_tower_hits: Query<(Entity, &mut TowerHit)>,
 ) {
     let delta_time = time.delta();
-    
+
     for (root_entity, towers) in query_tower_sets.iter_mut() {
-        
         if towers.is_empty() {
             // This means children have despawned. Finish up and remove root as well.
             commands.entity(root_entity).despawn();
@@ -347,24 +320,30 @@ fn update(
                 if let Ok(entity) = query_poison_pools.get(tower_component.poison_pool_entity) {
                     for (_, hitbox, intersecting) in rapier_context.intersections_with(entity) {
                         if intersecting {
-                            ev_player_poison.send(PlayerPoisonEvent { player_hitbox: hitbox, position: tower_info.position });
+                            ev_player_poison.send(PlayerPoisonEvent {
+                                player_hitbox: hitbox,
+                                position: tower_info.position,
+                            });
                         }
                     }
                 }
 
                 // Tower Hits
-                if let Ok((entity, mut tower_hit_component)) = query_tower_hits.get_mut(tower_component.tower_hit_entity) {
+                if let Ok((entity, mut tower_hit_component)) =
+                    query_tower_hits.get_mut(tower_component.tower_hit_entity)
+                {
                     tower_hit_component.tick(delta_time);
-                    
+
                     if tower_hit_component.just_finished() {
                         println!("Finished!");
                         for (_, hitbox, intersecting) in rapier_context.intersections_with(entity) {
                             if intersecting {
-                                ev_player_hit.send(PlayerHitEvent { player_hitbox: hitbox, position: tower_info.position });
+                                ev_player_hit.send(PlayerHitEvent {
+                                    player_hitbox: hitbox,
+                                    position: tower_info.position,
+                                });
                             }
                         }
-
-                        commands.entity(entity).despawn();
                     }
                 }
             }

@@ -3,7 +3,9 @@ use bevy::ecs::component::Component;
 use bevy::prelude::Vec2;
 use bevy::transform::TransformBundle;
 use bevy_rapier2d::geometry::Collider;
-use bevy_rapier2d::prelude::{Real, Sensor};
+use bevy_rapier2d::prelude::{Real, Sensor, CollisionGroups, Group};
+
+use super::collision_groups::*;
 
 #[derive(Default, Component)]
 pub struct AreaOfEffect;
@@ -14,12 +16,26 @@ pub struct AreaOfEffectBundle {
     sensor_tag: Sensor,
     aoe_tag: AreaOfEffect,
     transform_bundle: TransformBundle,
+    collision_groups: CollisionGroups,
 }
 
 impl AreaOfEffectBundle {
+    fn collision_groups() -> CollisionGroups {
+        CollisionGroups {
+            memberships: Group::from(Group::from_bits_truncate(SENSOR_AOE_HITBOX)),
+            filters: Group::from(Group::from_bits_truncate(SENSOR_PLAYER_HITBOX)),
+        }
+    }
+
+    pub fn set_transform(mut self, transform: TransformBundle) -> AreaOfEffectBundle {
+        self.transform_bundle = transform;
+        self
+    }
+
     pub fn circle(radius: f32) -> AreaOfEffectBundle {
         AreaOfEffectBundle {
             collider: Collider::ball(radius),
+            collision_groups: Self::collision_groups(),
             ..Default::default()
         }
     }
@@ -55,6 +71,7 @@ impl AreaOfEffectBundle {
                     .map(|shape| (Vec2::ZERO, Real::default(), shape))
                     .collect(),
             ),
+            collision_groups: Self::collision_groups(),
             ..Default::default()
         }
     }
@@ -77,6 +94,7 @@ impl AreaOfEffectBundle {
                 Real::default(),
                 Collider::cuboid(half_width, half_distance),
             )]),
+            collision_groups: Self::collision_groups(),
             ..Default::default()
         }
     }
@@ -103,6 +121,7 @@ impl AreaOfEffectBundle {
 
         AreaOfEffectBundle {
             collider: collider,
+            collision_groups: Self::collision_groups(),
             ..Default::default()
         }
     }
@@ -144,6 +163,7 @@ impl AreaOfEffectBundle {
                     .map(|collider| (Vec2::ZERO, Real::default(), collider))
                     .collect(),
             ),
+            collision_groups: Self::collision_groups(),
             ..Default::default()
         }
     }

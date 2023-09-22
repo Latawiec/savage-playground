@@ -14,6 +14,7 @@ use framework::{
     },
     types::player::new_player_id,
 };
+use worlds::mechanics::ruby_glow::{RubyGlowOne, RubyGlowPlugin};
 use worlds::mechanics::towers::{TowersMechanicPlugin, TowerSet};
 
 fn main() {
@@ -23,6 +24,7 @@ fn main() {
         .add_plugins(RapierDebugRenderPlugin::default())
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(TowersMechanicPlugin::default())
+        .add_plugins(RubyGlowPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin::default())
         .add_systems(Startup, setup_graphics)
         .add_systems(Startup, create_test_stuff)
@@ -54,7 +56,8 @@ fn setup_graphics(mut commands: Commands) {
     // Add a camera so we can see the debug-render.
     commands.spawn(Camera2dBundle::default());
 
-    TowerSet::spawn(&mut commands, None);
+    // TowerSet::spawn(&mut commands, None);
+    RubyGlowOne::spawn(&mut commands, None);
 }
 
 #[derive(Component)]

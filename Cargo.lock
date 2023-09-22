@@ -1620,6 +1620,8 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_rapier2d",
+ "rand",
+ "rand_chacha",
  "serde",
  "serde_json",
  "tracing",
