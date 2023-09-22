@@ -1,8 +1,19 @@
 use std::time::Duration;
 
-use bevy::{prelude::{Component, Commands, Bundle, Vec2, Transform, BuildChildren, Entity, Children, Res, Query, With, Vec3, Plugin, Update}, transform::TransformBundle, time::{Timer, TimerMode, Time}};
+use bevy::{
+    prelude::{
+        BuildChildren, Bundle, Children, Commands, Component, Entity, Plugin, Query, Res,
+        Transform, Update, Vec2, Vec3, With,
+    },
+    time::{Time, Timer, TimerMode},
+    transform::TransformBundle,
+};
 use bevy_rapier2d::prelude::RapierContext;
-use framework::{components::{collision::aoe::AreaOfEffectBundle, lifetime::SelfDestruct}, types::environment::WorldDirection, utils::rand::rnd_two_of_vec};
+use framework::{
+    components::{collision::aoe::AreaOfEffectBundle, lifetime::SelfDestruct},
+    types::environment::WorldDirection,
+    utils::rand::rnd_two_of_vec,
+};
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
@@ -114,17 +125,20 @@ impl RubyGlowOne {
     // const EXPLOSION_CRYSTAL_POSITIONS_DIR: [WorldDirection; 4] // Make it relative to quadrant center.
 
     fn explode_topaz(position: Vec2) -> ExplodeTopazBundle {
-        let transform = TransformBundle::from_transform(Transform::from_xyz(position.x, position.y, 0.0));
-        
+        let transform =
+            TransformBundle::from_transform(Transform::from_xyz(position.x, position.y, 0.0));
+
         ExplodeTopazBundle {
             topaz: ExplodeTopaz::new(Self::EXPLOSION_COUNTODOWN),
-            aoe: AreaOfEffectBundle::rectangle(Self::EXPLOSION_SPAN, Self::EXPLOSION_SPAN).set_transform(transform),
+            aoe: AreaOfEffectBundle::rectangle(Self::EXPLOSION_SPAN, Self::EXPLOSION_SPAN)
+                .set_transform(transform),
             destruct: SelfDestruct::new(Self::EXPLOSION_LIFETIME),
         }
     }
 
     fn poison_topaz(position: Vec2) -> PoisonTopazBundle {
-        let transform = TransformBundle::from_transform(Transform::from_xyz(position.x, position.y, 0.0));
+        let transform =
+            TransformBundle::from_transform(Transform::from_xyz(position.x, position.y, 0.0));
 
         PoisonTopazBundle {
             topaz: PoisonTopaz::new(Self::POISON_GROWTH_START, Self::POISON_GROWTH_DURATION),
@@ -141,9 +155,37 @@ impl RubyGlowOne {
             .insert(TransformBundle::default())
             .id();
 
+        // Explosion
+        let explosion_positions = {
+            let mut positions = Self::EXPLOSION_POSITIONS_DIR.clone();
+            let picked_positions = rnd_two_of_vec(&mut positions, &mut seed);
+
+            for pos in picked_positions {
+                let position = pos.vec() * Self::EXPLOSION_DISTANCE;
+                let explosion = commands.spawn(Self::explode_topaz(position)).id();
+
+                commands.entity(main).add_child(explosion);
+            }
+            [*picked_positions[0], *picked_positions[1]]
+        };
+
         // Poison
         {
-            let [&close_dir, &far_dir] = rnd_two_of_vec(&mut Self::POISON_POSITIONS_DIR.clone(), &mut seed);
+            // If explosions are on the diagonal, Poisons just need to pick the other diagonal.
+            let [close_dir, far_dir] = {
+                if explosion_positions[0].is_opposite(&explosion_positions[1]) {
+                    // Take the other diagonal then.
+                    [
+                        explosion_positions[0].perpendicular_clockwise(),
+                        explosion_positions[1].perpendicular_clockwise(),
+                    ]
+                } else {
+                    // We can simply shuffle.
+                    let mut positions = Self::POISON_POSITIONS_DIR.clone();
+                    let [&one, &two] = rnd_two_of_vec(&mut positions, &mut seed);
+                    [one, two]
+                }
+            };
 
             let close_position = close_dir.vec() * Self::POISON_NEAR_DISTANCE;
             let far_position = far_dir.vec() * Self::POISON_FAR_DISTANCE;
@@ -151,22 +193,9 @@ impl RubyGlowOne {
             let close = commands.spawn(Self::poison_topaz(close_position)).id();
             let far = commands.spawn(Self::poison_topaz(far_position)).id();
 
-            commands.entity(main)
-                .add_child(close)
-                .add_child(far);
+            commands.entity(main).add_child(close).add_child(far);
         }
 
-        // Explosion
-        {
-            for pos in rnd_two_of_vec(&mut Self::EXPLOSION_POSITIONS_DIR.clone(), &mut seed) {
-                let position = pos.vec() * Self::EXPLOSION_DISTANCE;
-                let explosion = commands.spawn(Self::explode_topaz(position)).id();
-
-                commands.entity(main)
-                    .add_child(explosion);
-            }
-        }
-        
         main
     }
 
@@ -188,7 +217,6 @@ impl RubyGlowOne {
             }
 
             for &topaz in topaz_crystals.iter() {
-
                 // Explosion
                 if let Ok((entity, mut explode_topaz)) = query_explosions.get_mut(topaz) {
                     explode_topaz.tick(delta_time);
@@ -203,10 +231,14 @@ impl RubyGlowOne {
                 }
 
                 // Poison
-                if let Ok((entity, mut poison_topaz, mut transform)) = query_poisons.get_mut(topaz) {
+                if let Ok((entity, mut poison_topaz, mut transform)) = query_poisons.get_mut(topaz)
+                {
                     poison_topaz.tick(delta_time);
 
-                    let scale_factor = (Self::POISON_START_RADIUS + poison_topaz.grow_progress() * (Self::POISON_END_RADIUS - Self::POISON_START_RADIUS)) / Self::POISON_START_RADIUS;
+                    let scale_factor = (Self::POISON_START_RADIUS
+                        + poison_topaz.grow_progress()
+                            * (Self::POISON_END_RADIUS - Self::POISON_START_RADIUS))
+                        / Self::POISON_START_RADIUS;
                     transform.scale = Vec3::splat(scale_factor);
 
                     for (_, hitbox, intersecting) in rapier_context.intersections_with(entity) {
@@ -224,7 +256,6 @@ impl RubyGlowOne {
 pub struct RubyGlowPlugin;
 impl Plugin for RubyGlowPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Update, RubyGlowOne::update)
-            ;// .add_systems(PostUpdate, self_destruct_system);
+        app.add_systems(Update, RubyGlowOne::update); // .add_systems(PostUpdate, self_destruct_system);
     }
 }

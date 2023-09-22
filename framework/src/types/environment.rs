@@ -1,6 +1,6 @@
-use bevy::prelude::Vec2;
+use bevy::prelude::{Vec2, World};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum WorldDirection {
     North,
     South,
@@ -39,6 +39,36 @@ impl WorldDirection {
             || self == WorldDirection::NorthEast
             || self == WorldDirection::SouthWest
             || self == WorldDirection::SouthEast
+    }
+
+    pub fn opposite(&self) -> WorldDirection {
+        match self {
+            WorldDirection::North => WorldDirection::South,
+            WorldDirection::South => WorldDirection::North,
+            WorldDirection::East => WorldDirection::West,
+            WorldDirection::West => WorldDirection::East,
+            WorldDirection::NorthWest => WorldDirection::SouthEast,
+            WorldDirection::NorthEast => WorldDirection::SouthWest,
+            WorldDirection::SouthWest => WorldDirection::NorthEast,
+            WorldDirection::SouthEast => WorldDirection::NorthWest,
+        }
+    }
+
+    pub fn perpendicular_clockwise(&self) -> WorldDirection {
+        match self {
+            WorldDirection::North => WorldDirection::East,
+            WorldDirection::East => WorldDirection::South,
+            WorldDirection::South => WorldDirection::West,
+            WorldDirection::West => WorldDirection::North,
+            WorldDirection::NorthEast => WorldDirection::SouthEast,
+            WorldDirection::SouthEast => WorldDirection::SouthWest,
+            WorldDirection::SouthWest => WorldDirection::NorthWest,
+            WorldDirection::NorthWest => WorldDirection::NorthEast,
+        }
+    }
+
+    pub fn is_opposite(&self, other: &WorldDirection) -> bool {
+        *self == other.opposite()
     }
 
     pub fn vec(self) -> Vec2 {
