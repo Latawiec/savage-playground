@@ -1,15 +1,13 @@
 use std::sync::mpsc::sync_channel;
 
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use framework::debug::rapier_debug::RapierDebugViewPlugin;
 use framework::plugin::FrameworkPlugin;
 use framework::{
     blueprints::player::Player,
     components::player::{jobs::PALADIN, raid_roles::RaidRole},
-    debug::local_input::{local_input_system, LocalInput},
+    debug::local_input::LocalInput,
     resources::{
         io::input::{InputManager, NewInput},
         world::environment::EnvironmentConfig,
