@@ -4,6 +4,8 @@ use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
+use framework::debug::rapier_debug::RapierDebugViewPlugin;
+use framework::plugin::FrameworkPlugin;
 use framework::{
     blueprints::player::Player,
     components::player::{jobs::PALADIN, raid_roles::RaidRole},
@@ -15,47 +17,21 @@ use framework::{
     types::player::new_player_id,
 };
 use worlds::mechanics::ruby_glow::{RubyGlowOne, RubyGlowPlugin};
-use worlds::mechanics::towers::{TowersMechanicPlugin, TowerSet};
+use worlds::mechanics::towers::TowersMechanicPlugin;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(0.01))
-        .add_plugins(RapierDebugRenderPlugin::default())
-        .add_plugins(LogDiagnosticsPlugin::default())
+        .add_plugins(FrameworkPlugin)
         .add_plugins(TowersMechanicPlugin::default())
         .add_plugins(RubyGlowPlugin::default())
-        .add_plugins(FrameTimeDiagnosticsPlugin::default())
-        .add_systems(Startup, setup_graphics)
+        .add_systems(Startup, setup)
         .add_systems(Startup, create_test_stuff)
-        .add_systems(
-            PostUpdate,
-            framework::systems::player::probed_rigid_body_system::pre_physics_update
-                .before(PhysicsSet::SyncBackend),
-        )
-        .add_systems(
-            PostUpdate,
-            framework::systems::player::probed_rigid_body_system::post_physics_update
-                .after(PhysicsSet::Writeback),
-        )
-        .add_systems(
-            Update,
-            framework::systems::player::player_input_system::player_input_system,
-        )
-        .add_systems(Update, framework::systems::player::rendering::player_sprite_update)
-        .add_systems(PreUpdate, local_input_system)
         .add_systems(Update, spin_wall)
-        .insert_resource(RapierConfiguration {
-            gravity: Vec2::ZERO,
-            ..Default::default()
-        })
         .run();
 }
 
-fn setup_graphics(mut commands: Commands) {
-    // Add a camera so we can see the debug-render.
-    commands.spawn(Camera2dBundle::default());
-
+fn setup(mut commands: Commands) {
     // TowerSet::spawn(&mut commands, None);
     RubyGlowOne::spawn(&mut commands, None);
 }

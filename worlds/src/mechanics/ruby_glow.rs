@@ -12,7 +12,7 @@ use bevy_rapier2d::prelude::RapierContext;
 use framework::{
     components::{collision::aoe::AreaOfEffectBundle, lifetime::SelfDestruct},
     types::environment::WorldDirection,
-    utils::rand::rnd_two_of_vec,
+    utils::rand::{rnd_two_of_vec, rnd_one_of_vec},
 };
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -181,9 +181,9 @@ impl RubyGlowOne {
                     ]
                 } else {
                     // We can simply shuffle.
-                    let mut positions = Self::POISON_POSITIONS_DIR.clone();
-                    let [&one, &two] = rnd_two_of_vec(&mut positions, &mut seed);
-                    [one, two]
+                    let mut positions = explosion_positions.clone();
+                    let &one = rnd_one_of_vec(&mut positions, &mut seed);
+                    [one, one.opposite()]
                 }
             };
 

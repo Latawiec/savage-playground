@@ -17,7 +17,7 @@ use framework::{
     types::environment::WorldDirection,
     utils::{locals::EntitySetTracket, rand::rnd_two_of_vec},
 };
-use rand::{seq::SliceRandom, Rng, SeedableRng};
+use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use std::{collections::BTreeSet, time::Duration};
 

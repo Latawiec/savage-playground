@@ -3,7 +3,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use bevy::prelude::{Input, KeyCode, Res, Resource};
+use bevy::prelude::{Input, KeyCode, Res, Resource, Plugin, PreUpdate};
 
 use crate::{
     resources::io::input::{InputStateFlags, KeyFlag, NewInput},
@@ -66,4 +66,13 @@ pub fn local_input_system(keys: Res<Input<KeyCode>>, local_input: Res<LocalInput
     new_input.new_state = keys_state;
 
     local_input.new_input(new_input);
+}
+
+
+#[derive(Default)]
+pub struct LocalInputPlugin;
+impl Plugin for LocalInputPlugin {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_systems(PreUpdate, local_input_system);
+    }
 }

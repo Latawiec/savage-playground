@@ -9,3 +9,4 @@ pub mod events;
 #[cfg(debug_assertions)]
 #[path = "./.debug/mod.rs"]
 pub mod debug;
+pub mod plugin;
