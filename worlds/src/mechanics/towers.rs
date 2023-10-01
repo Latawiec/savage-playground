@@ -9,7 +9,7 @@ use bevy::{
 use bevy_rapier2d::prelude::RapierContext;
 use framework::{
     components::{
-        collision::{hitbox::PlayerHitboxTag, aoe::AreaOfEffectBundle},
+        collision::{tags::PlayerHitboxTag, aoe::AreaOfEffectBundle},
         lifetime::SelfDestruct,
         player::identity::Identity,
     },

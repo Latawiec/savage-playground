@@ -2,10 +2,10 @@ use std::collections::BTreeMap;
 
 use bevy::prelude::{BuildChildren, Commands, Entity};
 use bevy::transform::TransformBundle;
-use bevy_rapier2d::prelude::Sensor;
 
 use crate::components::collision::hitbox::HitboxBundle;
 use crate::components::collision::probed_rigid_body::{PhysicsProbeBundle, ProbedRigidBody};
+use crate::components::collision::tags::PlayerHitboxTag;
 use crate::components::player::classes::Class;
 use crate::components::player::identity::Identity;
 use crate::components::player::jobs::*;
@@ -34,6 +34,7 @@ impl Player {
             .id();
         let hitbox = commands
             .spawn(HitboxBundle::new(Self::PLAYER_HITBOX_RADIUS))
+            .insert(PlayerHitboxTag)
             .id();
         let drawing: Entity = commands
             .spawn(Sprite::default())

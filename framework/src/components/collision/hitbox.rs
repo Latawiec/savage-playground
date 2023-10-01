@@ -3,8 +3,6 @@ use bevy_rapier2d::prelude::{Collider, Sensor, CollisionGroups, Group, RigidBody
 
 use super::collision_groups::*;
 
-#[derive(Component, Default)]
-pub struct PlayerHitboxTag;
 
 #[derive(Bundle)]
 pub struct HitboxBundle {
@@ -13,7 +11,6 @@ pub struct HitboxBundle {
     rigid_body: RigidBody,
     collision_groups: CollisionGroups,
     transform: TransformBundle,
-    tag: PlayerHitboxTag,
 }
 
 impl HitboxBundle {
@@ -23,8 +20,7 @@ impl HitboxBundle {
             collider: Collider::ball(radius),
             rigid_body: RigidBody::Dynamic, // Intersection test doesn't work otherwise.
             collision_groups: Self::collision_groups(),
-            transform: TransformBundle::default(),
-            tag: PlayerHitboxTag::default(),
+            transform: TransformBundle::default()
         }
     }
 

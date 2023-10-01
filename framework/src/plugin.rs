@@ -2,7 +2,7 @@ use crate::{
     debug::{local_input::LocalInputPlugin, rapier_debug::RapierDebugViewPlugin},
     *,
 };
-use bevy::prelude::IntoSystemConfigs;
+use bevy::prelude::{IntoSystemConfigs, PreUpdate};
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::{Plugin, PostUpdate, Update, Vec2},
@@ -18,6 +18,7 @@ impl Plugin for FrameworkPlugin {
                 gravity: Vec2::ZERO,
                 ..Default::default()
             })
+            .add_systems(PreUpdate, systems::aggro::aggro_system)
             .add_systems(
                 PostUpdate,
                 systems::player::probed_rigid_body_system::pre_physics_update
