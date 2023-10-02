@@ -99,6 +99,26 @@ impl AreaOfEffectBundle {
         }
     }
 
+    pub fn inverse_cone(distance: f32) -> AreaOfEffectBundle {
+
+        let left = Vec2::new(-1.0, 0.0) * distance;
+        let right = Vec2::new(1.0, 0.0) * distance;
+        let forward = Vec2::new(0.0, 1.0) * distance;
+
+        let collider = Collider::convex_polyline(vec![
+            left,
+            forward,
+            right
+        ])
+        .expect("Points passed to create a convex polyline were invalid.");
+
+        AreaOfEffectBundle {
+            collider,
+            collision_groups: Self::collision_groups(),
+            ..Default::default()
+        }
+    }
+
     // Basically a triangle.
     pub fn cone(spread_radians: f32, distance: f32) -> AreaOfEffectBundle {
         // If a triangle is spread too wide, I loose control over how high it can be. Set a safety net.
@@ -120,7 +140,7 @@ impl AreaOfEffectBundle {
         .expect("Points passed to create a convex polyline were invalid.");
 
         AreaOfEffectBundle {
-            collider: collider,
+            collider,
             collision_groups: Self::collision_groups(),
             ..Default::default()
         }

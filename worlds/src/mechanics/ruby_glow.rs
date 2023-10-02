@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::{
     prelude::{
         BuildChildren, Bundle, Children, Commands, Component, Entity, Plugin, Query, Res,
-        Transform, Update, Vec2, Vec3, With,
+        Transform, Update, Vec2, Vec3, With, Quat, EulerRot,
     },
     time::{Time, Timer, TimerMode},
     transform::TransformBundle,
@@ -124,7 +124,8 @@ impl RubyGlowOne {
     const EXPLOSION_LIFETIME: Duration = Duration::new(13, 0);
     // const EXPLOSION_CRYSTAL_POSITIONS_DIR: [WorldDirection; 4] // Make it relative to quadrant center.
 
-    fn explode_topaz(position: Vec2) -> ExplodeTopazBundle {
+    fn explode_topaz(position: WorldDirection) -> ExplodeTopazBundle {
+        let position = position.vec() * Self::EXPLOSION_DISTANCE;
         let transform =
             TransformBundle::from_transform(Transform::from_xyz(position.x, position.y, 0.0));
 
@@ -136,7 +137,15 @@ impl RubyGlowOne {
         }
     }
 
-    fn poison_topaz(position: Vec2) -> PoisonTopazBundle {
+    fn poison_topaz(position: WorldDirection, is_close: bool) -> PoisonTopazBundle {
+        let position = {
+            if is_close {
+                position.vec() * Self::POISON_NEAR_DISTANCE
+            } else {
+                position.vec() * Self::POISON_FAR_DISTANCE
+            }
+        }; 
+
         let transform =
             TransformBundle::from_transform(Transform::from_xyz(position.x, position.y, 0.0));
 
@@ -161,8 +170,7 @@ impl RubyGlowOne {
             let picked_positions = rnd_two_of_vec(&mut positions, &mut seed);
 
             for pos in picked_positions {
-                let position = pos.vec() * Self::EXPLOSION_DISTANCE;
-                let explosion = commands.spawn(Self::explode_topaz(position)).id();
+                let explosion = commands.spawn(Self::explode_topaz(*pos)).id();
 
                 commands.entity(main).add_child(explosion);
             }
@@ -187,11 +195,8 @@ impl RubyGlowOne {
                 }
             };
 
-            let close_position = close_dir.vec() * Self::POISON_NEAR_DISTANCE;
-            let far_position = far_dir.vec() * Self::POISON_FAR_DISTANCE;
-
-            let close = commands.spawn(Self::poison_topaz(close_position)).id();
-            let far = commands.spawn(Self::poison_topaz(far_position)).id();
+            let close = commands.spawn(Self::poison_topaz(close_dir, true)).id();
+            let far = commands.spawn(Self::poison_topaz(far_dir, false)).id();
 
             commands.entity(main).add_child(close).add_child(far);
         }
@@ -251,6 +256,36 @@ impl RubyGlowOne {
         }
     }
 }
+
+#[derive(Component)]
+pub struct RubyGlowTwo;
+
+impl RubyGlowTwo {
+    const TOPAZ_POSITIONS_DIR: [WorldDirection; 4] = WorldDirection::INTERCARDINALS;
+    
+    const POISON_START_RADIUS: f32 = 40.0;
+    const POISON_END_RADIUS: f32 = 250.0;
+    const POISON_GROWTH_START: Duration = Duration::new(5, 0);
+    const POISON_GROWTH_DURATION: Duration = Duration::new(12, 0);
+    const POISON_POISON_LIFETIME: Duration = Duration::new(20, 0);
+
+    const EXPLOSION_DISTANCE: f32 = 200.0;
+    const EXPLOSION_COUNTODOWN: Duration = Duration::new(13, 0);
+    const EXPLOSION_LIFETIME: Duration = Duration::new(13, 0);
+
+    fn explode_topaz(rotation: f32) -> ExplodeTopazBundle {
+        let transform =
+            TransformBundle::from_transform(Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, rotation, 0.0)));
+
+        ExplodeTopazBundle {
+            topaz: ExplodeTopaz::new(Self::EXPLOSION_COUNTODOWN),
+            aoe: AreaOfEffectBundle::inverse_cone(Self::EXPLOSION_DISTANCE)
+                .set_transform(transform),
+            destruct: SelfDestruct::new(Self::EXPLOSION_LIFETIME),
+        }
+    }
+}
+
 
 #[derive(Default)]
 pub struct RubyGlowPlugin;

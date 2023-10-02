@@ -1,6 +1,6 @@
 use crate::{
     debug::{local_input::LocalInputPlugin, rapier_debug::RapierDebugViewPlugin},
-    *,
+    *, events::aggro::AggroChangeEvent,
 };
 use bevy::prelude::{IntoSystemConfigs, PreUpdate};
 use bevy::{
@@ -19,6 +19,7 @@ impl Plugin for FrameworkPlugin {
                 ..Default::default()
             })
             .add_systems(PreUpdate, systems::aggro::aggro_system)
+            .add_event::<AggroChangeEvent>()
             .add_systems(
                 PostUpdate,
                 systems::player::probed_rigid_body_system::pre_physics_update
