@@ -1,4 +1,4 @@
-use bevy::prelude::{Vec2, World};
+use bevy::prelude::Vec2;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum WorldDirection {

@@ -1,6 +1,6 @@
 use crate::{
     debug::{local_input::LocalInputPlugin, rapier_debug::RapierDebugViewPlugin},
-    *, events::aggro::AggroChangeEvent,
+    *, events::aggro::AggroChangeEvent, systems::serialization::renderer_snapshot::RendererSnapshot,
 };
 use bevy::prelude::{IntoSystemConfigs, PreUpdate};
 use bevy::{
@@ -35,6 +35,9 @@ impl Plugin for FrameworkPlugin {
                 systems::player::player_input_system::player_input_system,
             )
             .add_systems(Update, systems::player::rendering::player_sprite_update);
+
+        app.insert_resource(RendererSnapshot::default())
+            .add_systems(PostUpdate, RendererSnapshot::update_snapshot);
 
         #[cfg(debug_assertions)]
         {
