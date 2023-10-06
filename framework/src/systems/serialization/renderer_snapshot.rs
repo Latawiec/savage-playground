@@ -1,16 +1,16 @@
-use bevy::prelude::{Entity, GlobalTransform, Query, ResMut, Resource};
+use bevy::prelude::{Entity, GlobalTransform, Query, ResMut, Resource, Event, EventWriter};
 use serde_json::json;
 
 use crate::components::rendering::drawable::{Sprite, Drawable};
 
-#[derive(Resource, Default)]
+#[derive(Event, Default)]
 pub struct RendererSnapshot {
     snapshot: serde_json::Value,
 }
 
 impl RendererSnapshot {
     pub fn update_snapshot(
-        mut res: ResMut<RendererSnapshot>,
+        mut ev_renderer_snapshot: EventWriter<RendererSnapshot>,
         drawable: Query<(Entity, &GlobalTransform, &Drawable, Option<&Sprite>)>,
     ) {
         let mut snapshot_map = serde_json::Map::new();
@@ -41,6 +41,6 @@ impl RendererSnapshot {
             snapshot_map.insert(uuid_string, serde_json::Value::Object(map));
         }
 
-        res.snapshot = serde_json::Value::Object(snapshot_map);
+        ev_renderer_snapshot.send(RendererSnapshot { snapshot: serde_json::Value::Object(snapshot_map) })
     }
 }

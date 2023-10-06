@@ -1,4 +1,4 @@
-use bevy::{prelude::{Bundle, GlobalTransform, Transform, Component}, transform::TransformBundle};
+use bevy::{prelude::Bundle, transform::TransformBundle};
 use bevy_rapier2d::prelude::{Collider, Sensor, CollisionGroups, Group, RigidBody};
 
 use super::collision_groups::*;

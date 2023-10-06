@@ -36,7 +36,7 @@ impl Plugin for FrameworkPlugin {
             )
             .add_systems(Update, systems::player::rendering::player_sprite_update);
 
-        app.insert_resource(RendererSnapshot::default())
+        app.add_event::<RendererSnapshot>()
             .add_systems(PostUpdate, RendererSnapshot::update_snapshot);
 
         #[cfg(debug_assertions)]
