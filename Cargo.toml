@@ -4,5 +4,9 @@ members = [
     "framework",
     "testing",
     "worlds",
-    "game_server",
+    "separate_game_server",
 ]
+
+[workspace.dependencies]
+bevy = { version = "*", features = ["dynamic_linking"] }
+tokio = { version = "1.32.0", features = ["rt-multi-thread", "tracing", "macros", "test-util", "signal", "sync"] }

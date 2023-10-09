@@ -14,12 +14,18 @@ use framework::{
     },
     types::player::new_player_id,
 };
+
 use worlds::mechanics::ruby_glow::{RubyGlowOne, RubyGlowPlugin};
 use worlds::mechanics::towers::TowersMechanicPlugin;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins
+        // this is just to test unlimited FPS.
+            // .set(WindowPlugin {
+            //     primary_window: Some(Window { present_mode: bevy::window::PresentMode::Immediate, ..Default::default() }),
+            //     ..Default::default()})
+        )
         .add_plugins(FrameworkPlugin)
         .add_plugins(TowersMechanicPlugin::default())
         .add_plugins(RubyGlowPlugin::default())

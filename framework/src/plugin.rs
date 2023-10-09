@@ -25,7 +25,7 @@ impl Plugin for FrameworkPlugin {
                 systems::player::probed_rigid_body_system::pre_physics_update
                     .before(PhysicsSet::SyncBackend),
             )
-            .add_systems(
+            .add_systems( 
                 PostUpdate,
                 systems::player::probed_rigid_body_system::post_physics_update
                     .after(PhysicsSet::Writeback),
@@ -39,7 +39,7 @@ impl Plugin for FrameworkPlugin {
         app.add_event::<RendererSnapshot>()
             .add_systems(PostUpdate, RendererSnapshot::update_snapshot);
 
-        #[cfg(debug_assertions)]
+        // #[cfg(debug_assertions)]
         {
             app.add_plugins(RapierDebugViewPlugin)
                 .add_plugins(LocalInputPlugin)

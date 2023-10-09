@@ -1,5 +1,5 @@
 [package]
-name = "game_server"
+name = "separate_game_server"
 version = "0.1.0"
 description = "Starts a Game Server."
 edition = "2021"
@@ -7,8 +7,8 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.4.6", features = ["derive"] }
 futures-util = "0.3.28"
-tokio = { version = "1.32.0", features = ["rt", "tracing", "macros", "test-util", "signal", "sync"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.17"
 warp = "*"
+tokio = { workspace = true }
 

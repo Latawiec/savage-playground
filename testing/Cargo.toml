@@ -16,7 +16,6 @@ version = "*"
 features = ["dynamic_linking"]
 
 
-
 [dependencies.bevy_rapier2d]
 version = "*"
 features = ["debug-render-2d", "simd-stable"]
