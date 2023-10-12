@@ -72,12 +72,12 @@ impl RoomHandle {
                 match msg {
                     Ok(msg) => {
                         if msg.is_text() {
-                            if let Err(error) = client_msg_sender.send(ClientMessage::String { client_id, text: msg.to_str().unwrap().to_owned() }) {
+                            if let Err(error) = client_msg_sender.send(ClientMessage::Data { client_id, message: super::message::Message::Text { data: msg.to_str().unwrap().to_owned() } }) {
                                 tracing::error!("Couldn't send ClientMessage: {}", error);
                             }
                         } else
                         if msg.is_binary() {
-                            if let Err(error) = client_msg_sender.send(ClientMessage::Binary { client_id, data: msg.as_bytes().to_vec() }) {
+                            if let Err(error) = client_msg_sender.send(ClientMessage::Data { client_id, message: super::message::Message::Binary { data: msg.as_bytes().to_vec() } }) {
                                 tracing::error!("Couldn't send ClientMessage: {}", error);
                             }
                         }
@@ -112,17 +112,17 @@ impl RoomHandle {
                     },
                     Ok(msg) => {
                         match msg {
-                            ServerMessage::Broadcast {  } => {
-                                tx.send(Message::text("Broadcast!")).await;
+                            ServerMessage::Broadcast { message } => {
+                                tx.send(Message::text(format!("Broadcast: {:?}", message))).await;
                             },
-                            ServerMessage::Room { room_id } => {
+                            ServerMessage::Room { room_id, message } => {
                                 if self_room_id == room_id {
-                                    tx.send(Message::text("Room-wide message!")).await;
+                                    tx.send(Message::text(format!("Room message: {:?}", message))).await;
                                 }
                             },
-                            ServerMessage::Client { client_id } => {
+                            ServerMessage::Client { client_id, message } => {
                                 if self_client_id == client_id {
-                                    tx.send(Message::text("Client direct message!")).await;
+                                    tx.send(Message::text(format!("Direct message: {:?}", message))).await;
                                 }
                             },
                         }

@@ -83,9 +83,9 @@ impl ServerHandle {
 
         let rooms_filter = warp::any().map(move || rooms_clone.clone());
         let room_id_gen_filter =
-            warp::any().map(move || room_id_gen.clone().fetch_add(1, std::sync::atomic::Ordering::Relaxed));
+            warp::any().map(move || { room_id_gen.fetch_add(1, std::sync::atomic::Ordering::Relaxed) });
         let client_id_gen_filter = warp::any()
-            .map(move || client_id_gen.clone().fetch_add(1, std::sync::atomic::Ordering::Relaxed));
+            .map(move || client_id_gen.fetch_add(1, std::sync::atomic::Ordering::Relaxed));
         let server_notification_sender_filter = warp::any().map(move|| server_notification_sender_clone.clone());
 
         let server_handle = ServerHandle {
@@ -104,8 +104,8 @@ impl ServerHandle {
             .recover(error::return_error);
 
         let create_room = warp::path!("create")
+            .and(room_id_gen_filter)
             .and(client_id_gen_filter.clone())
-            .and(room_id_gen_filter.clone())
             .and(warp::ws())
             .and(warp::addr::remote())
             .and(rooms_filter.clone())
@@ -174,9 +174,6 @@ impl ServerHandle {
 
                     while let Ok(msg) = receiver.recv().await {
                         match msg {
-                            ClientMessage::Connected { client_id } => {},
-                            ClientMessage::Disconnected { client_id } => {},
-                            ClientMessage::JoinedRoom { client_id, room_id } => {},
                             ClientMessage::LeftRoom { client_id, room_id } => {
                                 let rooms_lock = rooms_clone.read().await;
                                 if let Some(room) = rooms_lock.get(&room_id) {
@@ -185,8 +182,7 @@ impl ServerHandle {
                                     }
                                 }
                             },
-                            ClientMessage::String { client_id, text } => {},
-                            ClientMessage::Binary { client_id, data } => {},
+                            _ => {},
                         }
                     }
                 });

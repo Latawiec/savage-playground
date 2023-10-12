@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "debug",
     "framework",
     "testing",
     "worlds",
@@ -9,4 +10,4 @@ members = [
 
 [workspace.dependencies]
 bevy = { version = "*", features = ["dynamic_linking"] }
-tokio = { version = "1.32.0", features = ["rt-multi-thread", "tracing", "macros", "test-util", "signal", "sync"] }
+tokio = { version = "1.32.0", features = ["process", "rt-multi-thread", "tracing", "macros", "test-util", "signal", "sync"] }
