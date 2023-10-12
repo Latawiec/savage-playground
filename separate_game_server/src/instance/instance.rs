@@ -1,6 +1,5 @@
-use std::{process::{Stdio, ExitStatus}, io::{Read, Write}};
-use tokio::process::{Command, Child, ChildStdin, ChildStdout};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use std::process::{Stdio, ExitStatus};
+use tokio::process::{Command, Child, ChildStdin, ChildStdout, ChildStderr};
 
 #[derive(Debug)]
 pub enum Error {
@@ -25,6 +24,7 @@ impl Instance {
         let mut process = match Command::new(&path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
             .spawn() {
                 Err(error) => {
                     return Err(Error::StartupError { reason: error.to_string() })
@@ -38,8 +38,16 @@ impl Instance {
         })
     }
 
-    pub fn split_io(&mut self) -> (Option<ChildStdin>, Option<ChildStdout>) {
-        (self.process.stdin.take(), self.process.stdout.take())
+    pub fn take_stdin(&mut self) -> Option<ChildStdin> {
+        self.process.stdin.take()
+    }
+
+    pub fn take_stdout(&mut self) -> Option<ChildStdout> {
+        self.process.stdout.take()
+    }
+
+    pub fn take_stderr(&mut self) -> Option<ChildStderr> {
+        self.process.stderr.take()
     }
 
     pub fn try_wait(&mut self) -> Result<Option<ExitStatus>, Error> {

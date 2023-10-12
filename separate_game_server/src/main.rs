@@ -33,8 +33,7 @@ async fn main() {
                 server::server::ServerNotification::RoomCreated { room_id } => {
                     if let Some((mut receiver, sender)) = server.get_room_channels(room_id).await {
                         let mut process = Instance::new("/mnt/b981039f-fbe8-4a78-be47-2fd24cb3be26/Programing/RustTesting/savage_playground/target/debug/debug".to_owned()).unwrap();
-                        let (stdin, stdout) = process.split_io();
-                        let (mut stdin, mut stdout) = (stdin.unwrap(), stdout.unwrap());
+                        let (mut stdin, mut stdout, mut _stderr) = (process.take_stdin().unwrap(), process.take_stdout().unwrap(), process.take_stderr().unwrap());
 
                         tracing::info!("Room {} created.", room_id);
 
