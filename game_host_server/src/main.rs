@@ -9,6 +9,7 @@ use tokio::{runtime::{Runtime, Handle}, io::AsyncReadExt, io::AsyncWriteExt};
 mod config;
 mod server;
 mod instance;
+mod game_host;
 
 // Move it
 pub fn str_from_u8_nul_utf8(utf8_src: &[u8]) -> Result<&str, std::str::Utf8Error> {
@@ -30,8 +31,8 @@ async fn main() {
         let mut receiver = server.subscribe();
         while let Ok(notification) = receiver.recv().await {
             match notification {
-                server::server::ServerNotification::RoomCreated { room_id } => {
-                    if let Some((mut receiver, sender)) = server.get_room_channels(room_id).await {
+                server::server::ServerNotification::RoomCreated { room_id, client_id } => {
+                    if let Some((mut receiver, sender)) = server.get_room_channels(room_id) {
                         let mut process = Instance::new("/mnt/b981039f-fbe8-4a78-be47-2fd24cb3be26/Programing/RustTesting/savage_playground/target/debug/debug".to_owned()).unwrap();
                         let (mut stdin, mut stdout, mut _stderr) = (process.take_stdin().unwrap(), process.take_stdout().unwrap(), process.take_stderr().unwrap());
 
@@ -44,7 +45,7 @@ async fn main() {
                                 if let Ok(bytes_read) = stdout.read(&mut buffer).await {
                                     if bytes_read != 0 {
                                         let _ = sender.send(server::message::ServerMessage::Room { room_id, message: Message::Text{ data: str_from_u8_nul_utf8(&buffer).unwrap().to_owned() } });
-                                        buffer.fill(0);
+                                        buffer[0..bytes_read].fill(0);
                                     }
                                 } else {
                                     tracing::error!("Read from process failed");
@@ -86,7 +87,7 @@ async fn main() {
                 },
                 server::server::ServerNotification::RoomEmpty { room_id } => {
                     tracing::info!("Room {} is empty. Deleting", room_id);
-                    server.close_room(room_id).await;
+                    server.close_room(room_id);
                 }
             }
         }

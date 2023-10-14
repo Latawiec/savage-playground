@@ -5,9 +5,11 @@ members = [
     "framework",
     "testing",
     "worlds",
-    "separate_game_server",
+    "game_host_server",
 ]
 
 [workspace.dependencies]
 bevy = { version = "*", features = ["dynamic_linking"] }
 tokio = { version = "1.32.0", features = ["process", "rt-multi-thread", "tracing", "macros", "test-util", "signal", "sync"] }
+serde = { version = "*" }
+serde_json = { version = "*" }

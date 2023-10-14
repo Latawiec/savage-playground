@@ -1,7 +1,7 @@
-use std::{collections::HashMap, sync::Arc, net::SocketAddr, time::Duration};
+use std::{collections::HashMap, sync::{Arc, RwLock}, net::SocketAddr, time::Duration};
 
 use futures_util::{StreamExt, SinkExt};
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::broadcast;
 use warp::filters::ws::{WebSocket, Message};
 
 use super::{message::{ServerMessage, ClientMessage}, client::{Client, ClientID}};
@@ -34,8 +34,8 @@ impl RoomHandle {
         RoomHandle { room_id, clients: Default::default(), server_msg_sender, client_msg_sender }
     }
 
-    pub async fn is_empty(&self) -> bool {
-        self.clients.read().await.is_empty()
+    pub fn is_empty(&self) -> bool {
+        self.clients.read().unwrap().is_empty()
     }
 
     pub fn receiver(&self) -> broadcast::Receiver<ClientMessage> {
@@ -97,7 +97,7 @@ impl RoomHandle {
                 tracing::error!("Couldn't send ClientMessage: {}", error);
             }
 
-            clients_map.write().await.remove(&client_id);
+            clients_map.write().unwrap().remove(&client_id);
         });
 
         // Task with a loop writing messages to clients.
@@ -139,7 +139,7 @@ impl RoomHandle {
         };
 
         // Remember newly connected client.
-        self.clients.write().await.insert(client_id, client);
+        self.clients.write().unwrap().insert(client_id, client);
 
         Ok(())
     }
