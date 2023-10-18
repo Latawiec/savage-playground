@@ -4,14 +4,14 @@ use std::{collections::HashMap, cmp::Ordering};
 pub type AggroLevel = u32;
 
 #[derive(Clone, Copy)]
-struct AggoTableEntry {
-    aggro: AggroLevel,
-    entity: Entity
+pub struct AggroTableEntry {
+    pub aggro: AggroLevel,
+    pub entity: Entity
 }
 
 #[derive(Component, Default)]
 pub struct AggroTable {
-    aggro_table: Vec<AggoTableEntry>,
+    aggro_table: Vec<AggroTableEntry>,
     entity_to_vec_idx: HashMap<Entity, usize>
 }
 
@@ -20,7 +20,7 @@ impl AggroTable {
         let entity_idx = self.entity_to_vec_idx.get(&target);
         let mut entry = match entity_idx {
             Some(idx) => *self.aggro_table.get(*idx).unwrap(),
-            None => AggoTableEntry{ aggro: Default::default(), entity: *target }
+            None => AggroTableEntry{ aggro: Default::default(), entity: *target }
         }; 
         let target = entry.aggro + aggro_value;
 
@@ -57,19 +57,13 @@ impl AggroTable {
         }
     }
 
-    pub fn get_top_idx_aggro_entity(&self, idx: usize) -> Entity {
-        return self.aggro_table.get(idx).unwrap().entity;
+    pub fn get_nth_top_aggro_entry(&self, idx: usize) -> Option<&AggroTableEntry> {
+        self.aggro_table.get(idx)
     }
 
-    pub fn get_top_idx_aggro_value(&self, idx: usize) -> AggroLevel {
-        return self.aggro_table.get(idx).unwrap().aggro;
-    }
-
-    pub fn get_aggro_for_entity(&self, entity: Entity) -> AggroLevel {
-        match self.aggro_table.get(*self.entity_to_vec_idx.get(&entity).unwrap()) {
-            Some(entry) => entry.aggro,
-            _ => 0
-        }
+    pub fn get_aggro_for_entity(&self, entity: Entity) -> Option<AggroLevel> {
+        let idx = self.entity_to_vec_idx.get(&entity)?;
+        Some(self.aggro_table.get(*idx)?.aggro)
     }
 
     pub fn erase_aggro(&mut self, target: &Entity) {
@@ -106,12 +100,12 @@ mod tests {
         tab.increase_aggro(&e0, 4);
         tab.increase_aggro(&e5, 0);
 
-        assert_eq!(tab.get_top_idx_aggro_value(0), 5);
-        assert_eq!(tab.get_top_idx_aggro_value(1), 5);
-        assert_eq!(tab.get_top_idx_aggro_value(2), 4);
-        assert_eq!(tab.get_top_idx_aggro_value(3), 3);
-        assert_eq!(tab.get_top_idx_aggro_value(4), 2);
-        assert_eq!(tab.get_top_idx_aggro_value(5), 0);
-        assert_eq!(tab.get_top_idx_aggro_entity(3), e4);
+        assert_eq!(tab.get_nth_top_aggro_entry(0).unwrap().aggro, 5);
+        assert_eq!(tab.get_nth_top_aggro_entry(1).unwrap().aggro, 5);
+        assert_eq!(tab.get_nth_top_aggro_entry(2).unwrap().aggro, 4);
+        assert_eq!(tab.get_nth_top_aggro_entry(3).unwrap().aggro, 3);
+        assert_eq!(tab.get_nth_top_aggro_entry(4).unwrap().aggro, 2);
+        assert_eq!(tab.get_nth_top_aggro_entry(5).unwrap().aggro, 0);
+        assert_eq!(tab.get_nth_top_aggro_entry(3).unwrap().entity, e4);
     }
 }
