@@ -12,6 +12,10 @@ mod error {
         FileContentIllFormed { resason: String },
         GameNotFound { reason: String },
     }
+    
+    pub enum GameAuthorithyError {
+        NotAuthorized { reason: String },
+    }
 
     pub enum GameInstanceError {
         Unknown
@@ -47,9 +51,23 @@ impl GameHost {
                     if let Some(request) = Self::parse_client_message(message) {
                         match request {
                             Request::StartGame { game_name } => {
+                                if self.owner_id != client_id {
+                                    let error = Err(error::GameAuthorithyError{ reason: "Only current game owner can start the game.".to_owned() });
+                                    // Pass error somehow.
+                                }
+                        
                                 let _ = self.start_game(game_name).await;
                             },
-                            Request::SetGameOwner { new_game_owner } => todo!(),
+                            Request::SetGameOwner { new_game_owner } => {
+                                if self.owner_id != client_id {
+                                    let error = Err(error::GameAuthorithyError{ reason: "Only current game owner can assign a new owner.".to_owned() });
+                                    // Pass error somehow.
+                                }
+                        
+                                self.set_game_owner(client_id, new_game_owner).await;
+                            },
+                            Request::GameConfig { config } => todo!(),
+                            Request::GameInput { input } => todo!(),
                         };
                     } else {
 
@@ -74,6 +92,10 @@ impl GameHost {
                 }
             },
         }
+    }
+
+    async fn set_game_owner(&mut self, client_id: u64, new_owner_id: u64) {
+        self.game_owner = new_owner_id;
     }
 
     async fn start_game(&mut self, game_name: String) -> Result<Instance, error::GameInstanceError> {
