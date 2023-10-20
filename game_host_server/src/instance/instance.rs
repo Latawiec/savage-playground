@@ -1,15 +1,14 @@
-use std::process::{Stdio, ExitStatus};
+use std::{process::{Stdio, ExitStatus}, path::{Path, PathBuf}};
 use tokio::process::{Command, Child, ChildStdin, ChildStdout, ChildStderr};
 
 #[derive(Debug)]
 pub enum Error {
     StartupError { reason: String },
-    PipeError { reason: String },
     ProcessError { reason: String },
 }
 
 pub struct Instance {
-    path: String,
+    path: PathBuf,
     process: Child,
 }
 
@@ -20,7 +19,7 @@ impl Drop for Instance {
 }
 
 impl Instance {
-    pub fn new(path: String) -> Result<Instance, Error> {
+    pub fn new(path: &Path) -> Result<Instance, Error> {
         let process = match Command::new(&path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -33,7 +32,7 @@ impl Instance {
             };
 
         Ok(Instance {
-            path,
+            path: path.to_owned(),
             process,
         })
     }

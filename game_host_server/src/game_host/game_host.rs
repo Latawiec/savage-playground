@@ -1,11 +1,14 @@
 use std::path::{PathBuf, Path};
 
+use tokio::{process::{ChildStdin, ChildStdout, ChildStderr}, io::AsyncWriteExt};
+
 use crate::{instance::instance::Instance, server::{client::ClientID, room::RoomHandle, message::Message}};
 
 use super::message::{self, Request};
 
 mod error {
 
+    #[derive(Debug)]
     pub enum GamesMappingError {
         GameMappingFileError { reason: String },
         GameDirError { reason: String },
@@ -13,12 +16,22 @@ mod error {
         GameNotFound { reason: String },
     }
     
+    #[derive(Debug)]
     pub enum GameAuthorithyError {
         NotAuthorized { reason: String },
     }
 
+    #[derive(Debug)]
     pub enum GameInstanceError {
-        Unknown
+        Unknown { reason: String }
+    }
+
+    #[derive(Debug)]
+    pub enum GameError {
+        NoGameRunning,
+        StdInClosed,
+        StdOutClosed,
+        StdErrClosed,
     }
 }
 
@@ -28,6 +41,10 @@ pub struct GameHost {
 
     game_dir: Option<PathBuf>,
     game_instance: Option<Instance>,
+
+    game_stdin: Option<ChildStdin>,
+    game_stdout: Option<ChildStdout>,
+    game_stderr: Option<ChildStderr>,
 }
 
 impl GameHost {
@@ -37,6 +54,9 @@ impl GameHost {
             room_handle,
             game_dir: None,
             game_instance: None,
+            game_stdin: None,
+            game_stdout: None,
+            game_stderr: None,
         }
     }
 
@@ -54,23 +74,78 @@ impl GameHost {
                                 if self.game_owner != client_id {
                                     // let _ = Err(error::GameAuthorithyError::NotAuthorized{ reason: "Only current game owner can start the game.".to_owned() });
                                     // Pass error somehow.
+                                    return;
                                 }
-                        
-                                let _ = self.start_game(game_name).await;
+
+                                let game_path = Self::try_get_game_dir(&game_name).await;
+                                if let Err(error) = game_path {
+                                    // Err(error)
+                                    return;
+                                }
+
+                                let game_path = game_path.unwrap();
+                                let game_instance = Self::try_start_game(&game_path).await;
+                                if let Err(error) = game_instance {
+                                    // Err(error)
+                                    return;
+                                }
+
+                                let mut game_instance = game_instance.unwrap();
+                                self.game_stdin = game_instance.take_stdin();
+                                self.game_stdout = game_instance.take_stdout();
+                                self.game_stderr = game_instance.take_stderr();
+                                self.game_instance = Some(game_instance);
+                                self.game_dir = Some(game_path);
+                            },
+                            Request::StopGame => {
+                                if self.game_owner != client_id {
+                                    // let _ = Err(error::GameAuthorithyError::NotAuthorized{ reason: "Only current game owner can start the game.".to_owned() });
+                                    // Pass error somehow.
+                                    return;
+                                }
+
+                                if self.game_instance.is_none() {
+                                    // Err(error::GameError::NoGameRunning)
+                                    return;
+                                }
+
+                                self.game_dir = None;
+                                self.game_stdin = None;
+                                self.game_stdout = None;
+                                self.game_stderr = None;
+                                self.game_instance = None;
+
                             },
                             Request::SetGameOwner { new_game_owner } => {
                                 if self.game_owner != client_id {
                                     // let _ = Err(error::GameAuthorithyError::NotAuthorized{ reason: "Only current game owner can assign a new owner.".to_owned() });
                                     // Pass error somehow.
+                                    return;
                                 }
                         
                                 self.set_game_owner(client_id, new_game_owner).await;
                             },
-                            Request::GameConfig { config: _ } => todo!(),
-                            Request::GameInput { input: _ } => todo!(),
+                            Request::GameMessage { message } => {
+                                if self.game_instance.is_none() {
+                                    // Err(error::GameError::NoGameRunning);
+                                    // Pass error somehow
+                                    return;
+                                }
+                                
+                                let stdin = self.game_stdin.as_mut();
+                                if stdin.is_none() {
+                                    // Err(error::GameError::StdInClosed);
+                                    return;
+                                }
+
+                                let stdin = stdin.unwrap();
+
+                                let serialized_message = message.to_string();
+                                let _ = stdin.write_all(serialized_message.as_bytes()).await;
+                            }
                         };
                     } else {
-
+                        tracing::warn!("Unsupported message format");
                     }
                 },
                 _ => {},
@@ -98,11 +173,19 @@ impl GameHost {
         self.game_owner = new_owner_id;
     }
 
-    async fn start_game(&mut self, _game_name: String) -> Result<Instance, error::GameInstanceError> {
-        Err(error::GameInstanceError::Unknown)
+    async fn try_start_game(game_dir: &Path) -> Result<Instance, error::GameInstanceError> {
+        match Instance::new(&game_dir) {
+            Ok(instance) => Ok(instance),
+            Err(error) => {
+                match error {
+                    crate::instance::instance::Error::StartupError { reason } => Err(error::GameInstanceError::Unknown { reason }),
+                    crate::instance::instance::Error::ProcessError { reason } => Err(error::GameInstanceError::Unknown { reason }),
+                }
+            }
+        }
     }
 
-    async fn try_get_game_dir(game_name: String) -> Result<PathBuf, error::GamesMappingError> {
+    async fn try_get_game_dir(game_name: &str) -> Result<PathBuf, error::GamesMappingError> {
         const GAME_DIR_MAPPING_FILENAME: &str = "game_dir_mapping.json";
 
         let games_mapping_json = match tokio::fs::read_to_string(GAME_DIR_MAPPING_FILENAME).await {
@@ -121,7 +204,7 @@ impl GameHost {
 
         let game_dir = match games_mapping_json.as_object() {
             Some(game_dir_map) => {
-                if let Some(game_dir) = game_dir_map.get(&game_name) {
+                if let Some(game_dir) = game_dir_map.get(game_name) {
                     game_dir
                 } else {
                     return Err(error::GamesMappingError::GameNotFound { reason: format!("Game {} doesn't exist in the mapping.", game_name) });

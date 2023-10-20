@@ -1,5 +1,7 @@
 
 
+use std::{path::PathBuf, str::FromStr};
+
 use instance::instance::Instance;
 use server::{server::ServerHandle, message::Message};
 use tracing_subscriber::fmt::format::FmtSpan;
@@ -33,7 +35,8 @@ async fn main() {
             match notification {
                 server::server::ServerNotification::RoomCreated { room_id, client_id: _ } => {
                     if let Some((mut receiver, sender)) = server.get_room_channels(room_id) {
-                        let mut process = Instance::new("/mnt/b981039f-fbe8-4a78-be47-2fd24cb3be26/Programing/RustTesting/savage_playground/target/debug/debug".to_owned()).unwrap();
+                        let game_dir = PathBuf::from_str("/mnt/b981039f-fbe8-4a78-be47-2fd24cb3be26/Programing/RustTesting/savage_playground/target/debug/debug").unwrap();
+                        let mut process = Instance::new(&game_dir).unwrap();
                         let (mut stdin, mut stdout, mut _stderr) = (process.take_stdin().unwrap(), process.take_stdout().unwrap(), process.take_stderr().unwrap());
 
                         tracing::info!("Room {} created.", room_id);
