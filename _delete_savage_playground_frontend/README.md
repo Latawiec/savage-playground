@@ -1,8 +1,14 @@
-# savage_playground_frontend
+# savage-playground-client
 
 ## Project setup
 ```
-npm install --legacy-peer-deps // needed for newer versions of node apparently.
+npm install
+```
+
+### Remember to update dependencies from time to time
+```
+ncu -u
+npm install
 ```
 
 ### Compiles and hot-reloads for development
@@ -13,11 +19,6 @@ npm run serve
 ### Compiles and minifies for production
 ```
 npm run build
-```
-
-### Run your unit tests
-```
-npm run test:unit
 ```
 
 ### Lints and fixes files

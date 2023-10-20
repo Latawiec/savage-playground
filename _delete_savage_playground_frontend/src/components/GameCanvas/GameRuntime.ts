@@ -1,6 +1,5 @@
 import { AssetStorage } from "./Assets/AssetStorage";
 import { GameCommunication } from "./Communication/GameCommuinication";
-import { GameUpdateEvent } from "./Communication/GameRuntime/ServerEvents/GameUpdateEvent";
 import { GameRenderer } from "./Rendering/GameRenderer";
 
 
@@ -24,11 +23,11 @@ export class GameRuntime {
     async initialize() {
         await this._assetStorage.downloadPackage(this._assetPackagePath);
         
-        this._communication.on('gameUpdate', this.onGameUpdate);
+        // this._communication.on('gameUpdate', this.onGameUpdate);
     }
 
-    private onGameUpdate(event: GameUpdateEvent) {
-        const worldSnapshot = event.snapshot;
-        this._renderer.render(worldSnapshot);
-    }
+    // private onGameUpdate(event: GameUpdateEvent) {
+    //     const worldSnapshot = event.snapshot;
+    //     this._renderer.render(worldSnapshot);
+    // }
 }

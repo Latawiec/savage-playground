@@ -1,4 +1,3 @@
-import { Serialization } from "@/Shared/WorldSnapshot";
 import { AssetStorage } from "../Assets/AssetStorage";
 import { CommitedResourceStorage } from "../Assets/Commited/CommitedResourceStorage";
 import { Camera, RawCamera } from "./Scene/Camera";
@@ -9,6 +8,7 @@ import { mat4, vec3, vec4 } from "gl-matrix";
 import { OutputTarget } from "./RenderTarget/OutputTarget";
 import { GBufferTarget } from "./RenderTarget/GBufferTarget";
 import { DrawTextureProgram } from "./Common/Programs/DrawTextureProgram";
+import { Serialization } from "../Common/WorldSnapshot";
 
 interface DrawRequest {
     draw(camera: Readonly<Camera>): void;
