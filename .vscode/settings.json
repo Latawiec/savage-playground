@@ -1,7 +1,6 @@
 {
     "rust-analyzer.linkedProjects": [
-        "./Cargo.toml",
-        "./Cargo.toml"
+        "./savage_playground_backend/Cargo.toml"
     ],
     "rust-analyzer.showUnlinkedFileNotification": false
 }
