@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::{
     prelude::{
         BuildChildren, Bundle, Children, Commands, Component, Entity, Plugin, Query, Res,
-        Transform, Update, Vec2, Vec3, With, Quat, EulerRot,
+        Transform, Update, Vec3, With, Quat, EulerRot,
     },
     time::{Time, Timer, TimerMode},
     transform::TransformBundle,

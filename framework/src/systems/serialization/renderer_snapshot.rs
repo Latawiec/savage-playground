@@ -1,4 +1,4 @@
-use bevy::prelude::{Entity, GlobalTransform, Query, ResMut, Resource, Event, EventWriter};
+use bevy::prelude::{Entity, GlobalTransform, Query, Event, EventWriter};
 use serde_json::json;
 
 use crate::components::rendering::drawable::{Sprite, Drawable};

@@ -1,4 +1,4 @@
-use std::io::{self, Write, Read};
+use std::io::{self, Write};
 
 fn main() {
     println!("Hello! Let's go!\n");

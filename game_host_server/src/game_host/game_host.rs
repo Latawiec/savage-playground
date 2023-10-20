@@ -2,7 +2,7 @@ use std::path::{PathBuf, Path};
 
 use crate::{instance::instance::Instance, server::{client::ClientID, room::RoomHandle, message::Message}};
 
-use super::message::{self, Response, Request};
+use super::message::{self, Request};
 
 mod error {
 
@@ -43,7 +43,7 @@ impl GameHost {
     pub async fn serve(&mut self) {
 
         let mut receiver = self.room_handle.receiver();
-        let mut sender = self.room_handle.sender();
+        let _sender = self.room_handle.sender();
 
         while let Ok(msg) = receiver.recv().await {
             match msg {
@@ -51,23 +51,23 @@ impl GameHost {
                     if let Some(request) = Self::parse_client_message(message) {
                         match request {
                             Request::StartGame { game_name } => {
-                                if self.owner_id != client_id {
-                                    let error = Err(error::GameAuthorithyError{ reason: "Only current game owner can start the game.".to_owned() });
+                                if self.game_owner != client_id {
+                                    // let _ = Err(error::GameAuthorithyError::NotAuthorized{ reason: "Only current game owner can start the game.".to_owned() });
                                     // Pass error somehow.
                                 }
                         
                                 let _ = self.start_game(game_name).await;
                             },
                             Request::SetGameOwner { new_game_owner } => {
-                                if self.owner_id != client_id {
-                                    let error = Err(error::GameAuthorithyError{ reason: "Only current game owner can assign a new owner.".to_owned() });
+                                if self.game_owner != client_id {
+                                    // let _ = Err(error::GameAuthorithyError::NotAuthorized{ reason: "Only current game owner can assign a new owner.".to_owned() });
                                     // Pass error somehow.
                                 }
                         
                                 self.set_game_owner(client_id, new_game_owner).await;
                             },
-                            Request::GameConfig { config } => todo!(),
-                            Request::GameInput { input } => todo!(),
+                            Request::GameConfig { config: _ } => todo!(),
+                            Request::GameInput { input: _ } => todo!(),
                         };
                     } else {
 
@@ -81,7 +81,7 @@ impl GameHost {
 
     fn parse_client_message(message: Message) -> Option<message::Request> {
         match message {
-            Message::Binary { data } => None, // I dont use binary format yet
+            Message::Binary { data: _ } => None, // I dont use binary format yet
             Message::Text { data } => {
                 match serde_json::from_str::<Request>(&data) {
                     Ok(request) => Some(request),
@@ -94,11 +94,11 @@ impl GameHost {
         }
     }
 
-    async fn set_game_owner(&mut self, client_id: u64, new_owner_id: u64) {
+    async fn set_game_owner(&mut self, _client_id: u64, new_owner_id: u64) {
         self.game_owner = new_owner_id;
     }
 
-    async fn start_game(&mut self, game_name: String) -> Result<Instance, error::GameInstanceError> {
+    async fn start_game(&mut self, _game_name: String) -> Result<Instance, error::GameInstanceError> {
         Err(error::GameInstanceError::Unknown)
     }
 

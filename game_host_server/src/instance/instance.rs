@@ -21,7 +21,7 @@ impl Drop for Instance {
 
 impl Instance {
     pub fn new(path: String) -> Result<Instance, Error> {
-        let mut process = match Command::new(&path)
+        let process = match Command::new(&path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

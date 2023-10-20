@@ -1,11 +1,11 @@
 use std::{
     collections::HashMap,
     net::SocketAddr,
-    sync::{atomic::AtomicU64, Arc, RwLock}, time::Duration,
+    sync::{atomic::AtomicU64, Arc, RwLock},
 };
 
-use clap::Error;
-use futures_util::future::ErrInto;
+
+
 use tokio::{
     sync::broadcast,
     task::JoinHandle,
@@ -14,7 +14,7 @@ use warp::Filter;
 
 use super::{
     client::ClientID,
-    room::{RoomHandle, RoomID, self}, message::{ServerMessage, ClientMessage},
+    room::{RoomHandle, RoomID}, message::{ServerMessage, ClientMessage},
 };
 
 #[derive(Clone)]
@@ -46,7 +46,7 @@ mod error {
     impl Reject for Error {}
 
     pub async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
-        if let Some(error) = r.find::<Error>() {
+        if let Some(_error) = r.find::<Error>() {
             Ok(warp::reply::with_status(
                 "NOT_IMPLEMENTED",
                 StatusCode::FORBIDDEN,
@@ -77,7 +77,7 @@ impl ServerHandle {
     }
 
     pub fn check_room_exists(&self, room_id: RoomID) -> bool {
-        if let Some(room_handle) = self.rooms.read().unwrap().get(&room_id) {
+        if let Some(_room_handle) = self.rooms.read().unwrap().get(&room_id) {
             true
         } else {
             false

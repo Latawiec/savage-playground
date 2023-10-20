@@ -1,9 +1,9 @@
-use std::{time::Duration, sync::{Arc, Mutex}};
+
 
 use instance::instance::Instance;
 use server::{server::ServerHandle, message::Message};
 use tracing_subscriber::fmt::format::FmtSpan;
-use tokio::{runtime::{Runtime, Handle}, io::AsyncReadExt, io::AsyncWriteExt};
+use tokio::{io::AsyncReadExt, io::AsyncWriteExt};
 
 
 mod config;
@@ -31,7 +31,7 @@ async fn main() {
         let mut receiver = server.subscribe();
         while let Ok(notification) = receiver.recv().await {
             match notification {
-                server::server::ServerNotification::RoomCreated { room_id, client_id } => {
+                server::server::ServerNotification::RoomCreated { room_id, client_id: _ } => {
                     if let Some((mut receiver, sender)) = server.get_room_channels(room_id) {
                         let mut process = Instance::new("/mnt/b981039f-fbe8-4a78-be47-2fd24cb3be26/Programing/RustTesting/savage_playground/target/debug/debug".to_owned()).unwrap();
                         let (mut stdin, mut stdout, mut _stderr) = (process.take_stdin().unwrap(), process.take_stdout().unwrap(), process.take_stderr().unwrap());
@@ -82,7 +82,7 @@ async fn main() {
                         });
                     }
                 },
-                server::server::ServerNotification::RoomClosed { room_id } => {
+                server::server::ServerNotification::RoomClosed { room_id: _ } => {
                     
                 },
                 server::server::ServerNotification::RoomEmpty { room_id } => {
