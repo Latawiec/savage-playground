@@ -1,6 +1,5 @@
 import { strict as assert } from 'assert';
 import { AssetStorage } from '../AssetStorage';
-import { UuidGenerator } from '../../../../Shared/UuidGenerator'
 
 export enum ShaderType {
     PIXEL = WebGLRenderingContext.FRAGMENT_SHADER,

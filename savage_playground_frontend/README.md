@@ -5,6 +5,12 @@
 npm install
 ```
 
+### Remember to update dependencies from time to time
+```
+ncu -u
+npm install
+```
+
 ### Compiles and hot-reloads for development
 ```
 npm run serve
