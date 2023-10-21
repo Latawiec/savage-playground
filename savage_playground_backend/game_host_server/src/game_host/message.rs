@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-use crate::server::client::ClientID;
+use crate::room_server::client::ClientID;
 
 
 #[derive(Serialize, Deserialize)]

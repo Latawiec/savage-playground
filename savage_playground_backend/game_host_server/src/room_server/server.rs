@@ -4,8 +4,6 @@ use std::{
     sync::{atomic::AtomicU64, Arc, RwLock},
 };
 
-
-
 use tokio::{
     sync::broadcast,
     task::JoinHandle,
@@ -18,16 +16,16 @@ use super::{
 };
 
 #[derive(Clone)]
-pub enum ServerNotification {
+pub enum RoomServerNotification {
     RoomCreated{ room_id: RoomID, client_id: ClientID },
     RoomEmpty{ room_id: RoomID },
     RoomClosed{ room_id: RoomID },
 }
 
 #[derive(Clone)]
-pub struct ServerHandle {
+pub struct RoomServerHandle {
     pub addr: SocketAddr,
-    server_notification_sender: broadcast::Sender<ServerNotification>,
+    server_notification_sender: broadcast::Sender<RoomServerNotification>,
     rooms: Arc<RwLock<HashMap<RoomID, RoomHandle>>>,
 }
 
@@ -57,7 +55,7 @@ mod error {
     }
 }
 
-impl ServerHandle {
+impl RoomServerHandle {
     const SERVER_NOTIFICATION_CHANNEL_CAPACITY: usize = 128;
 
     pub fn get_room_channels(&self, room_id: RoomID) -> Option<(broadcast::Receiver<ClientMessage>, broadcast::Sender<ServerMessage>)> {
@@ -97,7 +95,7 @@ impl ServerHandle {
         }
     }
 
-    pub fn subscribe(&self) -> broadcast::Receiver<ServerNotification> {
+    pub fn subscribe(&self) -> broadcast::Receiver<RoomServerNotification> {
         self.server_notification_sender.subscribe()
     }
 
@@ -105,18 +103,18 @@ impl ServerHandle {
         self.rooms.write().unwrap().remove(&room_id).is_some()
     }
 
-    pub fn new(server_address: SocketAddr) -> (ServerHandle, JoinHandle<()>) {
+    pub fn new(server_address: SocketAddr) -> (RoomServerHandle, JoinHandle<()>) {
 
         let room_id_gen: Arc<AtomicU64> = Default::default();
         let client_id_gen: Arc<AtomicU64> = Default::default();
-        let (server_notification_sender, _) = broadcast::channel::<ServerNotification>(Self::SERVER_NOTIFICATION_CHANNEL_CAPACITY);
+        let (server_notification_sender, _) = broadcast::channel::<RoomServerNotification>(Self::SERVER_NOTIFICATION_CHANNEL_CAPACITY);
 
         let room_id_gen_filter =
             warp::any().map(move || { room_id_gen.fetch_add(1, std::sync::atomic::Ordering::Relaxed) });
         let client_id_gen_filter = warp::any()
             .map(move || client_id_gen.fetch_add(1, std::sync::atomic::Ordering::Relaxed));
 
-        let server_handle = ServerHandle {
+        let server_handle = RoomServerHandle {
             addr: server_address,
             server_notification_sender,
             rooms: Default::default(),
@@ -156,7 +154,7 @@ impl ServerHandle {
         client_id: ClientID,
         ws: warp::ws::Ws,
         addr: Option<SocketAddr>,
-        server_handle: ServerHandle,
+        server_handle: RoomServerHandle,
     ) -> Result<impl warp::Reply, warp::Rejection> {
         if let None = server_handle.get_room_handle(room_id) {
             return Err(warp::reject::custom(error::Error::RoomDoesNotExist));
@@ -184,7 +182,7 @@ impl ServerHandle {
         client_id: ClientID,
         ws: warp::ws::Ws,
         addr: Option<SocketAddr>,
-        server_handle: ServerHandle,
+        server_handle: RoomServerHandle,
     ) -> Result<impl warp::Reply, warp::Rejection> {
         {
             if server_handle.check_room_exists(room_id) {
@@ -193,7 +191,7 @@ impl ServerHandle {
 
             let new_room = RoomHandle::new(room_id);
             server_handle.insert_room_handle(room_id, new_room.clone());
-            let _ = server_handle.server_notification_sender.send(ServerNotification::RoomCreated { room_id, client_id });
+            let _ = server_handle.server_notification_sender.send(RoomServerNotification::RoomCreated { room_id, client_id });
 
             tokio::spawn(Self::empty_room_watch(server_handle.clone(), new_room.clone()));
         }
@@ -207,13 +205,13 @@ impl ServerHandle {
         ).await
     }
 
-    async fn empty_room_watch(server_handle: ServerHandle, room_handle: RoomHandle) {
+    async fn empty_room_watch(server_handle: RoomServerHandle, room_handle: RoomHandle) {
         let mut receiver = room_handle.receiver();
         while let Ok(msg) = receiver.recv().await {
             match msg {
                 ClientMessage::LeftRoom { client_id: _, room_id } => {
                     if room_handle.is_empty() {
-                        let _ = server_handle.server_notification_sender.send(ServerNotification::RoomEmpty { room_id });
+                        let _ = server_handle.server_notification_sender.send(RoomServerNotification::RoomEmpty { room_id });
                     }
                 },
                 _ => {},

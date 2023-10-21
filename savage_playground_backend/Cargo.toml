@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "build_utils",
     "debug",
     "framework",
     "testing",
@@ -12,7 +13,7 @@ members = [
 [workspace.dependencies]
 bevy = { version = "*", features = ["dynamic_linking"] }
 tokio = { version = "1.32.0", features = ["process", "rt-multi-thread", "tracing", "macros", "test-util", "signal", "sync"] }
-serde = { version = "*" }
+serde = { version = "*", features = ["derive"] }
 serde_json = { version = "*" }
 
 # Enable a small amount of optimization in debug mode
@@ -22,3 +23,5 @@ opt-level = 1
 # Enable high optimizations for dependencies (incl. Bevy)
 [profile.dev.package."*"]
 opt-level = 3
+
+

@@ -2,7 +2,7 @@ use std::path::{PathBuf, Path};
 
 use tokio::{process::{ChildStdin, ChildStdout, ChildStderr}, io::AsyncWriteExt};
 
-use crate::{instance::instance::Instance, server::{client::ClientID, room::RoomHandle, message::Message}};
+use crate::{instance::instance::Instance, room_server::{client::ClientID, room::RoomHandle, message::Message}};
 
 use super::message::{self, Request};
 
@@ -67,7 +67,7 @@ impl GameHost {
 
         while let Ok(msg) = receiver.recv().await {
             match msg {
-                crate::server::message::ClientMessage::Data { client_id, message } => {
+                crate::room_server::message::ClientMessage::Data { client_id, message } => {
                     if let Some(request) = Self::parse_client_message(message) {
                         match request {
                             Request::StartGame { game_name } => {
