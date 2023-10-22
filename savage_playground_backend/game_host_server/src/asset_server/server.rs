@@ -33,13 +33,13 @@ pub struct AssetServerHandle {
 impl AssetServerHandle {
     
     pub fn new(server_address: SocketAddr) -> (AssetServerHandle, JoinHandle<()>) {
-        const ASSETS_SERVER_ASETS_DIR_ENV_VAR: &str = "ASSETS_SERVER_ASETS_DIR";
+        const ASSETS_SERVER_ASSETS_DIR_ENV_VAR: &str = "ASSETS_SERVER_ASSETS_DIR";
         const ASSETS_MAPPING_FILE_ENV_VAR: &str = "ASSETS_SERVER_MAPPING_FILE";
 
-        let assets_dir = match std::env::var(ASSETS_SERVER_ASETS_DIR_ENV_VAR) {
+        let assets_dir = match std::env::var(ASSETS_SERVER_ASSETS_DIR_ENV_VAR) {
             Ok(path) => path,
             Err(_) => {
-                tracing::error!("{} undefined. Probably won't find any assets because of that.", ASSETS_SERVER_ASETS_DIR_ENV_VAR);
+                tracing::error!("{} undefined. Probably won't find any assets because of that.", ASSETS_SERVER_ASSETS_DIR_ENV_VAR);
                 "".to_owned()    
             },
         };

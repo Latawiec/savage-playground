@@ -6,5 +6,5 @@ linker = "clang"
 rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold"]
 
 [env]
-ASSETS_SERVER_ASETS_DIR = { value = "./assets", relative = true }
+ASSETS_SERVER_ASSETS_DIR = { value = "./assets", relative = true }
 ASSETS_SERVER_MAPPING_FILE = { value = "./assets/game_assets_mapping.json", relative = true }
