@@ -1,10 +1,11 @@
 use bevy::input::keyboard;
+use bevy::window::PresentMode;
 use bevy::{app::ScheduleRunnerPlugin, utils::Duration, prelude::*};
 
 pub mod components;
 pub mod resources;
 
-use components::ball::{Ball, Direction};
+use components::ball::{Ball};
 use components::palette::{Palette, Side};
 use resources::settings::Settings;
 
@@ -23,7 +24,8 @@ fn main() {
         }))
         .insert_resource(Settings{ resolution: [1280, 960] })
         .add_systems(Startup, setup)
-        .add_systems(Update, (move_palletes, move_ball))
+        .add_systems(FixedUpdate, (move_palletes, move_ball))
+        .insert_resource(FixedTime::new_from_secs(1./60.))
         .run();
 }
 
@@ -58,10 +60,10 @@ fn setup(mut commands: Commands, app_settings: Res<Settings>) {
         },
         transform: Transform::from_translation(Vec3::new(0., 0., 0.)),
         ..default()
-    }, Ball{direction: Direction::Left, speed: 5.}));
+    }, Ball{velocity: [1., 0.], speed: 5.}));
 }
 
-const MOVE_SPEED: f32 = 4.0;
+const MOVE_SPEED: f32 = 8.0;
 
 fn move_palletes(mut query: Query<(&Palette, &mut Transform, &Sprite)>, keyboard_input: Res<Input<KeyCode>>, app_settings: Res<Settings>) {
     let top_edge = app_settings.resolution[1] as f32 / 2.;
@@ -83,19 +85,55 @@ fn move_palletes(mut query: Query<(&Palette, &mut Transform, &Sprite)>, keyboard
     }
 }
 
-fn move_ball(mut query: Query<(&mut Ball, &mut Transform, &Sprite)>, palletes: Query<(&Palette, &Transform, &Sprite)>, app_settings: Res<Settings>) {
-    for (ball, transform, sprite) in query.iter_mut() {
+fn move_ball(mut query: Query<(&mut Ball, &mut Transform, &Sprite), Without<Palette>>, palletes: Query<(&Palette, &Transform, &Sprite), Without<Ball>>, app_settings: Res<Settings>) {
+    let top_edge = app_settings.resolution[1] as f32 / 2.;
+    let bottom_edge = -(app_settings.resolution[1] as f32 / 2.);
+    let left_edge = -(app_settings.resolution[0] as f32 / 2.);
+    let right_edge = app_settings.resolution[0] as f32 / 2.;
+
+    for (mut ball, mut transform, sprite) in query.iter_mut() {
         let half_width = sprite.custom_size.unwrap()[0] / 2.;
         let half_height = sprite.custom_size.unwrap()[1] / 2.;
 
-        for (pal, pal_transform, pal_sprite) in palletes.iter() {
+        let ball_l = transform.translation.x - half_width;
+        let ball_r = transform.translation.x + half_width;
+        let ball_t = transform.translation.y + half_height;
+        let ball_b = transform.translation.y - half_height;
+
+        for (_, pal_transform, pal_sprite) in palletes.iter() {
             let pal_half_width = pal_sprite.custom_size.unwrap()[0] / 2.;
             let pal_half_height = pal_sprite.custom_size.unwrap()[1] / 2.;
-        if pal.side == Side::Left {
-                if transform.translation.x - half_width < pal_transform.translation.x + pal_half_width {
-                    if transform.translation.y + half_height < pal_transform + pal_half_height a
-                }
+
+            let pal_l = pal_transform.translation.x - pal_half_width;
+            let pal_r = pal_transform.translation.x + pal_half_width;
+            let pal_t = pal_transform.translation.y + pal_half_height;
+            let pal_b = pal_transform.translation.y - pal_half_height;
+
+            if pal_l <= ball_r && pal_r >= ball_l && pal_t >= ball_b && pal_b <= ball_t {
+                let x = transform.translation.x - pal_transform.translation.x;
+                let y = transform.translation.y - pal_transform.translation.y;
+
+                let len = (x*x + y*y).sqrt();
+                let x = x/len;
+                let y = y/len;
+
+                ball.velocity = [x,y];
+                ball.speed *= 1.1;
             }
         }
+
+        if transform.translation.y + half_height > top_edge || transform.translation.y - half_height < bottom_edge {
+            ball.velocity[1] = -ball.velocity[1];
+        }
+
+        if transform.translation.x < left_edge || transform.translation.x > right_edge {
+            transform.translation.x = 0.;
+            transform.translation.y = 0.;
+            ball.velocity[0] = -ball.velocity[0];
+            ball.speed = 5.;
+        }
+
+        transform.translation.x += ball.velocity[0] * ball.speed;
+        transform.translation.y += ball.velocity[1] * ball.speed;
     }
 }
