@@ -3,13 +3,13 @@ use std::sync::mpsc::sync_channel;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
+use framework::debug::local_input::LocalPlayerInput;
+use framework::io::resource::PlayerInputManager;
 use framework::plugin::FrameworkPlugin;
 use framework::{
     blueprints::player::Player,
     components::player::{jobs::PALADIN, raid_roles::RaidRole},
-    debug::local_input::LocalInput,
     resources::{
-        io::input::{InputManager, NewInput},
         world::environment::EnvironmentConfig,
     },
     types::player::new_player_id,
@@ -45,10 +45,9 @@ struct TestWall;
 
 fn create_test_stuff(mut commands: Commands) {
     let player_id = new_player_id();
-    let (tx, rx) = sync_channel::<NewInput>(10);
 
-    let local_input_res = LocalInput::new(player_id, tx);
-    let input_manager = InputManager::new(rx);
+    let local_input_res = LocalPlayerInput{ player_id };
+    let input_manager = PlayerInputManager::default();
     let environment = EnvironmentConfig {
         forward: Vec2::new(0.0, 1.0),
         right: Vec2::new(1.0, 0.0),

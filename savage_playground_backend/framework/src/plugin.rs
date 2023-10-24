@@ -32,7 +32,7 @@ impl Plugin for FrameworkPlugin {
             )
             .add_systems(
                 Update,
-                systems::player::player_input_system::player_input_system,
+                systems::player::player_input_system::player_motion_input_system,
             )
             .add_systems(Update, systems::player::rendering::player_sprite_update);
 

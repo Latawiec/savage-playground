@@ -1,42 +1,35 @@
-use bevy::prelude::{Query, Res, ResMut, Vec2};
+use bevy::prelude::{Query, Res, Vec2};
 
 use crate::{
     components::{collision::probed_rigid_body::ProbedRigidBody, player::identity::Identity},
     resources::{
-        io::input::{InputManager, KeyFlag},
         world::environment::EnvironmentConfig,
-    },
+    }, io::{resource::PlayerInputManager, default_key_flags::DefaultKeyFlags},
 };
 
-pub fn player_input_system(
+pub fn player_motion_input_system(
     environment: Res<EnvironmentConfig>,
-    mut input_manager: ResMut<InputManager>,
+    mut input_manager: Res<PlayerInputManager>,
     mut players: Query<(&mut ProbedRigidBody, &Identity)>,
 ) {
-    // Process new input first.
-    if !input_manager.process_input() {
-        tracing::error!("Couldn't process input.");
-        return;
-    }
-
     // Apply inputs.
     for (mut rigid_body, identity) in players.iter_mut() {
         let player_id = &identity.id;
 
-        if let Some(input) = input_manager.players_input.get(player_id) {
+        if let Some(input) = input_manager.get_input_state(&player_id) {
             if input.changed() {
                 // Motion.
                 let mut new_direction = Vec2::new(0.0, 0.0);
-                if input.is_key_down(KeyFlag::Up) {
+                if input.is_key_down(DefaultKeyFlags::Up.into()) {
                     new_direction += environment.forward;
                 }
-                if input.is_key_down(KeyFlag::Down) {
+                if input.is_key_down(DefaultKeyFlags::Down.into()) {
                     new_direction -= environment.forward;
                 }
-                if input.is_key_down(KeyFlag::Right) {
+                if input.is_key_down(DefaultKeyFlags::Right.into()) {
                     new_direction += environment.right;
                 }
-                if input.is_key_down(KeyFlag::Left) {
+                if input.is_key_down(DefaultKeyFlags::Left.into()) {
                     new_direction -= environment.right;
                 }
 

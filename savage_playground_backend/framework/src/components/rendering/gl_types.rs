@@ -1,3 +1,4 @@
+
 pub type float = f32;
 pub type vec2 = (float, float);
 pub type vec3 = (float, float, float);

@@ -3,31 +3,23 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use bevy::prelude::{Input, KeyCode, Res, Resource, Plugin, PreUpdate};
+use bevy::prelude::{Input, KeyCode, Res, Resource, Plugin, PreUpdate, EventWriter};
+use uuid::Uuid;
 
 use crate::{
-    resources::io::input::{InputStateFlags, KeyFlag, NewInput},
-    types::player::PlayerID,
+    types::player::PlayerID, io::{event::PlayerInputEvent, input::InputStateFlags, default_key_flags::DefaultKeyFlags},
 };
 
 #[derive(Resource)]
-pub struct LocalInput {
-    sender: SyncSender<NewInput>,
+pub struct LocalPlayerInput {
     pub player_id: PlayerID,
 }
 
-impl LocalInput {
-    pub fn new(player_id: PlayerID, sender: SyncSender<NewInput>) -> LocalInput {
-        LocalInput { sender, player_id }
-    }
-    pub fn new_input(&self, input: NewInput) {
-        self.sender
-            .send(input)
-            .expect("Couldn't send debug local input");
-    }
-}
-
-pub fn local_input_system(keys: Res<Input<KeyCode>>, local_input: Res<LocalInput>) {
+pub fn local_player_input_system(
+    mut ev_player_input: EventWriter<PlayerInputEvent>,
+    keys: Res<Input<KeyCode>>,
+    res_local_player_input: Res<LocalPlayerInput>,
+) {
     let start = SystemTime::now();
     let since_the_epoch = start
         .duration_since(UNIX_EPOCH)
@@ -48,24 +40,25 @@ pub fn local_input_system(keys: Res<Input<KeyCode>>, local_input: Res<LocalInput
     }
 
     if keys.pressed(KeyCode::W) {
-        keys_state |= KeyFlag::Up as InputStateFlags;
+        keys_state |= DefaultKeyFlags::Up as InputStateFlags;
     }
     if keys.pressed(KeyCode::A) {
-        keys_state |= KeyFlag::Left as InputStateFlags;
+        keys_state |= DefaultKeyFlags::Left as InputStateFlags;
     }
     if keys.pressed(KeyCode::S) {
-        keys_state |= KeyFlag::Down as InputStateFlags;
+        keys_state |= DefaultKeyFlags::Down as InputStateFlags;
     }
     if keys.pressed(KeyCode::D) {
-        keys_state |= KeyFlag::Right as InputStateFlags;
+        keys_state |= DefaultKeyFlags::Right as InputStateFlags;
     }
 
-    let mut new_input = NewInput::default();
-    new_input.timestamp = since_the_epoch;
-    new_input.player_id = local_input.player_id;
-    new_input.new_state = keys_state;
-
-    local_input.new_input(new_input);
+    let input_event = PlayerInputEvent {
+        timestamp: since_the_epoch,
+        player_id: res_local_player_input.player_id,
+        new_state: keys_state,
+    };
+    
+    ev_player_input.send(input_event);
 }
 
 
@@ -73,6 +66,6 @@ pub fn local_input_system(keys: Res<Input<KeyCode>>, local_input: Res<LocalInput
 pub struct LocalInputPlugin;
 impl Plugin for LocalInputPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(PreUpdate, local_input_system);
+        app.add_systems(PreUpdate, local_player_input_system);
     }
 }
