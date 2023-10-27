@@ -1,8 +1,14 @@
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
-use tokio::{process::{ChildStdin, ChildStdout, ChildStderr}, io::AsyncWriteExt};
+use tokio::{
+    io::AsyncWriteExt,
+    process::{ChildStderr, ChildStdin, ChildStdout},
+};
 
-use crate::{instance::instance::Instance, room_server::{client::ClientID, room::RoomHandle, message::Message}};
+use crate::{
+    instance::instance::Instance,
+    room_server::{client::ClientID, message::Message, room::RoomHandle},
+};
 
 use super::message::{self, Request};
 
@@ -15,7 +21,7 @@ mod error {
         FileContentIllFormed { resason: String },
         GameNotFound { reason: String },
     }
-    
+
     #[derive(Debug)]
     pub enum GameAuthorithyError {
         NotAuthorized { reason: String },
@@ -23,7 +29,7 @@ mod error {
 
     #[derive(Debug)]
     pub enum GameInstanceError {
-        Unknown { reason: String }
+        Unknown { reason: String },
     }
 
     #[derive(Debug)]
@@ -61,7 +67,6 @@ impl GameHost {
     }
 
     pub async fn serve(&mut self) {
-
         let mut receiver = self.room_handle.receiver();
         let _sender = self.room_handle.sender();
 
@@ -96,7 +101,7 @@ impl GameHost {
                                 self.game_stderr = game_instance.take_stderr();
                                 self.game_instance = Some(game_instance);
                                 self.game_dir = Some(game_path);
-                            },
+                            }
                             Request::StopGame => {
                                 if self.game_owner != client_id {
                                     // let _ = Err(error::GameAuthorithyError::NotAuthorized{ reason: "Only current game owner can start the game.".to_owned() });
@@ -114,24 +119,23 @@ impl GameHost {
                                 self.game_stdout = None;
                                 self.game_stderr = None;
                                 self.game_instance = None;
-
-                            },
+                            }
                             Request::SetGameOwner { new_game_owner } => {
                                 if self.game_owner != client_id {
                                     // let _ = Err(error::GameAuthorithyError::NotAuthorized{ reason: "Only current game owner can assign a new owner.".to_owned() });
                                     // Pass error somehow.
                                     return;
                                 }
-                        
+
                                 self.set_game_owner(client_id, new_game_owner).await;
-                            },
+                            }
                             Request::GameMessage { message } => {
                                 if self.game_instance.is_none() {
                                     // Err(error::GameError::NoGameRunning);
                                     // Pass error somehow
                                     return;
                                 }
-                                
+
                                 let stdin = self.game_stdin.as_mut();
                                 if stdin.is_none() {
                                     // Err(error::GameError::StdInClosed);
@@ -147,23 +151,20 @@ impl GameHost {
                     } else {
                         tracing::warn!("Unsupported message format");
                     }
-                },
-                _ => {},
+                }
+                _ => {}
             };
         }
-        
     }
 
     fn parse_client_message(message: Message) -> Option<message::Request> {
         match message {
             Message::Binary { data: _ } => None, // I dont use binary format yet
-            Message::Text { data } => {
-                match serde_json::from_str::<Request>(&data) {
-                    Ok(request) => Some(request),
-                    Err(err) => {
-                        tracing::error!("Couldn't deserialize message: {:?}", err);
-                        None
-                    },
+            Message::Text { data } => match serde_json::from_str::<Request>(&data) {
+                Ok(request) => Some(request),
+                Err(err) => {
+                    tracing::error!("Couldn't deserialize message: {:?}", err);
+                    None
                 }
             },
         }
@@ -176,12 +177,14 @@ impl GameHost {
     async fn try_start_game(game_dir: &Path) -> Result<Instance, error::GameInstanceError> {
         match Instance::new(&game_dir) {
             Ok(instance) => Ok(instance),
-            Err(error) => {
-                match error {
-                    crate::instance::instance::Error::StartupError { reason } => Err(error::GameInstanceError::Unknown { reason }),
-                    crate::instance::instance::Error::ProcessError { reason } => Err(error::GameInstanceError::Unknown { reason }),
+            Err(error) => match error {
+                crate::instance::instance::Error::StartupError { reason } => {
+                    Err(error::GameInstanceError::Unknown { reason })
                 }
-            }
+                crate::instance::instance::Error::ProcessError { reason } => {
+                    Err(error::GameInstanceError::Unknown { reason })
+                }
+            },
         }
     }
 
@@ -193,13 +196,17 @@ impl GameHost {
                 match serde_json::from_str::<serde_json::Value>(&game_dir_mapping) {
                     Ok(mapping) => mapping,
                     Err(error) => {
-                        return Err(error::GamesMappingError::FileContentIllFormed { resason: error.to_string() });
-                    },
+                        return Err(error::GamesMappingError::FileContentIllFormed {
+                            resason: error.to_string(),
+                        });
+                    }
                 }
-            },
+            }
             Err(error) => {
-                return Err(error::GamesMappingError::GameMappingFileError { reason: error.to_string() });
-            },
+                return Err(error::GamesMappingError::GameMappingFileError {
+                    reason: error.to_string(),
+                });
+            }
         };
 
         let game_dir = match games_mapping_json.as_object() {
@@ -207,32 +214,42 @@ impl GameHost {
                 if let Some(game_dir) = game_dir_map.get(game_name) {
                     game_dir
                 } else {
-                    return Err(error::GamesMappingError::GameNotFound { reason: format!("Game {} doesn't exist in the mapping.", game_name) });
+                    return Err(error::GamesMappingError::GameNotFound {
+                        reason: format!("Game {} doesn't exist in the mapping.", game_name),
+                    });
                 }
-            },
+            }
             None => {
-                return Err(error::GamesMappingError::FileContentIllFormed { resason: "Expected object as root of the mapping".to_owned() });
-            },
+                return Err(error::GamesMappingError::FileContentIllFormed {
+                    resason: "Expected object as root of the mapping".to_owned(),
+                });
+            }
         };
 
         let game_dir = match game_dir {
             serde_json::Value::String(game_dir) => game_dir,
             _ => {
-                return Err(error::GamesMappingError::FileContentIllFormed { resason: "Expected String as game mapping".to_owned() });
-            },
+                return Err(error::GamesMappingError::FileContentIllFormed {
+                    resason: "Expected String as game mapping".to_owned(),
+                });
+            }
         };
 
         let game_dir_path = Path::new(game_dir);
 
         if !tokio::fs::try_exists(game_dir_path).await.unwrap() {
-            return Err(error::GamesMappingError::GameDirError { reason: "Directory does not exist".to_owned() });
+            return Err(error::GamesMappingError::GameDirError {
+                reason: "Directory does not exist".to_owned(),
+            });
         }
 
         // Can't find tokio replacement for this one.
         if !game_dir_path.is_dir() {
-            return Err(error::GamesMappingError::GameDirError { reason: "Path doesn't point to a directory".to_owned() });
+            return Err(error::GamesMappingError::GameDirError {
+                reason: "Path doesn't point to a directory".to_owned(),
+            });
         }
-        
+
         Ok(game_dir_path.to_owned())
     }
 }

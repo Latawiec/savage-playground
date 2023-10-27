@@ -2,17 +2,20 @@ use std::time::Duration;
 
 use bevy::{
     prelude::{
-        BuildChildren, Bundle, Children, Commands, Component, Entity, Plugin, Query, Res,
-        Transform, Update, Vec3, With, Quat, EulerRot,
+        BuildChildren, Bundle, Children, Commands, Component, Entity, EulerRot, Plugin, Quat,
+        Query, Res, Transform, Update, Vec3, With,
     },
     time::{Time, Timer, TimerMode},
     transform::TransformBundle,
 };
 use bevy_rapier2d::prelude::RapierContext;
-use framework::{
-    components::{collision::aoe::AreaOfEffectBundle, lifetime::SelfDestruct},
-    types::environment::WorldDirection,
-    utils::rand::{rnd_two_of_vec, rnd_one_of_vec},
+use framework::game::{
+    collision::component::aoe::AreaOfEffectBundle,
+    common::{
+        direction_type::WorldDirection,
+        utils::rand::{rnd_one_of_vec, rnd_two_of_vec},
+    },
+    lifetime::component::SelfDestruct,
 };
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -144,7 +147,7 @@ impl RubyGlowOne {
             } else {
                 position.vec() * Self::POISON_FAR_DISTANCE
             }
-        }; 
+        };
 
         let transform =
             TransformBundle::from_transform(Transform::from_xyz(position.x, position.y, 0.0));
@@ -262,7 +265,7 @@ pub struct RubyGlowTwo;
 
 impl RubyGlowTwo {
     const TOPAZ_POSITIONS_DIR: [WorldDirection; 4] = WorldDirection::INTERCARDINALS;
-    
+
     const POISON_START_RADIUS: f32 = 40.0;
     const POISON_END_RADIUS: f32 = 250.0;
     const POISON_GROWTH_START: Duration = Duration::new(5, 0);
@@ -274,8 +277,9 @@ impl RubyGlowTwo {
     const EXPLOSION_LIFETIME: Duration = Duration::new(13, 0);
 
     fn explode_topaz(rotation: f32) -> ExplodeTopazBundle {
-        let transform =
-            TransformBundle::from_transform(Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, rotation, 0.0)));
+        let transform = TransformBundle::from_transform(Transform::from_rotation(
+            Quat::from_euler(EulerRot::XYZ, 0.0, rotation, 0.0),
+        ));
 
         ExplodeTopazBundle {
             topaz: ExplodeTopaz::new(Self::EXPLOSION_COUNTODOWN),
@@ -285,7 +289,6 @@ impl RubyGlowTwo {
         }
     }
 }
-
 
 #[derive(Default)]
 pub struct RubyGlowPlugin;

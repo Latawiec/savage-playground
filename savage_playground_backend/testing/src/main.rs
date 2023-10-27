@@ -3,18 +3,14 @@ use std::sync::mpsc::sync_channel;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use framework::debug::local_input::LocalPlayerInput;
+use framework::game::blueprints::player_blueprint::Player;
+use framework::game::common::player_type::new_player_id;
+use framework::game::debug::local_input::LocalPlayerInput;
+use framework::game::player::component::jobs::PALADIN;
+use framework::game::player::component::raid_roles::RaidRole;
+use framework::game::world::resource::EnvironmentConfig;
 use framework::io::resource::PlayerInputManager;
 use framework::plugin::FrameworkPlugin;
-use framework::{
-    blueprints::player::Player,
-    components::player::{jobs::PALADIN, raid_roles::RaidRole},
-    resources::{
-        world::environment::EnvironmentConfig,
-    },
-    types::player::new_player_id,
-};
-
 use worlds::mechanics::ruby_glow::{RubyGlowOne, RubyGlowPlugin};
 use worlds::mechanics::towers::TowersMechanicPlugin;
 

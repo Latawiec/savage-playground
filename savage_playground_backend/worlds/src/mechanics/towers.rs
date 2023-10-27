@@ -7,15 +7,15 @@ use bevy::{
     transform::TransformBundle,
 };
 use bevy_rapier2d::prelude::RapierContext;
-use framework::{
-    components::{
-        collision::{aoe::AreaOfEffectBundle, tags::PlayerHitboxTag},
-        lifetime::SelfDestruct,
-        player::identity::Identity,
+
+use framework::game::{
+    collision::component::{aoe::AreaOfEffectBundle, tags::PlayerHitboxTag},
+    common::{
+        direction_type::WorldDirection,
+        utils::{locals::EntitySetTracker, rand::rnd_two_of_vec},
     },
-    systems::lifetime::self_destruct_system,
-    types::environment::WorldDirection,
-    utils::{locals::EntitySetTracker, rand::rnd_two_of_vec},
+    lifetime::component::SelfDestruct,
+    player::component::identity::Identity,
 };
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -223,8 +223,7 @@ impl Plugin for TowersMechanicPlugin {
         app.add_event::<PlayerHitEvent>()
             .add_event::<PlayerPoisonEvent>()
             .add_systems(Update, check)
-            .add_systems(Update, update)
-            .add_systems(PostUpdate, self_destruct_system);
+            .add_systems(Update, update);
     }
 }
 

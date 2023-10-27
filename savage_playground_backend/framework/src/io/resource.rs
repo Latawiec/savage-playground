@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use bevy::prelude::Resource;
 
-use crate::types::player::PlayerID;
+use crate::game::common::player_type::PlayerID;
 
 use super::input::{InputState, InputStateFlags};
 

@@ -17,3 +17,8 @@ bevy = { workspace = true }
 [dependencies.bevy_rapier2d]
 version = "*"
 features = ["debug-render-2d", "simd-stable"]
+
+[features]
+debug_collider_renderer = []
+debug_local_input = []
+debug_diagnostics = []

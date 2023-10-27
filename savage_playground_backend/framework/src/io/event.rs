@@ -1,7 +1,8 @@
 use bevy::prelude::Event;
 
+use crate::game::common::player_type::PlayerID;
+
 use super::input::InputStateFlags;
-use crate::types::player::PlayerID;
 
 #[derive(Event)]
 pub struct PlayerInputEvent {
