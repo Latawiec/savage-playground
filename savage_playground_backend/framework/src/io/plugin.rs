@@ -1,15 +1,17 @@
-use bevy::prelude::{Plugin, First};
+use bevy::prelude::{Last, Plugin};
 
-use super::{resource::PlayerInputManager, event::PlayerInputEvent, system::input_system};
-
+use super::{
+    event::{GameInputMessage, GameOutputMessage},
+    system::io_exchange_system,
+};
 
 #[derive(Default)]
 pub struct IOPlugin;
 impl Plugin for IOPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app
-            .insert_resource(PlayerInputManager::default())
-            .add_event::<PlayerInputEvent>()
-            .add_systems(First, input_system);
+            .add_event::<GameInputMessage>()
+            .add_event::<GameOutputMessage>()
+            .add_systems(Last, io_exchange_system);
     }
 }

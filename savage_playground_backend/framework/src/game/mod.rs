@@ -2,6 +2,7 @@ pub mod aggro;
 pub mod blueprints;
 pub mod collision;
 pub mod common;
+pub mod io;
 pub mod lifetime;
 pub mod player;
 pub mod rendering;

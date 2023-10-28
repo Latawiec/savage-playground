@@ -3,13 +3,14 @@ use bevy::prelude::{Parent, Query, Res, Vec2};
 use crate::{
     game::{
         collision::component::probed_rigid_body::ProbedRigidBody,
+        io::resource::PlayerInputManager,
         rendering::component::{
             drawable::Sprite,
             sprites::{MovementDirection, PlayerSprite},
         },
         world::resource::EnvironmentConfig,
     },
-    io::{default_key_flags::DefaultKeyFlags, resource::PlayerInputManager},
+    io::default_key_flags::DefaultKeyFlags,
 };
 
 use super::component::identity::Identity;

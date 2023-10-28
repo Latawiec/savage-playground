@@ -3,8 +3,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use bevy::prelude::{EventWriter, Input, KeyCode, Plugin, PreUpdate, Res, Resource};
 
 use crate::{
-    game::common::player_type::PlayerID,
-    io::{default_key_flags::DefaultKeyFlags, event::PlayerInputEvent, input::InputStateFlags},
+    game::{common::player_type::PlayerID, io::event::PlayerInputEvent},
+    io::{default_key_flags::DefaultKeyFlags, input::InputStateFlags},
 };
 
 #[derive(Resource)]

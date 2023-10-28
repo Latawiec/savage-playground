@@ -1,27 +1,25 @@
-use bevy::prelude::{EventReader, ResMut};
+use bevy::prelude::{EventReader, EventWriter, Local};
 
-use super::{event::PlayerInputEvent, resource::PlayerInputManager};
+use crate::io::interface::{IOInterface, PushVec};
 
-pub fn input_system(
-    mut ev_player_input: EventReader<PlayerInputEvent>,
-    mut res_player_input: ResMut<PlayerInputManager>,
+use super::{
+    event::{GameInputMessage, GameOutputMessage},
+    interface::unnamed_pipes::UnnamedPipesGameIO,
+};
+
+pub fn io_exchange_system(
+    mut ev_input_message: EventWriter<GameInputMessage>,
+    mut ev_output_message: EventReader<GameOutputMessage>,
+    mut io_interface: Local<UnnamedPipesGameIO>,
 ) {
-    for ev in ev_player_input.iter() {
-        res_player_input.set_input_state(ev.player_id, ev.new_state);
+    for out_message in ev_output_message.iter() {
+        io_interface.write(&out_message.0);
     }
-}
 
+    let mut push_vec = PushVec::<u8>::default();
+    io_interface.read(&mut push_vec);
 
-
-
-
-#[cfg(test)]
-mod test {
-    use super::input_system;
-    use bevy::ecs::system::assert_is_system;
-
-    #[test]
-    fn check_systems_validity() {
-        assert_is_system(input_system);
+    for in_message in push_vec.iter() {
+        ev_input_message.send(GameInputMessage(in_message.to_owned()));
     }
 }

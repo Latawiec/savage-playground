@@ -4,6 +4,7 @@ use bevy_rapier2d::prelude::{RapierPhysicsPlugin, NoUserData, RapierConfiguratio
 
 use crate::game::aggro::plugin::AggroPlugin;
 use crate::game::collision::plugin::ProbedRigidBodyPlugin;
+use crate::game::io::plugin::GameIOPlugin;
 use crate::game::lifetime::plugin::SelfDestructPlugin;
 use crate::game::player::plugin::PlayerSystemsPlugin;
 use crate::game::rendering::plugin::HeadlessRendererPlugin;
@@ -27,6 +28,7 @@ impl Plugin for FrameworkPlugin {
             .add_plugins(SelfDestructPlugin)
             .add_plugins(HeadlessRendererPlugin)
             .add_plugins(IOPlugin)
+            .add_plugins(GameIOPlugin)
         ;
 
         // Debug features:
