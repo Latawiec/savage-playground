@@ -1,16 +1,13 @@
 use bevy::prelude::{Parent, Query, Res, Vec2};
 
-use crate::{
-    game::{
-        collision::component::probed_rigid_body::ProbedRigidBody,
-        io::resource::PlayerInputManager,
-        rendering::component::{
-            drawable::Sprite,
-            sprites::{MovementDirection, PlayerSprite},
-        },
-        world::resource::EnvironmentConfig,
+use crate::game::{
+    collision::component::probed_rigid_body::ProbedRigidBody,
+    io::{default_key_flags::DefaultKeyFlags, resource::PlayerInputManager},
+    rendering::component::{
+        drawable::Sprite,
+        sprites::{MovementDirection, PlayerSprite},
     },
-    io::default_key_flags::DefaultKeyFlags,
+    world::resource::EnvironmentConfig,
 };
 
 use super::component::identity::Identity;

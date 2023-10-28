@@ -1,6 +1,6 @@
 use bevy::prelude::{EventReader, EventWriter, Local};
 
-use crate::io::interface::{IOInterface, PushVec};
+use crate::io::interface::IOInterface;
 
 use super::{
     event::{GameInputMessage, GameOutputMessage},
@@ -13,13 +13,10 @@ pub fn io_exchange_system(
     mut io_interface: Local<UnnamedPipesGameIO>,
 ) {
     for out_message in ev_output_message.iter() {
-        io_interface.write(&out_message.0);
+        io_interface.write_msg(&out_message.0);
     }
 
-    let mut push_vec = PushVec::<u8>::default();
-    io_interface.read(&mut push_vec);
-
-    for in_message in push_vec.iter() {
+    while let Some(in_message) = io_interface.read_msg() {
         ev_input_message.send(GameInputMessage(in_message.to_owned()));
     }
 }

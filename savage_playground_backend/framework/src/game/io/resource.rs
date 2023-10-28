@@ -2,10 +2,9 @@ use std::collections::BTreeMap;
 
 use bevy::prelude::Resource;
 
-use crate::{
-    game::common::player_type::PlayerID,
-    io::input::{InputState, InputStateFlags},
-};
+use crate::game::common::player_type::PlayerID;
+
+use super::input::{InputState, InputStateFlags};
 
 #[derive(Default, Resource)]
 pub struct PlayerInputManager {
