@@ -13,6 +13,7 @@ tracing = { version = "0.1", features = ["log"] }
 rand = "*"
 rand_chacha = "0.3.1"
 bevy = { workspace = true }
+datazoo = { git = "https://github.com/Latawiec/datazoo" }
 
 [dependencies.bevy_rapier2d]
 version = "*"
