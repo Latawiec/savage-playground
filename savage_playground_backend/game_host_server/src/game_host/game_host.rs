@@ -7,7 +7,7 @@ use tokio::{
 
 use crate::{
     instance::instance::Instance,
-    room_server::{client::ClientID, message::Message, room::RoomHandle},
+    room_server::{client::{ClientID, self}, message::Message, room::RoomHandle},
 };
 
 use super::message::{self, Request};
@@ -129,12 +129,15 @@ impl GameHost {
 
                                 self.set_game_owner(client_id, new_game_owner).await;
                             }
-                            Request::GameMessage { message } => {
+                            Request::GameMessage { mut message } => {
                                 if self.game_instance.is_none() {
                                     // Err(error::GameError::NoGameRunning);
                                     // Pass error somehow
                                     return;
                                 }
+
+                                // Add client_id.
+                                message.as_object_mut().unwrap().insert("client_id".to_owned(), serde_json::json!(client_id));
 
                                 let stdin = self.game_stdin.as_mut();
                                 if stdin.is_none() {

@@ -30,7 +30,7 @@ impl Default for UnnamedPipesGameIO {
                 stdin_buffer_clone
                     .write()
                     .unwrap()
-                    .push_slice(&temp_buff[0..&temp_buff.len() - 1]); // Cut the '\0'
+                    .push_row(temp_buff[0..&temp_buff.len() - 1].iter().cloned()); // Cut the '\0'
                 sender.send(());
                 temp_buff.clear();
             }

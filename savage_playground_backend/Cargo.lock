@@ -1630,7 +1630,8 @@ checksum = "c2e66c9d817f1720209181c316d28635c050fa304f9c79e47a520882661b7308"
 [[package]]
 name = "datazoo"
 version = "0.7.0"
-source = "git+https://github.com/Latawiec/datazoo#c1b5ac0d182f6a335dab479ec7fb2065bac8646f"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "960d75a240e74f2e22eebd80be31c1c2ed38ea48f997284991c345823652cd34"
 dependencies = [
  "enumset",
  "sorted-iter",
