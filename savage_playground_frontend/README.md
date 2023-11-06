@@ -1,5 +1,14 @@
 # savage_playground_frontend
 
+sudo apt install node
+sudo apt install npm
+
+
+## updating node
+sudo npm cache clean -f
+sudo npm install -g n
+sudo n stable
+
 ## Project setup
 ```
 npm install --legacy-peer-deps // needed for newer versions of node apparently.
