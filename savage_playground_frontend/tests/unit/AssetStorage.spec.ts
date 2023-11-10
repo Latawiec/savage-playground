@@ -6,6 +6,8 @@ import fetch, { Response } from 'node-fetch';
 
 jest.mock('node-fetch', ()=>jest.fn())
 
+const ASSETS_ROOT = "/assets/AssetStorage";
+
 function validate_memfs_contents(mem_fs: memfs.IFs, sys_fs_dir: fs.Dir, sys_dir_rel_path: string): Promise<boolean> {
 
     return new Promise<boolean>(async (resolve, reject) => {
@@ -46,14 +48,14 @@ function validate_memfs_contents(mem_fs: memfs.IFs, sys_fs_dir: fs.Dir, sys_dir_
 
 describe('from local', () => {
     it.each([
-        [0, "/assets/zip_folder_0.zip"],
-        [2, "/assets/zip_folder_2.zip"],
-        [5, "/assets/zip_folder_5.zip"],
-        [9, "/assets/zip_folder_9.zip"],
+        [0, ASSETS_ROOT + "/zip_folder_0.zip"],
+        [2, ASSETS_ROOT + "/zip_folder_2.zip"],
+        [5, ASSETS_ROOT + "/zip_folder_5.zip"],
+        [9, ASSETS_ROOT + "/zip_folder_9.zip"],
     ])('Unzup file - compression level %p', async (level: number, zip_file_path: string) => {
         // Given
         const zipped_file_path = __dirname + zip_file_path;
-        const validate_dir_path = __dirname + "/assets/zip_folder";
+        const validate_dir_path = __dirname + ASSETS_ROOT + "/zip_folder";
 
         // When
         const asset_storage = await AssetStorage.from_local(zipped_file_path);
@@ -66,14 +68,14 @@ describe('from local', () => {
 
 describe('from remote', () => {
     it.each([
-        [0, "/assets/zip_folder_0.zip"],
-        [2, "/assets/zip_folder_2.zip"],
-        [5, "/assets/zip_folder_5.zip"],
-        [9, "/assets/zip_folder_9.zip"],
+        [0, ASSETS_ROOT + "/zip_folder_0.zip"],
+        [2, ASSETS_ROOT + "/zip_folder_2.zip"],
+        [5, ASSETS_ROOT + "/zip_folder_5.zip"],
+        [9, ASSETS_ROOT + "/zip_folder_9.zip"],
     ])('Unzup file - compression level %p', async (level: number, zip_file_path: string) => {
         // Given
         const zipped_file_path = __dirname + zip_file_path;
-        const validate_dir_path = __dirname + "/assets/zip_folder";
+        const validate_dir_path = __dirname + ASSETS_ROOT + "/zip_folder";
 
         let file_buffer = fs.readFileSync(zipped_file_path);
         let file_blob = new Blob([file_buffer]);
