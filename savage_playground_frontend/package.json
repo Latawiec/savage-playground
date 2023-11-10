@@ -10,10 +10,15 @@
   },
   "dependencies": {
     "core-js": "^3.8.3",
+    "jszip": "^3.10.1",
+    "jszip-utils": "^0.1.0",
+    "memfs": "^4.6.0",
+    "node-fetch": "^3.3.2",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.23.3",
     "@types/jest": "^27.0.1",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
@@ -55,6 +60,7 @@
       {
         "files": [
           "**/__tests__/*.{j,t}s?(x)",
+          "**/tests/unit/**/*.test.{j,t}s?(x)",
           "**/tests/unit/**/*.spec.{j,t}s?(x)"
         ],
         "env": {
