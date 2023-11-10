@@ -1,17 +1,24 @@
-import JSZip, { OutputType } from "jszip";
+import JSZip, { OutputType, file } from "jszip";
 import { IFs, memfs } from "memfs";
 import fs from "fs";
 import fetch from "node-fetch";
 
+// Constructor is private. Create this structure from either `from_remote` or `from_local` static functions.
 export class AssetStorage {
-    private _fs;
+    private _fs: IFs;
+    private _path: string;
+    
+    private constructor(path: string, fs: IFs) {
+        this._fs = fs;
+        this._path = path;
+    }
 
     get fs() {
         return this._fs;
     }
 
-    private constructor(fs: IFs) {
-        this._fs = fs;
+    get path() {
+        return this._path;
     }
 
     static form_remote(path: string): Promise<AssetStorage> {
@@ -19,40 +26,23 @@ export class AssetStorage {
             const mem_fs = memfs().fs;
 
             fetch(path)
-            .then((response) => {
-                if (response.status === 200 || response.status === 0) {
-                    return Promise.resolve(response.blob());
-                } else {
-                    console.log(response.statusText);
-                    return Promise.reject(new Error(response.statusText));
-                }
-            })
-            .then(JSZip.loadAsync)
-            .then((zip) => {
-                let promises: Promise<void>[] = [];
-                zip.forEach((relativePath, zipEntry) => {
-                    if (zipEntry.dir) {
-                        mem_fs.mkdirSync("/" + relativePath);
+                .then((response) => {
+                    if (response.status === 200 || response.status === 0) {
+                        return response.blob();
                     } else {
-                        promises.push(
-                            zipEntry.async("uint8array")
-                            .then((blob) => {
-                                mem_fs.writeFileSync("/" + relativePath, Buffer.from(blob.buffer));
-                            })
-                        );
+                        console.log(response.statusText);
+                        return Promise.reject(new Error(response.statusText));
                     }
-                });
-                return promises;
-            })
-            .then(
-                async function success(promises) {
-                    await Promise.all(promises);
-                    resolve(new AssetStorage(mem_fs))
-                },
-                function error(e) {
-                    reject(e);
-                }
-            );
+                })
+                .then(AssetStorage.create_memfs_from_file)
+                .then(
+                    async function success(mem_fs) {
+                        resolve(new AssetStorage(path, mem_fs));
+                    },
+                    function error(e) {
+                        reject(e);
+                    }
+                )
         })
     }
 
@@ -60,43 +50,46 @@ export class AssetStorage {
         return new Promise<AssetStorage>((resolve, reject) => {
             const mem_fs = memfs().fs;
 
-            new JSZip.external.Promise(function (resolve, reject) {
-                fs.readFile(path, function(err, data) {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(data);
+            fs.promises.readFile(path)
+                .then((file_buffer) => new Blob([file_buffer]))
+                .then(AssetStorage.create_memfs_from_file)
+                .then(
+                    async function success(mem_fs) {
+                        resolve(new AssetStorage(path, mem_fs));
+                    },
+                    function error(e) {
+                        reject(e);
                     }
-                });
-            })
-            .then((data) => {
-                return JSZip.loadAsync(data as Buffer);
-            })
-            .then((zip) => {
-                let promises: Promise<void>[] = [];
-                zip.forEach((relativePath, zipEntry) => {
-                    if (zipEntry.dir) {
-                        mem_fs.mkdirSync("/" + relativePath);
-                    } else {
-                        promises.push(
-                            zipEntry.async("uint8array")
-                            .then((blob) => {
-                                mem_fs.writeFileSync("/" + relativePath, Buffer.from(blob.buffer));
-                            })
-                        );
-                    }
-                });
-                return promises;
-            })
-            .then(
-                async function success(promises) {
+                )
+        });
+    }
+
+    private static async create_memfs_from_file(file_blob: Blob): Promise<IFs> {
+        const mem_fs = memfs().fs;
+
+        return new Promise((resolve, reject) => {
+            JSZip.loadAsync(file_blob)
+                .then((zip) => {
+                    let promises: Promise<void>[] = [];
+                    zip.forEach((relativePath, zipEntry) => {
+                        if (zipEntry.dir) {
+                            mem_fs.mkdirSync("/" + relativePath);
+                        } else {
+                            promises.push(
+                                zipEntry.async("uint8array")
+                                    .then((blob) => {
+                                        mem_fs.writeFileSync("/" + relativePath, Buffer.from(blob.buffer));
+                                    })
+                            );
+                        }
+                    });
+                    return promises;
+                })
+                .then(async (promises) => {
                     await Promise.all(promises);
-                    resolve(new AssetStorage(mem_fs))
-                },
-                function error(e) {
-                    reject(e);
+                    resolve(mem_fs);
                 }
-            );
+                );
         });
     }
 }
