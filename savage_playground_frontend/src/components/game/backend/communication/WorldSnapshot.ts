@@ -39,6 +39,10 @@ export namespace Drawable {
 
 export namespace Settings {
 
+    export interface Assets {
+        assets_package_path?: string
+    }
+
     export interface Camera {
         view_transform?: Array<number>;
         proj_transform?: Array<number>;
@@ -53,6 +57,7 @@ export namespace Settings {
     export interface Snapshot {
         camera?: Camera;
         window?: Window;
+        assets?: Assets;
     }
 }
 
