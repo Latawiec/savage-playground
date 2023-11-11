@@ -6,7 +6,6 @@ export enum ShaderType {
     VERTEX = WebGL2RenderingContext.VERTEX_SHADER
 };
 
-
 export class Shader {
     private _gl: WebGLRenderingContext;
     private _id: number;
@@ -51,7 +50,7 @@ export class Shader {
 };
 
 export class ShaderStorage {
-    private _shaderCache = new Map<string, Shader>;
+    private _shaderCache = new Map<string, Shader>();
     private _shaderIdGenerator = new UuidGenerator();
 
     private _assetStorage: AssetStorage;

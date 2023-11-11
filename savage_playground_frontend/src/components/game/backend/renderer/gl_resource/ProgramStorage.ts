@@ -1,6 +1,5 @@
 import { AssetStorage } from '../AssetStorage'
 import { Shader, ShaderStorage, ShaderType } from './ShaderStorage'
-import { strict as assert } from 'assert'
 
 export class ShaderProgram {
     private _gl: WebGLRenderingContext;
@@ -10,8 +9,8 @@ export class ShaderProgram {
       pixelShader: Shader,
       vertexShader: Shader
     ) {
-      assert(pixelShader.type === ShaderType.PIXEL)
-      assert(vertexShader.type === ShaderType.VERTEX)
+      // assert(pixelShader.type === ShaderType.PIXEL)
+      // assert(vertexShader.type === ShaderType.VERTEX)
 
       this._gl = gl
       this._shaderProgram = this.linkProgram(pixelShader.glShader, vertexShader.glShader)!

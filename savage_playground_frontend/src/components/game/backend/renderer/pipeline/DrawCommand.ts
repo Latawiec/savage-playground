@@ -6,7 +6,7 @@ import { ShaderValueType } from "../../common/GLTypes";
 
 export interface IDrawCommand {
     draw(view: mat4, projection: mat4): void;
-    get zorder(): number,
+    get zorder(): number;
 }
 
 export class DrawCommand implements IDrawCommand {

@@ -71,7 +71,7 @@ interface MeshJSON {
 }
 
 export class MeshStorage {
-    private _meshCache = new Map<string, Mesh>;
+    private _meshCache = new Map<string, Mesh>();
 
     private _assetStorage: AssetStorage;
     private _gl: WebGLRenderingContext;
