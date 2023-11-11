@@ -2,20 +2,20 @@ import { mat4 } from "gl-matrix";
 import { ShaderProgram } from "../gl_resource/ProgramStorage";
 import { Mesh } from "../gl_resource/MeshStorage";
 import { Texture } from "../gl_resource/TextureStorage";
+import { ShaderValueType } from "../../common/GLTypes";
 
-interface IDrawCommand {
+export interface IDrawCommand {
     draw(view: mat4, projection: mat4): void;
     get zorder(): number,
 }
 
-
-class DrawCommand implements IDrawCommand {
+export class DrawCommand implements IDrawCommand {
 
     private gl: WebGLRenderingContext;
     private program: ShaderProgram;
     private mesh: Mesh;
     private textures: Map<number, Texture>;
-    private uniform_attrs: Record<string, any>;
+    private uniform_attrs: Map<ShaderValueType, Map<string, number | number[]>>;
     private vertex_attrs: Record<string, string>;
     private layer: number;
     private billboard: boolean;
@@ -25,8 +25,8 @@ class DrawCommand implements IDrawCommand {
         program: ShaderProgram,
         mesh: Mesh,
         textures: Map<number, Texture>,
-        uniform_attrs: Record<string, any>,
-        vertex_attrs: Record<string, any>,
+        uniform_attrs: Map<ShaderValueType, Map<string, number | number[]>>,
+        vertex_attrs: Record<string, string>,
         layer: number,
         billboard: boolean
     ) {
@@ -50,6 +50,10 @@ class DrawCommand implements IDrawCommand {
     }
 
 // private
+
+    private prepare_program(): void {
+        this.gl.useProgram(this.program.glShaderProgram);
+    }
 
     private prepare_vertex_attributes(): void {
         const gl = this.gl;
@@ -85,6 +89,50 @@ class DrawCommand implements IDrawCommand {
             gl.vertexAttribPointer(vertex_position_attrib_loc, size, gl_type, false, 0, 0);
         }
     }
+    
+    private prepare_uniform_attributes(): void {
+        const gl = this.gl;
 
+        for (const [type, attributes] of this.uniform_attrs) {
+            for (const [uniform_name, uniform_values] of attributes) {
+                const uniform_location = gl.getUniformLocation(this.program.glShaderProgram, uniform_name);
+                if (uniform_location === null) {
+                    throw new Error(`Uniform attribute ${uniform_name} not found in shader program.`);
+                }
+
+                switch(type) {
+                    case 'mat4': gl.uniformMatrix4fv(uniform_location, false, uniform_values as Array<number>); break;
+
+                    case 'float': gl.uniform1f(uniform_location, uniform_values as number); break;
+                    case 'vec2': gl.uniform2fv(uniform_location, uniform_values as Array<number>); break;
+                    case 'vec3': gl.uniform3fv(uniform_location, uniform_values as Array<number>); break;
+                    case 'vec4': gl.uniform4fv(uniform_location, uniform_values as Array<number>); break;
+
+                    case 'int': gl.uniform1i(uniform_location, uniform_values as number); break;
+                    case 'ivec2': gl.uniform2iv(uniform_location, uniform_values as Array<number>); break;
+                    case 'ivec3': gl.uniform3iv(uniform_location, uniform_values as Array<number>); break;
+                    case 'ivec4': gl.uniform4iv(uniform_location, uniform_values as Array<number>); break;
+
+                    default: throw new Error(`Uniform type unknown: ${type}`);
+                }
+            }
+        }
+    }
+
+    private prepare_textures(): void {
+        const gl = this.gl;
+
+        for (const [texture_offset, texture] of this.textures) {
+            gl.activeTexture(gl.TEXTURE0 + texture_offset);
+            gl.bindTexture(gl.TEXTURE_2D, texture.glTexture);
+        }
+    }
+
+    private prepare_blending(): void {
+        const gl = this.gl;
+        // Just use standard for now.
+        //canvas.glContext.blendFunc(canvas.glContext.SRC_ALPHA, canvas.glContext.ONE); // Additive blending.
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); // real transparency
+    }
 
 }

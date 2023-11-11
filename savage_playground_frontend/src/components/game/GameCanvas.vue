@@ -5,6 +5,11 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
+// Test if it builds so far
+import { CommitedResourceStorage } from './backend/renderer/gl_resource/CommitedResourceStorage'
+import { DrawCommand } from './backend/renderer/pipeline/DrawCommand'
+import { AssetStorage } from './backend/renderer/AssetStorage'
+
 export default defineComponent({
   name: 'GameCanvas',
   data () {

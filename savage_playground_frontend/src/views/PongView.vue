@@ -8,7 +8,7 @@
 <script lang="ts">
 
 import { defineComponent } from 'vue'
-import GameComponent from '@/components/Game/GameComponent.vue'
+import GameComponent from '@/components/game/GameComponent.vue'
 
 export default defineComponent({
   name: 'PongView',
