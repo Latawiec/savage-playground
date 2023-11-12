@@ -5,6 +5,7 @@ type NamedBufferElementSize = 1 | 2 | 3 | 4;
 
 export interface MeshNamedBuffer {
     size: NamedBufferElementSize;
+    normalize: boolean,
     gl_type: GLint,
     gl_buffer: WebGLBuffer,
 }
@@ -33,7 +34,7 @@ export class Mesh {
         this._elementsCount = indices.length;
     }
 
-    set_named_gl_buffer(gl: WebGLRenderingContext, buffer_name: string, gl_type: GLint, size: NamedBufferElementSize, data: ArrayBufferView) {
+    set_named_gl_buffer(gl: WebGLRenderingContext, buffer_name: string, gl_type: GLint, size: NamedBufferElementSize, normalize: boolean, data: ArrayBufferView) {
         let named_buffer = gl.createBuffer()!;
 
         gl.bindBuffer(gl.ARRAY_BUFFER, named_buffer);
@@ -41,6 +42,7 @@ export class Mesh {
 
         const mesh_named_buffer: MeshNamedBuffer = {
             size: size,
+            normalize: normalize,
             gl_type: gl_type,
             gl_buffer: named_buffer
         };
@@ -61,6 +63,7 @@ export class Mesh {
 interface NamedBufferJSON {
     type: NamedBufferElementType,
     size: NamedBufferElementSize,
+    normalize?: boolean,
     data: Array<number>,
 }
 
@@ -92,8 +95,16 @@ export class MeshStorage {
                         for (const [buffer_name, buffer_content] of json_mesh.named_buffers) {
                             let buffer_data = MeshStorage.match_buffer_by_type(buffer_content.type, buffer_content.data);
                             let buffer_gl_type = MeshStorage.match_gl_type_by_type(buffer_content.type);
+                            let normalize = buffer_content.normalize !== undefined ? buffer_content.normalize! : false;
 
-                            mesh.set_named_gl_buffer(this._gl, buffer_name, buffer_gl_type, buffer_content.size, buffer_data);
+                            mesh.set_named_gl_buffer(
+                                this._gl,
+                                buffer_name,
+                                buffer_gl_type,
+                                buffer_content.size,
+                                normalize,
+                                buffer_data
+                            );
                         }
                     }
 
@@ -111,11 +122,15 @@ export class MeshStorage {
         switch (type) {
             case 'u8': return Uint8Array.from(buffer);
             case 'u16': return Uint16Array.from(buffer);
-            case 'u32': return Uint32Array.from(buffer);
+            case 'u32': 
+                throw Error(`${type} only available in WebGL2`);
+                return Uint32Array.from(buffer);
 
             case 'i8': return Int8Array.from(buffer);
             case 'i16': return Int16Array.from(buffer);
-            case 'i32': return Int32Array.from(buffer);
+            case 'i32':
+                throw Error(`${type} only available in WebGL2`);
+                return Int32Array.from(buffer);
 
             case 'f32': return Float32Array.from(buffer);
 
@@ -129,11 +144,15 @@ export class MeshStorage {
         switch (type) {
             case 'u8': return WebGLRenderingContext.UNSIGNED_BYTE;
             case 'u16': return WebGLRenderingContext.UNSIGNED_SHORT;
-            case 'u32': return WebGLRenderingContext.UNSIGNED_INT;
+            case 'u32': 
+                throw Error(`${type} only available in WebGL2`);
+                return WebGLRenderingContext.UNSIGNED_INT;  // Only works in WebGL2
 
             case 'i8': return WebGLRenderingContext.BYTE;
             case 'i16': return WebGLRenderingContext.SHORT;
-            case 'i32': return WebGLRenderingContext.INT;
+            case 'i32': 
+                throw Error(`${type} only available in WebGL2`);
+                return WebGLRenderingContext.INT;   // Only works in WebGL2
 
             case 'f32': return WebGLRenderingContext.FLOAT;
             default:

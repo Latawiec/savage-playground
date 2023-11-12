@@ -61,7 +61,7 @@ export namespace Settings {
     }
 }
 
-export interface WorldSnapshot {
+export interface GameMessage {
     drawable?: Map<string, Drawable.Snapshot>;
     settings?: Settings.Snapshot;
 }

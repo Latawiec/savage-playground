@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { WorldSnapshot } from './communication/WorldSnapshot';
+import { GameMessage } from './communication/GameMessage';
 import { InputMessage } from './communication/ClientMessage';
 
 
@@ -7,7 +7,7 @@ interface ConnectionControllerEventMap {
     "connected": any;
     "disconnected": any;
     "error": any;
-    "world_snapshot": WorldSnapshot;
+    "game_message": GameMessage;
 }
 
 interface ConnectionControllerMessageMap {
@@ -56,6 +56,7 @@ export class ConnectionController extends EventEmitter {
 
     private on_message(event: MessageEvent) {
         // todo parse message
-        this.emit('world_snapshot', {});
+        let game_message = JSON.parse(event.data as string) as GameMessage;
+        this.emit('world_snapshot', game_message);
     }
 }

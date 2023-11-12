@@ -5,13 +5,11 @@ import { Texture } from "../gl_resource/TextureStorage";
 import { ShaderValueType } from "../../common/GLTypes";
 
 export interface IDrawCommand {
-    draw(view: mat4, projection: mat4): void;
+    draw(gl: WebGLRenderingContext, view: mat4, projection: mat4): void;
     get zorder(): number;
 }
 
 export class DrawCommand implements IDrawCommand {
-
-    private gl: WebGLRenderingContext;
     private program: ShaderProgram;
     private mesh: Mesh;
     private textures: Map<number, Texture>;
@@ -21,7 +19,6 @@ export class DrawCommand implements IDrawCommand {
     private billboard: boolean;
 
     constructor(
-        gl: WebGLRenderingContext,
         program: ShaderProgram,
         mesh: Mesh,
         textures: Map<number, Texture>,
@@ -30,7 +27,6 @@ export class DrawCommand implements IDrawCommand {
         layer: number,
         billboard: boolean
     ) {
-        this.gl = gl;
         this.program = program;
         this.mesh = mesh;
         this.textures = textures;
@@ -45,19 +41,18 @@ export class DrawCommand implements IDrawCommand {
         return this.layer;
     }
 
-    draw(view: mat4, projection: mat4): void {
+    draw(gl: WebGLRenderingContext, view: mat4, projection: mat4): void {
         throw new Error("Method not implemented.");
     }
 
 // private
 
-    private prepare_program(): void {
-        this.gl.useProgram(this.program.glShaderProgram);
+    private prepare_program(gl: WebGLRenderingContext,): void {
+        gl.useProgram(this.program.glShaderProgram);
     }
 
-    private prepare_vertex_attributes(): void {
-        const gl = this.gl;
-
+    private prepare_vertex_attributes(gl: WebGLRenderingContext): void {
+        
         // Required attributes (vertices, indices)
         const vertex_position_attrib_loc = gl.getAttribLocation(this.program.glShaderProgram, this.vertex_attrs.vertices);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.glVertexBuffer);
@@ -90,8 +85,7 @@ export class DrawCommand implements IDrawCommand {
         }
     }
     
-    private prepare_uniform_attributes(): void {
-        const gl = this.gl;
+    private prepare_uniform_attributes(gl: WebGLRenderingContext): void {
 
         for (const [type, attributes] of this.uniform_attrs) {
             for (const [uniform_name, uniform_values] of attributes) {
@@ -119,17 +113,15 @@ export class DrawCommand implements IDrawCommand {
         }
     }
 
-    private prepare_textures(): void {
-        const gl = this.gl;
-
+    private prepare_textures(gl: WebGLRenderingContext): void {
+        
         for (const [texture_offset, texture] of this.textures) {
             gl.activeTexture(gl.TEXTURE0 + texture_offset);
             gl.bindTexture(gl.TEXTURE_2D, texture.glTexture);
         }
     }
 
-    private prepare_blending(): void {
-        const gl = this.gl;
+    private prepare_blending(gl: WebGLRenderingContext): void {
         // Just use standard for now.
         //canvas.glContext.blendFunc(canvas.glContext.SRC_ALPHA, canvas.glContext.ONE); // Additive blending.
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); // real transparency
