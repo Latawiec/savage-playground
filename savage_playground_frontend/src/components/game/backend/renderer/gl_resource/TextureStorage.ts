@@ -76,6 +76,13 @@ export class TextureStorage {
       this._gl = gl
     }
 
+    write(asset_path: string, texture: Texture) {
+      if (this._textureCache.has(asset_path)) {
+        throw new Error(`Asset with path ${asset_path} already exists in ${TextureStorage.name}`);
+      }
+      this._textureCache.set(asset_path, texture);
+    }
+
     read (assetPath: string): Promise<Texture> {
       return new Promise(async (resolve, reject) => {
         if (!this._textureCache.has(assetPath)) {

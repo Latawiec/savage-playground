@@ -1,7 +1,5 @@
 import JSZip, { OutputType, file } from 'jszip'
 import { IFs, memfs } from 'memfs'
-import fs from 'fs'
-import fetch from 'node-fetch'
 
 // Constructor is private. Create this structure from either `from_remote` or `from_local` static functions.
 export class AssetStorage {
@@ -21,7 +19,11 @@ export class AssetStorage {
       return this._path
     }
 
-    static form_remote (path: string): Promise<AssetStorage> {
+    static empty(): AssetStorage {
+      return new AssetStorage("empty", memfs().fs);
+    }
+
+    static async form(path: string): Promise<AssetStorage> {
       return new Promise<AssetStorage>((resolve, reject) => {
         const mem_fs = memfs().fs
 
@@ -34,24 +36,6 @@ export class AssetStorage {
               return Promise.reject(new Error(response.statusText))
             }
           })
-          .then(AssetStorage.create_memfs_from_file)
-          .then(
-            async function success (mem_fs) {
-              resolve(new AssetStorage(path, mem_fs))
-            },
-            function error (e) {
-              reject(e)
-            }
-          )
-      })
-    }
-
-    static async from_local (path: string): Promise<AssetStorage> {
-      return new Promise<AssetStorage>((resolve, reject) => {
-        const mem_fs = memfs().fs
-
-        fs.promises.readFile(path)
-          .then((file_buffer) => new Blob([file_buffer]))
           .then(AssetStorage.create_memfs_from_file)
           .then(
             async function success (mem_fs) {

@@ -61,18 +61,27 @@ export class ShaderStorage {
         this._gl = gl;
     }
 
-    read(shaderType: ShaderType, assetPath: string): Promise<Shader> {
+    write(asset_path: string, type: ShaderType, source: Readonly<string>): Shader {
+        if (this._shaderCache.has(asset_path)) {
+          throw new Error(`Asset with path ${asset_path} already exists in ${ShaderStorage.name}`);
+        }
+        const shader = new Shader(this._gl, this._shaderIdGenerator.getNext(), type, source);
+        this._shaderCache.set(asset_path, shader);
+
+        return shader;
+    }
+
+    read(asset_path: string, type: ShaderType): Promise<Shader> {
         return new Promise(async (resolve, reject) => {
-            if (!this._shaderCache.has(assetPath)) {
+            if (!this._shaderCache.has(asset_path)) {
                 try {
-                    const shaderSource = this._assetStorage.fs.readFileSync(assetPath).toString();
-                    const shader = new Shader(this._gl, this._shaderIdGenerator.getNext(), shaderType, shaderSource);
-                    this._shaderCache.set(assetPath, shader);
+                    const shader_source = this._assetStorage.fs.readFileSync(asset_path).toString();
+                    this.write(asset_path, type, shader_source);
                 } catch (e) {
                     reject(e);
                 }
             }
-            resolve(this._shaderCache.get(assetPath)!)
+            resolve(this._shaderCache.get(asset_path)!)
         });
     }
 }  

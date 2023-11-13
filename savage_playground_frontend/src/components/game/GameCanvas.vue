@@ -9,6 +9,7 @@ import { defineComponent } from 'vue'
 import { CommitedResourceStorage } from './backend/renderer/gl_resource/CommitedResourceStorage'
 import { DrawCommand } from './backend/renderer/pipeline/DrawCommand'
 import { AssetStorage } from './backend/renderer/AssetStorage'
+import { LocalAssets } from './backend/renderer/base_assets/LocalAssets'
 
 export default defineComponent({
   name: 'GameCanvas',
@@ -31,6 +32,11 @@ export default defineComponent({
 
     // this.$data._private.runtime = new GameRuntime(this.$refs.gameCanvas as HTMLCanvasElement, assetPackagePath, gameHostAddress);
     // this.$data._private.runtime.initialize();
+    const gl = (this.$refs.gameCanvas as HTMLCanvasElement).getContext("webgl")!;
+
+    const gl_res_storage = new CommitedResourceStorage(gl, AssetStorage.empty());
+    LocalAssets.store_local_meshes(gl_res_storage.meshes);
+    LocalAssets.store_local_shaders(gl_res_storage.programs);
   }
 })
 

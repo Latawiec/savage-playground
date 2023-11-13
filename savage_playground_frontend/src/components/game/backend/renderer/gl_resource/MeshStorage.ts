@@ -34,6 +34,31 @@ export class Mesh {
         this._elementsCount = indices.length;
     }
 
+    static from_json(
+        gl: WebGLRenderingContext,
+        mesh_data: json_mesh.MeshJSON
+    ): Mesh {
+        const mesh = new Mesh(gl, Float32Array.from(mesh_data.vertices), Uint16Array.from(mesh_data.indices));
+        if (mesh_data.named_buffers !== undefined) {
+            for (const buffer_name in mesh_data.named_buffers) {
+                const buffer_content = mesh_data.named_buffers[buffer_name];
+                let buffer_data = json_mesh.match_buffer_by_type(buffer_content.type, buffer_content.data);
+                let buffer_gl_type = json_mesh.match_gl_type_by_type(buffer_content.type);
+                let normalize = buffer_content.normalize !== undefined ? buffer_content.normalize! : false;
+
+                mesh.set_named_gl_buffer(
+                    gl,
+                    buffer_name,
+                    buffer_gl_type,
+                    buffer_content.size,
+                    normalize,
+                    buffer_data
+                );
+            }
+        }
+        return mesh;
+    }
+
     set_named_gl_buffer(gl: WebGLRenderingContext, buffer_name: string, gl_type: GLint, size: NamedBufferElementSize, normalize: boolean, data: ArrayBufferView) {
         let named_buffer = gl.createBuffer()!;
 
@@ -59,20 +84,6 @@ export class Mesh {
     get elementsCount(): Readonly<number> { return this._elementsCount; }
 }
 
-// Json mesh 
-interface NamedBufferJSON {
-    type: NamedBufferElementType,
-    size: NamedBufferElementSize,
-    normalize?: boolean,
-    data: Array<number>,
-}
-
-interface MeshJSON {
-    vertices: Float32Array;
-    indices: Uint16Array;
-    named_buffers?: Map<string, NamedBufferJSON>;
-}
-
 export class MeshStorage {
     private _meshCache = new Map<string, Mesh>();
 
@@ -84,31 +95,21 @@ export class MeshStorage {
         this._gl = gl;
     }
 
+    write(asset_path:string, json_mesh: json_mesh.MeshJSON): Mesh {
+        if (this._meshCache.has(asset_path)) {
+            throw new Error(`Asset with path ${asset_path} already exists in ${MeshStorage.name}`);
+        }
+        const mesh = Mesh.from_json(this._gl, json_mesh);
+        this._meshCache.set(asset_path, mesh);
+        return mesh;
+    }
+
     read(assetPath: string): Promise<Mesh> {
         return new Promise(async (resolve, reject) => {
             if (!this._meshCache.has(assetPath)) {
                 try {
-                    const json_mesh = JSON.parse(this._assetStorage.fs.readFileSync(assetPath).toString()) as MeshJSON;
-                    const mesh = new Mesh(this._gl, Float32Array.from(json_mesh.vertices), Uint16Array.from(json_mesh.indices));
-
-                    if (json_mesh.named_buffers !== undefined) {
-                        for (const [buffer_name, buffer_content] of json_mesh.named_buffers) {
-                            let buffer_data = MeshStorage.match_buffer_by_type(buffer_content.type, buffer_content.data);
-                            let buffer_gl_type = MeshStorage.match_gl_type_by_type(buffer_content.type);
-                            let normalize = buffer_content.normalize !== undefined ? buffer_content.normalize! : false;
-
-                            mesh.set_named_gl_buffer(
-                                this._gl,
-                                buffer_name,
-                                buffer_gl_type,
-                                buffer_content.size,
-                                normalize,
-                                buffer_data
-                            );
-                        }
-                    }
-
-                    this._meshCache.set(assetPath, mesh);
+                    const json_mesh = JSON.parse(this._assetStorage.fs.readFileSync(assetPath).toString()) as json_mesh.MeshJSON;
+                    this.write(assetPath, json_mesh);
                 } catch (e) {
                     reject(e);
                 }
@@ -116,8 +117,23 @@ export class MeshStorage {
             resolve(this._meshCache.get(assetPath)!);
         })
     }
+}
 
-    private static match_buffer_by_type(type: NamedBufferElementType, buffer: Array<number>): ArrayBufferView {
+module json_mesh {
+    export interface NamedBufferJSON {
+        type: NamedBufferElementType,
+        size: NamedBufferElementSize,
+        normalize?: boolean,
+        data: Array<number>,
+    }
+
+    export interface MeshJSON {
+        vertices: Float32Array;
+        indices: Uint16Array;
+        named_buffers?: Record<string, NamedBufferJSON>;
+    }
+
+    export function match_buffer_by_type(type: NamedBufferElementType, buffer: Array<number>): ArrayBufferView {
         let buffer_data: ArrayBufferView;
         switch (type) {
             case 'u8': return Uint8Array.from(buffer);
@@ -140,7 +156,7 @@ export class MeshStorage {
         return buffer_data;
     }
 
-    private static match_gl_type_by_type(type: NamedBufferElementType): GLint {
+    export function match_gl_type_by_type(type: NamedBufferElementType): GLint {
         switch (type) {
             case 'u8': return WebGLRenderingContext.UNSIGNED_BYTE;
             case 'u16': return WebGLRenderingContext.UNSIGNED_SHORT;

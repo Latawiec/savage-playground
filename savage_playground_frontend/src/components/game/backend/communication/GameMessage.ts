@@ -5,24 +5,24 @@ export namespace Drawable {
         vertex_shader?: string;
         pixel_shader?: string;
         mesh?: string;
-        textures?: Map<number, string>;
+        textures?: Record<number, string>;
     }
 
     export interface VertexAttributes {
         vertices?: string;
-        named_buffers?: Map<string, string>;
+        named_buffers?: Record<string, string>;
     }
 
     export interface UniformAttributes {
-        float?: Map<string, number>;
-        vec2?: Map<string, Array<number>>;
-        vec3?: Map<string, Array<number>>;
-        vec4?: Map<string, Array<number>>;
-        int?: Map<string, number>;
-        ivec2?: Map<string, Array<number>>;
-        ivec3?: Map<string, Array<number>>;
-        ivec4?: Map<string, Array<number>>;
-        mat4?: Map<string, Array<number>>;
+        float?: Record<string, number>;
+        vec2?: Record<string, Array<number>>;
+        vec3?: Record<string, Array<number>>;
+        vec4?: Record<string, Array<number>>;
+        int?: Record<string, number>;
+        ivec2?: Record<string, Array<number>>;
+        ivec3?: Record<string, Array<number>>;
+        ivec4?: Record<string, Array<number>>;
+        mat4?: Record<string, Array<number>>;
     }
 
     export interface Snapshot {
@@ -62,6 +62,6 @@ export namespace Settings {
 }
 
 export interface GameMessage {
-    drawable?: Map<string, Drawable.Snapshot>;
+    drawable?: Record<string, Drawable.Snapshot>;
     settings?: Settings.Snapshot;
 }
