@@ -11,7 +11,7 @@ sudo n stable
 
 ## Project setup
 ```
-npm install --legacy-peer-deps // needed for newer versions of node apparently.
+npm install --legacy-peer-deps // needed for newer versions of node apparently. I set it for the entire project in npmrc.
 ```
 
 ### Compiles and hot-reloads for development
