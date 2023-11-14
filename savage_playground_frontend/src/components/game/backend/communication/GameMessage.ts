@@ -1,5 +1,5 @@
 
-export namespace Drawable {
+export namespace Renderer {
 
     export interface Assets {
         vertex_shader?: string;
@@ -15,17 +15,17 @@ export namespace Drawable {
 
     export interface UniformAttributes {
         float?: Record<string, number>;
-        vec2?: Record<string, Array<number>>;
-        vec3?: Record<string, Array<number>>;
-        vec4?: Record<string, Array<number>>;
-        int?: Record<string, number>;
+        vec2?:  Record<string, Array<number>>;
+        vec3?:  Record<string, Array<number>>;
+        vec4?:  Record<string, Array<number>>;
+        int?:   Record<string, number>;
         ivec2?: Record<string, Array<number>>;
         ivec3?: Record<string, Array<number>>;
         ivec4?: Record<string, Array<number>>;
-        mat4?: Record<string, Array<number>>;
+        mat4?:  Record<string, Array<number>>;
     }
 
-    export interface Snapshot {
+    export interface Drawable {
         transform?: Array<number>;
         blending?: number;
         layer?: number;
@@ -35,17 +35,27 @@ export namespace Drawable {
         vertex_attributes?: VertexAttributes;
         uniform_attributes?: UniformAttributes;
     }
+
+    export interface Camera {
+        view_transform?: Array<number>;
+        proj_transform?: Array<number>;
+    }
+
+    export interface Snapshot {
+        // Increment: add/remove elements from whatever was already passed before.
+        //            It assumes state was being cached.
+        // Reset: erase whole state you've had before and replace it with this.
+        // If nothing is passed, we assume 'reset'
+        type?: 'increment' | 'reset';
+        entities?: Record<string, Drawable>;
+        camera?: Camera;
+    }
 }
 
 export namespace Settings {
 
     export interface Assets {
         assets_package_path?: string
-    }
-
-    export interface Camera {
-        view_transform?: Array<number>;
-        proj_transform?: Array<number>;
     }
 
     export interface Window {
@@ -55,13 +65,13 @@ export namespace Settings {
     }
 
     export interface Snapshot {
-        camera?: Camera;
         window?: Window;
         assets?: Assets;
     }
 }
 
 export interface GameMessage {
-    drawable?: Record<string, Drawable.Snapshot>;
+    renderer?: Renderer.Snapshot;
     settings?: Settings.Snapshot;
+    ui?: any; // Each game will have it's very own UI. We'll forward this raw so that Vue Component can parse it however it wants.
 }

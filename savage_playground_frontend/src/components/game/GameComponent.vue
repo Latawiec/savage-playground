@@ -1,10 +1,10 @@
 <template>
-    <GameOverlay/>
-    <GameCanvas/>
+    <GameOverlay ref="game_overlay"/>
+    <GameCanvas ref="game_canvas"/>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
 import GameCanvas from './GameCanvas.vue'
 import GameOverlay from './GameOverlay.vue'
 
@@ -13,6 +13,12 @@ export default defineComponent({
   components: {
     GameCanvas,
     GameOverlay
+  },
+  methods: {
+    test() {
+      const auto = this.$refs.game_canvas;
+    }
   }
 })
+
 </script>

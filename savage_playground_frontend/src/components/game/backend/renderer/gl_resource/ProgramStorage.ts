@@ -1,4 +1,4 @@
-import { AssetStorage } from '../AssetStorage'
+import { AssetStorage } from '../../AssetStorage'
 import { Shader, ShaderStorage, ShaderType } from './ShaderStorage'
 
 export class ShaderProgram {

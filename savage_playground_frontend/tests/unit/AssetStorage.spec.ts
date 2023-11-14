@@ -1,4 +1,4 @@
-import { AssetStorage } from '@/components/game/backend/renderer/AssetStorage'
+import { AssetStorage } from '@/components/game/backend/AssetStorage'
 import fs from 'fs'
 import memfs from 'memfs'
 import path from 'path'

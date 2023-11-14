@@ -1,4 +1,4 @@
-import { AssetStorage } from '../AssetStorage';
+import { AssetStorage } from '../../AssetStorage';
 import { UuidGenerator } from '../../common/UuidGenerator';
 
 export enum ShaderType {

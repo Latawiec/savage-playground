@@ -1,4 +1,4 @@
-import { AssetStorage } from "../AssetStorage";
+import { AssetStorage } from "../../AssetStorage";
 
 type NamedBufferElementType = 'u8' | 'u16' | 'u32' | 'i8' | 'i16' | 'i32' | 'f32';
 type NamedBufferElementSize = 1 | 2 | 3 | 4;

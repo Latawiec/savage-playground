@@ -8,16 +8,16 @@ import { defineComponent } from 'vue'
 // Test if it builds so far
 import { CommitedResourceStorage } from './backend/renderer/gl_resource/CommitedResourceStorage'
 import { DrawCommand } from './backend/renderer/pipeline/DrawCommand'
-import { AssetStorage } from './backend/renderer/AssetStorage'
+import { AssetStorage } from './backend/AssetStorage'
 import { LocalAssets } from './backend/renderer/base_assets/LocalAssets'
+import { ConnectionController } from './backend/ConnectionController'
+import { GameRenderer } from "./backend/renderer/GameRenderer";
 
 export default defineComponent({
   name: 'GameCanvas',
   data () {
     return {
-      private: {
-        // runtime: {} as GameRuntime
-      }
+      _game_renderer: undefined as GameRenderer | undefined,
     }
   },
   props: {
@@ -27,6 +27,7 @@ export default defineComponent({
     }
   },
   mounted () {
+    this._game_renderer = new GameRenderer(this.$refs.gameCanvas as HTMLCanvasElement);
     // const assetPackagePath = this.$props.assetsPackagePath;
     // const gameHostAddress = this.$props.gameHostAddress;
 
@@ -35,9 +36,14 @@ export default defineComponent({
     const gl = (this.$refs.gameCanvas as HTMLCanvasElement).getContext("webgl")!;
 
     const gl_res_storage = new CommitedResourceStorage(gl, AssetStorage.empty());
-    LocalAssets.store_local_meshes(gl_res_storage.meshes);
-    LocalAssets.store_local_shaders(gl_res_storage.programs);
+
+
+    const conn_contr = new ConnectionController(new URL("ws://localhost:8080/create"));
+  },
+  methods: {
+    
   }
+
 })
 
 </script>
@@ -49,3 +55,4 @@ export default defineComponent({
     background-color: black;
 }
 </style>
+./backend/AssetStorage

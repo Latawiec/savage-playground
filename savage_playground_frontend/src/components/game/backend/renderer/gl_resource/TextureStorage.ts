@@ -1,5 +1,5 @@
 import { PNG } from 'pngjs'
-import { AssetStorage } from '../AssetStorage'
+import { AssetStorage } from '../../AssetStorage'
 
 type Components = 1 | 2 | 3 | 4; // Grayscale: 1, Gayscale+Alpha: 2 etc...
 type BitDepth = 1 | 2 | 4 | 8 | 16; // How many bits per one component. I don't know if less than 8 is realistic.

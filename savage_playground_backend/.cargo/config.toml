@@ -8,3 +8,6 @@ rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold"]
 [env]
 ASSETS_SERVER_ASSETS_DIR = { value = "./assets", relative = true }
 ASSETS_SERVER_MAPPING_FILE = { value = "./assets/game_assets_mapping.json", relative = true }
+
+# This is for test exe of game_host_server
+DEBUG_ECHO_PROGRAM_FILE = { value = "./target/debug/debug", relative = true}

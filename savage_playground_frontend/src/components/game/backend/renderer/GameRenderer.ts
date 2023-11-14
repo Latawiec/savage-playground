@@ -3,8 +3,10 @@ import { CommitedResourceStorage } from "./gl_resource/CommitedResourceStorage";
 import { DrawCommand } from "./pipeline/DrawCommand";
 import { BackBufferTarget } from "./pipeline/render_target/BackBufferTarget";
 import { MainTarget } from "./pipeline/render_target/MainTarget";
+import { AssetStorage } from "../AssetStorage";
+import { LocalAssets } from "./base_assets/LocalAssets";
 
-class GameRenderer {
+export class GameRenderer {
     private _gl: WebGLRenderingContext;
     private _game_canvas: HTMLCanvasElement;
     private _commited_resource_storage: CommitedResourceStorage;
@@ -18,14 +20,13 @@ class GameRenderer {
 
     constructor (
       game_canvas: HTMLCanvasElement,
-      commited_resource_storage: CommitedResourceStorage,
     ) {
       this._gl = game_canvas.getContext('webgl', 
       {
           alpha: false
       })!;
       this._game_canvas = game_canvas
-      this._commited_resource_storage = commited_resource_storage;
+      this._commited_resource_storage = new CommitedResourceStorage(this._gl, AssetStorage.empty());
 
       this._back_buffer_render_target = new BackBufferTarget(this._gl, game_canvas.width, game_canvas.height);
       this._main_render_target = new MainTarget(this._gl, game_canvas.width, game_canvas.height);
@@ -33,11 +34,22 @@ class GameRenderer {
       game_canvas.addEventListener('resize', this.on_game_canvas_resize)
     }
 
+    set_asset_storage(asset_storage: AssetStorage) {
+      this._commited_resource_storage = new CommitedResourceStorage(this._gl, asset_storage);
+      // Add renderer required assets.
+      LocalAssets.store_local_meshes(this._commited_resource_storage.meshes);
+      LocalAssets.store_local_shaders(this._commited_resource_storage.programs);
+    }
+
     set_camera(view: mat4, proj: mat4) {
       this._active_camera = {
         view: view,
         proj: proj
       };
+    }
+
+    get resource_storage(): CommitedResourceStorage {
+      return this._commited_resource_storage;
     }
 
     execute_draw_commands(draw_commands: DrawCommand[]) {

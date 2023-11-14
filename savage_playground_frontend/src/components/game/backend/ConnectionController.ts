@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { GameMessage } from './communication/GameMessage';
+import { GameMessage, Renderer, Settings } from './communication/GameMessage';
 import { InputMessage } from './communication/ClientMessage';
 
 
@@ -7,7 +7,9 @@ interface ConnectionControllerEventMap {
     "connected": any;
     "disconnected": any;
     "error": any;
-    "game_message": GameMessage;
+    "renderer_update": Renderer.Snapshot,
+    "settings_update": Settings.Snapshot,
+    "ui_update": any,
 }
 
 interface ConnectionControllerMessageMap {
@@ -22,10 +24,10 @@ export class ConnectionController extends EventEmitter {
     ) {
         super();
         this._websocket = new WebSocket(game_host_address);
-        this._websocket.addEventListener('open', this.on_open);
-        this._websocket.addEventListener('error', this.on_error);
-        this._websocket.addEventListener('close', this.on_close);
-        this._websocket.addEventListener('message', this.on_message);
+        this._websocket.addEventListener('open', (e) => { this.on_open(e) } );
+        this._websocket.addEventListener('error', (e) => { this.on_error(e) });
+        this._websocket.addEventListener('close', (e) => { this.on_close(e) });
+        this._websocket.addEventListener('message', (e) => { this.on_message(e) });
     }
 
     send<K extends keyof ConnectionControllerMessageMap>(type: K, message: ConnectionControllerMessageMap[K]) {
@@ -43,20 +45,38 @@ export class ConnectionController extends EventEmitter {
 
     // WebSocket Callbacks
     private on_open(event: Event) {
+        console.log("open: ", event);
         this.emit('connected');
     }
 
     private on_close(event: CloseEvent) {
+        console.log("close: ", event);
         this.emit('disconnected');
     }
 
     private on_error(event: Event) {
+        console.log("error: ", event);
         this.emit('error', {});
     }
 
     private on_message(event: MessageEvent) {
-        // todo parse message
-        let game_message = JSON.parse(event.data as string) as GameMessage;
-        this.emit('world_snapshot', game_message);
+        console.log("message: ", event);
+        try {
+            let game_message = JSON.parse(event.data as string) as GameMessage;
+            
+            if (game_message.renderer !== undefined) {
+                this.emit('renderer_update', game_message.renderer!);
+            }
+
+            if (game_message.settings !== undefined) {
+                this.emit('settings_update', game_message.settings!);
+            }
+
+            if (game_message.ui !== undefined) {
+                this.emit('ui_update', game_message.ui!);
+            }
+        } catch(e) {
+            console.log(`Error reading message: ${e}`);
+        }
     }
 }

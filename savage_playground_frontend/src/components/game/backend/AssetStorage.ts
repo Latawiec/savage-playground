@@ -1,4 +1,4 @@
-import JSZip, { OutputType, file } from 'jszip'
+import JSZip from 'jszip'
 import { IFs, memfs } from 'memfs'
 
 // Constructor is private. Create this structure from either `from_remote` or `from_local` static functions.
