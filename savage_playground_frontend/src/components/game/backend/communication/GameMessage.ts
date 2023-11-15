@@ -13,6 +13,23 @@ export namespace Renderer {
         named_buffers?: Record<string, string>;
     }
 
+    // Predefined global attributes. Not mandatory.
+    // Values for these will be set from the renderer so no need to pass them here.
+    // Just pass in the names where you want these values to be parked at.
+    //
+    // You can overwrite the values of any of these
+    // by simply providing the value as non-global field in UniformAttributes.
+    // Or just don't put the names of them here.
+    export interface GlobalUniformAttributes {
+        mat4?: {
+            camera_view?: string,
+            camera_proj?: string,
+        },
+        vec3?: {
+            camera_forward?: string,
+        }
+    }
+
     export interface UniformAttributes {
         float?: Record<string, number>;
         vec2?:  Record<string, Array<number>>;
@@ -29,11 +46,12 @@ export namespace Renderer {
         transform?: Array<number>;
         blending?: number;
         layer?: number;
-        billboard?: number;
+        billboard?: boolean;
 
         assets?: Assets;
         vertex_attributes?: VertexAttributes;
         uniform_attributes?: UniformAttributes;
+        global_uniform_attributes?: GlobalUniformAttributes;
     }
 
     export interface Camera {

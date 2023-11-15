@@ -13,11 +13,6 @@ export class GameRenderer {
     private _back_buffer_render_target: BackBufferTarget;
     private _main_render_target: MainTarget;
 
-    private _active_camera: {
-      view: mat4,
-      proj: mat4
-    } | undefined;
-
     constructor (
       game_canvas: HTMLCanvasElement,
     ) {
@@ -41,22 +36,11 @@ export class GameRenderer {
       LocalAssets.store_local_shaders(this._commited_resource_storage.programs);
     }
 
-    set_camera(view: mat4, proj: mat4) {
-      this._active_camera = {
-        view: view,
-        proj: proj
-      };
-    }
-
     get resource_storage(): CommitedResourceStorage {
       return this._commited_resource_storage;
     }
 
     execute_draw_commands(draw_commands: DrawCommand[]) {
-      if (this._active_camera === undefined) {
-        throw new Error("No camera is defined. Will not render the scene.");
-      }
-      const camera = this._active_camera!;
       const gl = this._gl;
 
       this._back_buffer_render_target.bind();
@@ -68,7 +52,7 @@ export class GameRenderer {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       for(const draw_command of draw_commands) {
-        draw_command.draw(this._gl, camera.view, camera.proj)
+        draw_command.draw(this._gl)
       }
     }
 

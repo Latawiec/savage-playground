@@ -17,6 +17,7 @@
     "memfs": "^4.6.0",
     "node-fetch": "^3.3.2",
     "pngjs": "^7.0.0",
+    "ts-results": "^3.3.0",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3"
   },
