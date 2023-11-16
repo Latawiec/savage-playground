@@ -1,4 +1,4 @@
-import { AssetStorage } from "../../AssetStorage";
+import { IAssetStorage } from "../../assets/IAssetStorage";
 
 type NamedBufferElementType = 'u8' | 'u16' | 'u32' | 'i8' | 'i16' | 'i32' | 'f32';
 type NamedBufferElementSize = 1 | 2 | 3 | 4;
@@ -87,10 +87,10 @@ export class Mesh {
 export class MeshStorage {
     private _meshCache = new Map<string, Mesh>();
 
-    private _assetStorage: AssetStorage;
+    private _assetStorage: IAssetStorage;
     private _gl: WebGLRenderingContext;
 
-    constructor(gl: WebGLRenderingContext, assetStorage: AssetStorage) {
+    constructor(gl: WebGLRenderingContext, assetStorage: IAssetStorage) {
         this._assetStorage = assetStorage;
         this._gl = gl;
     }
@@ -108,7 +108,7 @@ export class MeshStorage {
         return new Promise(async (resolve, reject) => {
             if (!this._meshCache.has(assetPath)) {
                 try {
-                    const json_mesh = JSON.parse(this._assetStorage.fs.readFileSync(assetPath).toString()) as json_mesh.MeshJSON;
+                    const json_mesh = JSON.parse(await this._assetStorage.read_file(assetPath).toString()) as json_mesh.MeshJSON;
                     this.write(assetPath, json_mesh);
                 } catch (e) {
                     reject(e);

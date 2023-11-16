@@ -1,4 +1,4 @@
-import { AssetStorage } from '../../AssetStorage'
+import { IAssetStorage } from '../../assets/IAssetStorage';
 import { Shader, ShaderStorage, ShaderType } from './ShaderStorage'
 
 export class ShaderProgram {
@@ -39,10 +39,10 @@ export class ProgramStorage {
   private _programCache = new Map<string, ShaderProgram>();
 
   private _shaderStorage: ShaderStorage;
-  private _assetStorage: AssetStorage;
+  private _assetStorage: IAssetStorage;
   private _gl: WebGLRenderingContext;
 
-  constructor(gl: WebGLRenderingContext, assetStorage: AssetStorage) {
+  constructor(gl: WebGLRenderingContext, assetStorage: IAssetStorage) {
     this._assetStorage = assetStorage
     this._shaderStorage = new ShaderStorage(gl, assetStorage)
     this._gl = gl

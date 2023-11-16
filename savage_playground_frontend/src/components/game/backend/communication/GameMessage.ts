@@ -50,7 +50,7 @@ export namespace Renderer {
 
         assets?: Assets;
         vertex_attributes?: VertexAttributes;
-        uniform_attributes?: UniformAttributes;
+        local_uniform_attributes?: UniformAttributes;
         global_uniform_attributes?: GlobalUniformAttributes;
     }
 

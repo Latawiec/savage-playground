@@ -1,4 +1,4 @@
-import { AssetStorage } from '../../AssetStorage';
+import { IAssetStorage } from '../../assets/IAssetStorage';
 import { UuidGenerator } from '../../common/UuidGenerator';
 
 export enum ShaderType {
@@ -53,10 +53,10 @@ export class ShaderStorage {
     private _shaderCache = new Map<string, Shader>();
     private _shaderIdGenerator = new UuidGenerator();
 
-    private _assetStorage: AssetStorage;
+    private _assetStorage: IAssetStorage;
     private _gl: WebGLRenderingContext;
 
-    constructor(gl: WebGLRenderingContext, assetStorage: AssetStorage) {
+    constructor(gl: WebGLRenderingContext, assetStorage: IAssetStorage) {
         this._assetStorage = assetStorage;
         this._gl = gl;
     }
@@ -75,7 +75,7 @@ export class ShaderStorage {
         return new Promise(async (resolve, reject) => {
             if (!this._shaderCache.has(asset_path)) {
                 try {
-                    const shader_source = this._assetStorage.fs.readFileSync(asset_path).toString();
+                    const shader_source = await this._assetStorage.read_file(asset_path).toString();
                     this.write(asset_path, type, shader_source);
                 } catch (e) {
                     reject(e);

@@ -1,4 +1,4 @@
-import { AssetStorage } from '@/components/game/backend/AssetStorage'
+import { ZipAssetStorage } from '@/components/game/backend/assets/ZipAssetStorage';
 import fs from 'fs'
 import memfs from 'memfs'
 import path from 'path'
@@ -7,33 +7,22 @@ global.fetch = jest.fn();
 
 const ASSETS_ROOT = '/assets/AssetStorage'
 
-function validate_memfs_contents (mem_fs: memfs.IFs, sys_fs_dir: fs.Dir, sys_dir_rel_path: string): Promise<boolean> {
+function validate_storage_contents (storage: ZipAssetStorage, sys_fs_dir: fs.Dir, sys_dir_rel_path: string): Promise<boolean> {
   return new Promise<boolean>(async (resolve, reject) => {
     for await (const sys_dir_entry of sys_fs_dir) {
-      const relative_path = '/' + path.relative(sys_dir_rel_path, sys_dir_entry.path) + '/' + sys_dir_entry.name
-
-      if (!mem_fs.existsSync(relative_path)) {
-        reject(`Path ${relative_path} does not exist in in-memory fs`)
-      }
+      const relative_path = '/' + path.relative(sys_dir_rel_path, sys_dir_entry.path) + '/' + sys_dir_entry.name;
 
       if (sys_dir_entry.isFile()) {
-        if (!mem_fs.statSync(relative_path).isFile()) {
-          reject(`Missmatch: expected file at ${relative_path}`)
-        }
+        const storage_file_content = await storage.read_file(relative_path) as Buffer;
+        const sys_fs_file_content = fs.readFileSync(sys_dir_entry.path + '/' + sys_dir_entry.name, null);
 
-        const mem_fs_file_content = mem_fs.readFileSync(relative_path, undefined) as Buffer
-        const sys_fs_file_content = fs.readFileSync(sys_dir_entry.path + '/' + sys_dir_entry.name, null)
-
-        if (Buffer.compare(mem_fs_file_content, sys_fs_file_content) != 0) {
+        if (Buffer.compare(storage_file_content, sys_fs_file_content) != 0) {
           reject(`Missmatch: file contents differ in ${relative_path}`)
         }
       }
 
       if (sys_dir_entry.isDirectory()) {
-        if (!mem_fs.statSync(relative_path).isDirectory()) {
-          reject(`Missmatch: expected directory at ${relative_path}`)
-        }
-        const dir_match = await validate_memfs_contents(mem_fs, await fs.promises.opendir(sys_dir_entry.path + '/' + sys_dir_entry.name), sys_dir_rel_path)
+        const dir_match = await validate_storage_contents(storage, await fs.promises.opendir(sys_dir_entry.path + '/' + sys_dir_entry.name), sys_dir_rel_path)
         if (!dir_match) {
           reject(`Missmatch: directory contents validation failed in ${relative_path}`)
         }
@@ -66,10 +55,10 @@ describe('from', () => {
     } as any as Response)
 
     // When
-    const asset_storage = await AssetStorage.form(zipped_file_path)
+    const asset_storage = await ZipAssetStorage.from_file(zipped_file_path)
 
     // Then
     const check_dir = await fs.promises.opendir(validate_dir_path)
-    expect(await validate_memfs_contents(asset_storage.fs, check_dir, validate_dir_path)).toBe(true)
+    expect(await validate_storage_contents(asset_storage, check_dir, validate_dir_path)).toBe(true)
   })
 })

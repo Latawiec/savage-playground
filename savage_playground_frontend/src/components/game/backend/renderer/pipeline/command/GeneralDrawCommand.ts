@@ -1,14 +1,10 @@
-import { ShaderProgram } from "../gl_resource/ProgramStorage";
-import { Mesh } from "../gl_resource/MeshStorage";
-import { Texture } from "../gl_resource/TextureStorage";
-import { ShaderValueType } from "../../common/GLTypes";
+import { ShaderProgram } from "../../gl_resource/ProgramStorage";
+import { Mesh } from "../../gl_resource/MeshStorage";
+import { Texture } from "../../gl_resource/TextureStorage";
+import { ShaderValueType } from "../../../common/GLTypes";
+import { IDrawCommand } from "./IDrawCommand";
 
-export interface IDrawCommand {
-    draw(gl: WebGLRenderingContext): void;
-    get zorder(): number;
-}
-
-export class DrawCommand implements IDrawCommand {
+export class GeneralDrawCommand implements IDrawCommand {
     private program: ShaderProgram;
     private mesh: Mesh;
     private textures: Map<number, Texture> | undefined;
@@ -36,15 +32,23 @@ export class DrawCommand implements IDrawCommand {
     }
 
 // impl IDrawRequest
-    get zorder(): number {
-        return this.layer;
-    }
-
     draw(gl: WebGLRenderingContext): void {
         this.prepare_program(gl);
+        this.prepare_vertex_attributes(gl);
+        this.prepare_uniform_attributes(gl);
+        this.prepare_textures(gl);
+        this.prepare_blending(gl);
+        this.final_draw(gl);
     }
 
 // private
+    private final_draw(gl: WebGLRenderingContext): void {
+        const elements_count = this.mesh.elementsCount;
+        // Assume that we always have triangles.
+        // Assume that indices are always short ints.
+        // Assume index offset is always 0.
+        gl.drawElements(gl.TRIANGLES, elements_count, gl.UNSIGNED_SHORT, 0);
+    }
 
     private prepare_program(gl: WebGLRenderingContext,): void {
         gl.useProgram(this.program.glShaderProgram);
@@ -82,9 +86,10 @@ export class DrawCommand implements IDrawCommand {
             const gl_type = mesh_named_buffer!.gl_type;
             const gl_buffer = mesh_named_buffer!.gl_buffer;
             const size = mesh_named_buffer!.size;
+            const normalize = mesh_named_buffer!.normalize;
 
             gl.bindBuffer(gl.ARRAY_BUFFER, gl_buffer);
-            gl.vertexAttribPointer(vertex_position_attrib_loc, size, gl_type, false, 0, 0);
+            gl.vertexAttribPointer(vertex_position_attrib_loc, size, gl_type, normalize, 0, 0);
         }
     }
     

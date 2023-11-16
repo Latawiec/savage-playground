@@ -1,7 +1,7 @@
 <template>
     <div class="main">
         <h1>Pong!</h1>
-        <GameComponent></GameComponent>
+        <GameComponent game_host_address="ws://localhost:3000/create"></GameComponent>
     </div>
 </template>
 

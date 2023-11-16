@@ -1,5 +1,5 @@
 import { PNG } from 'pngjs'
-import { AssetStorage } from '../../AssetStorage'
+import { IAssetStorage } from '../../assets/IAssetStorage';
 
 type Components = 1 | 2 | 3 | 4; // Grayscale: 1, Gayscale+Alpha: 2 etc...
 type BitDepth = 1 | 2 | 4 | 8 | 16; // How many bits per one component. I don't know if less than 8 is realistic.
@@ -68,10 +68,10 @@ export class Texture {
 export class TextureStorage {
     private _textureCache = new Map<string, Texture>();
 
-    private _assetStorage: AssetStorage;
+    private _assetStorage: IAssetStorage;
     private _gl: WebGLRenderingContext;
 
-    constructor (gl: WebGLRenderingContext, assetStorage: AssetStorage) {
+    constructor (gl: WebGLRenderingContext, assetStorage: IAssetStorage) {
       this._assetStorage = assetStorage
       this._gl = gl
     }
@@ -88,7 +88,7 @@ export class TextureStorage {
         if (!this._textureCache.has(assetPath)) {
           try {
             // For now we'll assume all images are PNG.
-            const pngFileData = this._assetStorage.fs.readFileSync(assetPath) as Buffer
+            const pngFileData = await this._assetStorage.read_file(assetPath) as Buffer
             const image = Image.fromPNG(pngFileData)
 
             const texture = new Texture(this._gl, image)

@@ -29,8 +29,8 @@ async fn main() {
         .with_span_events(FmtSpan::CLOSE)
         .init();
     
-    let (room_server, room_server_handle) = RoomServerHandle::new(([127, 0, 0, 1], 8080).into());
-    let (asset_Server, asset_server_handle) = AssetServerHandle::new(([127, 0, 0, 1], 8081).into());
+    let (room_server, room_server_handle) = RoomServerHandle::new(([127, 0, 0, 1], 3000).into());
+    let (asset_Server, asset_server_handle) = AssetServerHandle::new(([127, 0, 0, 1], 3001).into());
 
     tokio::spawn(async move {
         let mut receiver = room_server.subscribe();
