@@ -1,8 +1,0 @@
-[package]
-name = "debug"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-atty = "0.2.14"
-mio = { version = "0.8.9", features = ["os-poll", "os-ext"] }

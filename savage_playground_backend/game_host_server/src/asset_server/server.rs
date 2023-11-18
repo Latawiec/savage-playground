@@ -87,7 +87,8 @@ impl AssetServerHandle {
             .and(warp::addr::remote())
             .and(warp::header::conditionals())
             .and(server_handle_filter)
-            .and_then(Self::get_asset);
+            .and_then(Self::get_asset)
+            .map(|reply| warp::reply::with_header(reply, "Access-Control-Allow-Origin", "http://localhost:8080")); // TODO: Learn more about CORS.
 
         let routes = get_asset;
 

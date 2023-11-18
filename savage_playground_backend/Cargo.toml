@@ -1,13 +1,13 @@
 [workspace]
 
 members = [
+    "debug/echo",
+    "debug/pong",
     "build_utils",
-    "debug",
     "framework",
     "testing",
     "worlds",
     "game_host_server",
-    "pong",
 ]
 
 [workspace.dependencies]

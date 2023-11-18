@@ -17,7 +17,8 @@ export class ZipAssetStorage implements IAssetStorage {
         method: 'GET',
         mode: 'cors',
         credentials: 'omit',
-        redirect: 'follow'
+        redirect: 'follow',
+        cache: 'no-store' // TODO: Remove, we want this to be handled properly with headers.
       })
 
       if (response.status !== 200 && response.status !== 0) {
