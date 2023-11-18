@@ -1,10 +1,10 @@
-import { IAssetStorage } from '../../assets/IAssetStorage';
-import { UuidGenerator } from '../../common/UuidGenerator';
+import { IAssetStorage } from '../../assets/IAssetStorage'
+import { UuidGenerator } from '../../common/UuidGenerator'
 
 export enum ShaderType {
     PIXEL = WebGLRenderingContext.FRAGMENT_SHADER,
     VERTEX = WebGL2RenderingContext.VERTEX_SHADER
-};
+}
 
 export class Shader {
     private _gl: WebGLRenderingContext;
@@ -12,42 +12,45 @@ export class Shader {
     private _type: ShaderType;
     private _shader: WebGLShader;
 
-    constructor(gl: WebGLRenderingContext, id: number, type: ShaderType, source: Readonly<string>) {
-        this._gl = gl;
-        this._id = id;
-        this._type = type;
-        this._shader = this.compileShader(this._gl, source)!;
+    constructor (gl: WebGLRenderingContext, id: number, type: ShaderType, source: Readonly<string>) {
+      this._gl = gl
+      this._id = id
+      this._type = type
+      this._shader = this.compileShader(this._gl, source)
     }
 
-    release() {
-        this._gl.deleteShader(this._shader);
+    release () {
+      this._gl.deleteShader(this._shader)
     }
 
-    get type() {
-        return this._type;
+    get type () {
+      return this._type
     }
 
-    get id() {
-        return this._id;
+    get id () {
+      return this._id
     }
 
-    get glShader() {
-        return this._shader;
+    get glShader () {
+      return this._shader
     }
 
-    private compileShader(gl: WebGLRenderingContext, source: Readonly<string>): WebGLShader | undefined {
-        const shader = gl.createShader(this._type)!;
-        gl.shaderSource(shader, source);
-        gl.compileShader(shader);
+    private compileShader (gl: WebGLRenderingContext, source: Readonly<string>): WebGLShader {
+      const shader = gl.createShader(this._type)
+      if (!shader) {
+        throw new Error('Failed to create shader.')
+      }
 
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            console.error('Failed to compile shader: ' + gl.getShaderInfoLog(shader));
-            gl.deleteShader(shader);
-            return undefined;
-        }
-        return shader;
+      gl.shaderSource(shader, source)
+      gl.compileShader(shader)
+
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        gl.deleteShader(shader)
+        throw new Error(`Failed to compile shader: ${gl.getShaderInfoLog(shader)}`)
+      }
+      return shader
     }
-};
+}
 
 export class ShaderStorage {
     private _shaderCache = new Map<string, Shader>();
@@ -56,32 +59,33 @@ export class ShaderStorage {
     private _assetStorage: IAssetStorage;
     private _gl: WebGLRenderingContext;
 
-    constructor(gl: WebGLRenderingContext, assetStorage: IAssetStorage) {
-        this._assetStorage = assetStorage;
-        this._gl = gl;
+    constructor (gl: WebGLRenderingContext, assetStorage: IAssetStorage) {
+      this._assetStorage = assetStorage
+      this._gl = gl
     }
 
-    write(asset_path: string, type: ShaderType, source: Readonly<string>): Shader {
-        if (this._shaderCache.has(asset_path)) {
-          throw new Error(`Asset with path ${asset_path} already exists in ${ShaderStorage.name}`);
-        }
-        const shader = new Shader(this._gl, this._shaderIdGenerator.getNext(), type, source);
-        this._shaderCache.set(asset_path, shader);
+    write (assetPath: string, type: ShaderType, source: Readonly<string>): Shader {
+      if (this._shaderCache.has(assetPath)) {
+        throw new Error(`Asset with path ${assetPath} already exists in ${ShaderStorage.name}`)
+      }
+      const shader = new Shader(this._gl, this._shaderIdGenerator.getNext(), type, source)
+      this._shaderCache.set(assetPath, shader)
 
-        return shader;
+      return shader
     }
 
-    read(asset_path: string, type: ShaderType): Promise<Shader> {
-        return new Promise(async (resolve, reject) => {
-            if (!this._shaderCache.has(asset_path)) {
-                try {
-                    const shader_source = await this._assetStorage.read_file(asset_path).toString();
-                    this.write(asset_path, type, shader_source);
-                } catch (e) {
-                    reject(e);
-                }
-            }
-            resolve(this._shaderCache.get(asset_path)!)
-        });
+    async read (assetPath: string, type: ShaderType): Promise<Shader> {
+      const shader = this._shaderCache.get(assetPath)
+      if (shader) {
+        return shader
+      }
+
+      try {
+        const shaderSource = (await this._assetStorage.readFile(assetPath)).toString()
+        const shader = this.write(assetPath, type, shaderSource)
+        return shader
+      } catch (e) {
+        throw new Error(`Couldn't retrieve shader ${assetPath}: ${e}`)
+      }
     }
-}  
+}

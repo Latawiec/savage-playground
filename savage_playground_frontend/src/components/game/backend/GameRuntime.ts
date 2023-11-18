@@ -1,58 +1,60 @@
-import { ConnectionController } from "./ConnectionController";
-import { GameRendererProxy } from "./GameRendererProxy";
-import { Renderer, Settings } from "./communication/GameMessage";
+import { ConnectionController } from './ConnectionController'
+import { GameRendererProxy } from './GameRendererProxy'
+import { Renderer, Settings } from './communication/GameMessage'
 
 export interface GameCanvasInterface {
-  get_html_canvas(): HTMLCanvasElement,
+  getHtmlCanvas(): HTMLCanvasElement,
 }
 
 export interface GameOverlayInterface {
-
+  data(): object, // Just placeholder.
 }
 
 export class GameRuntime {
-    private _canvas_interface: GameCanvasInterface;
-    private _overlay_interface: GameOverlayInterface;
+    private _canvasInterface: GameCanvasInterface;
+    private _overlayInterface: GameOverlayInterface;
 
-    private _connection_controller: ConnectionController;
-    private _game_renderer: GameRendererProxy;
+    private _connectionController: ConnectionController;
+    private _gameRenderer: GameRendererProxy;
 
-    constructor(game_host_address: URL, canvas_interface: GameCanvasInterface, overlay_interface: GameOverlayInterface) {
-      this._canvas_interface = canvas_interface;
-      this._overlay_interface = overlay_interface;
+    constructor (gameHostAddress: URL, canvasInterface: GameCanvasInterface, overlayInterface: GameOverlayInterface) {
+      this._canvasInterface = canvasInterface
+      this._overlayInterface = overlayInterface
 
-      this._connection_controller = new ConnectionController(game_host_address);
-      this._game_renderer = new GameRendererProxy(canvas_interface.get_html_canvas());
+      this._connectionController = new ConnectionController(gameHostAddress)
+      this._gameRenderer = new GameRendererProxy(canvasInterface.getHtmlCanvas())
 
-      this._connection_controller.on('connected',       (e) => this.on_connected());
-      this._connection_controller.on('disconnected',    (e) => this.on_disconnected());
-      this._connection_controller.on('error',           (e) => this.on_error());
-      this._connection_controller.on('renderer_update', (e) => this.on_renderer_update(e));
-      this._connection_controller.on('settings_update', (e) => this.on_settings_update(e));
-      this._connection_controller.on('ui_update',       (e) => this.on_ui_update(e));
+      this._connectionController.on('connected', (e) => this.onConnected(e))
+      this._connectionController.on('disconnected', (e) => this.onDisconnected(e))
+      this._connectionController.on('error', (e) => this.onError(e))
+      this._connectionController.on('renderer_update', (e) => this.onRendererUpdate(e))
+      this._connectionController.on('settings_update', (e) => this.onSettingsUpdate(e))
+      this._connectionController.on('ui_update', (e) => this.onUiUpdate(e))
     }
 
-    private async on_connected() {
-
+    private async onConnected (_: unknown) {
+      console.log('Connected')
     }
 
-    private async on_disconnected() {
-
+    private async onDisconnected (_: unknown) {
+      console.log('Disconnected')
     }
 
-    private async on_error() {
-
+    private async onError (_: unknown) {
+      console.log('Error')
     }
 
-    private async on_renderer_update(snaposhot: Renderer.Snapshot) {
-      await this._game_renderer.render_snapshot(snaposhot);
+    private async onRendererUpdate (snaposhot: Renderer.Snapshot) {
+      await this._gameRenderer.renderSnapshot(snaposhot)
     }
 
-    private async on_settings_update(snapshot: Settings.Snapshot) {
-
+    private async onSettingsUpdate (snapshot: Settings.Snapshot) {
+      if (snapshot.assets && snapshot.assets.assetsPackagePath) {
+        await this._gameRenderer.loadAssetsPackage(snapshot.assets.assetsPackagePath)
+      }
     }
 
-    private async on_ui_update(snapshot: any) {
-      
+    private async onUiUpdate (_snapshot: unknown) {
+      console.log('UI Update')
     }
 }

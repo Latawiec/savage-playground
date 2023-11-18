@@ -1,6 +1,6 @@
 
 export enum MessageType {
-    Input = "input",
+    Input = 'input',
 }
 
 export interface ClientMessage {
@@ -9,6 +9,6 @@ export interface ClientMessage {
 
 export interface InputMessage extends ClientMessage {
     type: MessageType.Input;
-    input_state: bigint;
+    inputState: bigint;
     timestamp?: bigint; // Millis since Epoch.
 }

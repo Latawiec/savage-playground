@@ -12,7 +12,7 @@
     "named_buffers": {
         "uv": {
             "type": "f32",
-            "size": "2",
+            "size": 2,
             "data": [
                 0.0, 0.0,
                 1.0, 0.0,

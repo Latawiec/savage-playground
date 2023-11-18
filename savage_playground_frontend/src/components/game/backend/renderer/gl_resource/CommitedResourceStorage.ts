@@ -1,4 +1,4 @@
-import { IAssetStorage } from '../../assets/IAssetStorage';
+import { IAssetStorage } from '../../assets/IAssetStorage'
 import { MeshStorage } from './MeshStorage'
 import { ProgramStorage } from './ProgramStorage'
 import { TextureStorage } from './TextureStorage'

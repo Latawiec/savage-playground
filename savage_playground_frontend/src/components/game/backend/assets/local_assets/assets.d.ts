@@ -1,2 +1,2 @@
-declare module "*.glsl";
-declare module "*.json";
+declare module '*.glsl';
+declare module '*.json';

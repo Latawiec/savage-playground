@@ -123,6 +123,13 @@ impl RoomServerHandle {
         let server_handle_clone = server_handle.clone();
         let server_handle_filter = warp::any().map(move || server_handle_clone.clone());
 
+        // Remove this if I make sure I dont need it
+        // let cors = warp::cors()
+        //     .allow_any_origin()
+        //     .allow_headers(vec!["Access-Control-Allow-Origin", "Content-Type"])
+        //     .allow_methods(vec!["GET"]);
+        // let route_cors = warp::any().map(warp::reply);//.map(|reply| warp::reply::with_header(reply, "Access-Control-Allow-Origin", "*"));//.with(cors);
+
         let join_room = warp::path!("join" / RoomID)
             .and(client_id_gen_filter.clone())
             .and(warp::ws())
@@ -140,7 +147,7 @@ impl RoomServerHandle {
             .and_then(Self::create_room)
             .recover(error::return_error);
 
-        let routes = join_room.or(create_room);
+        let routes = join_room.or(create_room);//.or(route_cors);
 
         let server_join_handle = tokio::spawn(async move {
             warp::serve(routes).bind(server_address).await;

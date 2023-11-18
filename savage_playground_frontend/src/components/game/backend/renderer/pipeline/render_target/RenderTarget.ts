@@ -1,5 +1,4 @@
 
-
 export interface RenderTarget {
     bind(): void;
     get width(): number;

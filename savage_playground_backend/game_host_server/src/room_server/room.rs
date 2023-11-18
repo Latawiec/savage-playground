@@ -117,7 +117,11 @@ impl RoomHandle {
                             },
                             ServerMessage::Room { room_id, message } => {
                                 if self_room_id == room_id {
-                                    tx.send(Message::text(format!("Room message: {:?}", message))).await;
+                                    // tx.send(Message::text(format!("Room message: {:?}", message))).await;
+                                    match message {
+                                        super::message::Message::Text { data } => { tx.send(Message::text(format!("{}", data))).await; }
+                                        super::message::Message::Binary { data } => todo!(),
+                                    }
                                 }
                             },
                             ServerMessage::Client { client_id, message } => {

@@ -6,12 +6,13 @@ module.exports = defineConfig({
   transpileDependencies: true,
   configureWebpack: {
     plugins: [
-        // fix "process is not defined" error:
-        // (do "npm install process" before running the build)
-        // I did this only because I use memfs instead of memfs-browser. All fallbacks below are also because of that. I might just use memfs-browser then?
-        new webpack.ProvidePlugin({
-          process: 'process/browser',
-        }),
+      // fix "process is not defined" error:
+      // (do "npm install process" before running the build)
+      // I did this only because I use memfs instead of memfs-browser. All fallbacks below are also because of that. I might just use memfs-browser then?
+      new webpack.ProvidePlugin({
+        process: 'process/browser',
+        Buffer: ['buffer', 'Buffer']
+      })
     ],
     resolve: {
       alias: {
@@ -25,7 +26,7 @@ module.exports = defineConfig({
         stream: require.resolve('stream-browserify'),
         process: require.resolve('process/browser'),
         url: require.resolve('url'),
-        events: require.resolve('events'),
+        events: require.resolve('events')
       }
     },
     module: {
@@ -34,14 +35,14 @@ module.exports = defineConfig({
           test: /\.glsl$/,
           type: 'asset/resource',
           generator: {
-            outputPath: process.env.VUE_APP_LOCAL_ASSETS_PATH,
+            outputPath: process.env.VUE_APP_LOCAL_ASSETS_PATH
           }
         },
         {
           test: /\.json$/,
           type: 'asset/resource',
           generator: {
-            outputPath: process.env.VUE_APP_LOCAL_ASSETS_PATH,
+            outputPath: process.env.VUE_APP_LOCAL_ASSETS_PATH
           }
         }
       ]

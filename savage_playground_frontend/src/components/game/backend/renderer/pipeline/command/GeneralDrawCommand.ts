@@ -1,145 +1,147 @@
-import { ShaderProgram } from "../../gl_resource/ProgramStorage";
-import { Mesh } from "../../gl_resource/MeshStorage";
-import { Texture } from "../../gl_resource/TextureStorage";
-import { ShaderValueType } from "../../../common/GLTypes";
-import { IDrawCommand } from "./IDrawCommand";
+import { ShaderProgram } from '../../gl_resource/ProgramStorage'
+import { Mesh } from '../../gl_resource/MeshStorage'
+import { Texture } from '../../gl_resource/TextureStorage'
+import { ShaderValueType } from '../../../common/GLTypes'
+import { IDrawCommand } from './IDrawCommand'
 
 export class GeneralDrawCommand implements IDrawCommand {
     private program: ShaderProgram;
     private mesh: Mesh;
     private textures: Map<number, Texture> | undefined;
-    private uniform_attrs: Map<ShaderValueType, Map<string, number | number[]>> | undefined;
-    private vertex_attrs: Map<string, string>;
+    private uniformAttrs: Map<ShaderValueType, Map<string, number | number[]>> | undefined;
+    private vertexAttrs: Map<string, string>;
     private layer: number;
     private billboard: boolean;
 
-    constructor(
-        program: ShaderProgram,
-        mesh: Mesh,
-        textures: Map<number, Texture> | undefined,
-        uniform_attrs: Map<ShaderValueType, Map<string, number | number[]>> | undefined,
-        vertex_attrs: Map<string, string>,
-        layer: number,
-        billboard: boolean
+    constructor (
+      program: ShaderProgram,
+      mesh: Mesh,
+      textures: Map<number, Texture> | undefined,
+      uniformAttrs: Map<ShaderValueType, Map<string, number | number[]>> | undefined,
+      vertexAttrs: Map<string, string>,
+      layer: number,
+      billboard: boolean
     ) {
-        this.program = program;
-        this.mesh = mesh;
-        this.textures = textures;
-        this.uniform_attrs = uniform_attrs;
-        this.vertex_attrs = vertex_attrs;
-        this.layer = layer;
-        this.billboard = billboard;
+      this.program = program
+      this.mesh = mesh
+      this.textures = textures
+      this.uniformAttrs = uniformAttrs
+      this.vertexAttrs = vertexAttrs
+      this.layer = layer
+      this.billboard = billboard
     }
 
-// impl IDrawRequest
-    draw(gl: WebGLRenderingContext): void {
-        this.prepare_program(gl);
-        this.prepare_vertex_attributes(gl);
-        this.prepare_uniform_attributes(gl);
-        this.prepare_textures(gl);
-        this.prepare_blending(gl);
-        this.final_draw(gl);
+    // impl IDrawRequest
+    draw (gl: WebGLRenderingContext): void {
+      this.prepareProgram(gl)
+      this.prepareVertexAttributes(gl)
+      this.prepareUniformAttributes(gl)
+      this.prepareTextures(gl)
+      this.prepareBlending(gl)
+      this.finalizeDraw(gl)
     }
 
-// private
-    private final_draw(gl: WebGLRenderingContext): void {
-        const elements_count = this.mesh.elementsCount;
-        // Assume that we always have triangles.
-        // Assume that indices are always short ints.
-        // Assume index offset is always 0.
-        gl.drawElements(gl.TRIANGLES, elements_count, gl.UNSIGNED_SHORT, 0);
+    // private
+    private finalizeDraw (gl: WebGLRenderingContext): void {
+      // Assume that we always have triangles.
+      // Assume that indices are always short ints.
+      // Assume index offset is always 0.
+      gl.drawElements(gl.TRIANGLES, this.mesh.elementsCount, gl.UNSIGNED_SHORT, 0)
     }
 
-    private prepare_program(gl: WebGLRenderingContext,): void {
-        gl.useProgram(this.program.glShaderProgram);
+    private prepareProgram (gl: WebGLRenderingContext): void {
+      gl.useProgram(this.program.glShaderProgram)
     }
 
-    private prepare_vertex_attributes(gl: WebGLRenderingContext): void {
-        
-        // Required attributes (vertices, indices)
-        const vertex_position_attrib_loc = gl.getAttribLocation(this.program.glShaderProgram, this.vertex_attrs.get('vertices')!);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.glVertexBuffer);
-        gl.vertexAttribPointer(vertex_position_attrib_loc, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(vertex_position_attrib_loc);
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.mesh.glIndexBuffer);
+    private prepareVertexAttributes (gl: WebGLRenderingContext): void {
+      // Required attributes (vertices, indices)
+      const verticesAttributeName = this.vertexAttrs.get('vertices')
+      if (!verticesAttributeName) {
+        throw new Error('Vertices attribute not found.')
+      }
 
-        // Optional attributes
-        for (const [buffer_name, attrib_name] of this.vertex_attrs) {
-            if (buffer_name === 'vertices') {
-                // Special. For now.
-                continue;
-            }
+      const vertexPositionAttribLoc = gl.getAttribLocation(this.program.glShaderProgram, verticesAttributeName)
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.glVertexBuffer)
+      gl.vertexAttribPointer(vertexPositionAttribLoc, 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(vertexPositionAttribLoc)
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.mesh.glIndexBuffer)
 
-            const mesh_named_buffer = this.mesh.get_named_gl_buffer(buffer_name);
-            const vertex_position_attrib_loc = gl.getAttribLocation(this.program.glShaderProgram, attrib_name);
-
-            if (mesh_named_buffer === undefined) {
-                console.error(`Mesh doesn't have required named buffer: ${attrib_name}. Vertex attribute couldn't be set.`);
-                continue;
-            }
-
-            if (vertex_position_attrib_loc === null) {
-                console.error(`Couldn't locate ${mesh_named_buffer} in shader program. Vertex attribute couldn't be set.`);
-                continue;
-            }
-
-            const gl_type = mesh_named_buffer!.gl_type;
-            const gl_buffer = mesh_named_buffer!.gl_buffer;
-            const size = mesh_named_buffer!.size;
-            const normalize = mesh_named_buffer!.normalize;
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, gl_buffer);
-            gl.vertexAttribPointer(vertex_position_attrib_loc, size, gl_type, normalize, 0, 0);
-        }
-    }
-    
-    private prepare_uniform_attributes(gl: WebGLRenderingContext): void {
-        if (this.uniform_attrs === undefined) {
-            return;
+      // Optional attributes
+      for (const [bufferName, attribName] of this.vertexAttrs) {
+        if (bufferName === 'vertices') {
+          // Special. For now.
+          continue
         }
 
-        for (const [type, attributes] of this.uniform_attrs) {
-            for (const [uniform_name, uniform_values] of attributes) {
-                const uniform_location = gl.getUniformLocation(this.program.glShaderProgram, uniform_name);
-                if (uniform_location === null) {
-                    console.error(`Uniform attribute ${uniform_name} not found in shader program.`);
-                    continue;
-                }
+        const meshNamedBuffer = this.mesh.getNamedGlBuffer(bufferName)
+        const attribLoc = gl.getAttribLocation(this.program.glShaderProgram, attribName)
 
-                switch(type) {
-                    case 'mat4': gl.uniformMatrix4fv(uniform_location, false, uniform_values as Array<number>); break;
-
-                    case 'float': gl.uniform1f(uniform_location, uniform_values as number); break;
-                    case 'vec2': gl.uniform2fv(uniform_location, uniform_values as Array<number>); break;
-                    case 'vec3': gl.uniform3fv(uniform_location, uniform_values as Array<number>); break;
-                    case 'vec4': gl.uniform4fv(uniform_location, uniform_values as Array<number>); break;
-
-                    case 'int': gl.uniform1i(uniform_location, uniform_values as number); break;
-                    case 'ivec2': gl.uniform2iv(uniform_location, uniform_values as Array<number>); break;
-                    case 'ivec3': gl.uniform3iv(uniform_location, uniform_values as Array<number>); break;
-                    case 'ivec4': gl.uniform4iv(uniform_location, uniform_values as Array<number>); break;
-
-                    default: console.error(`Uniform type unknown: ${type}`);
-                }
-            }
-        }
-    }
-
-    private prepare_textures(gl: WebGLRenderingContext): void {
-        if (this.textures === undefined) {
-            return;
+        if (!meshNamedBuffer) {
+          console.warn(`Mesh doesn't have required named buffer: ${bufferName}. Vertex attribute couldn't be set.`)
+          continue
         }
 
-        for (const [texture_offset, texture] of this.textures) {
-            gl.activeTexture(gl.TEXTURE0 + texture_offset);
-            gl.bindTexture(gl.TEXTURE_2D, texture.glTexture);
+        if (attribLoc < 0) {
+          console.warn(`Couldn't locate ${attribName} in shader program. Vertex attribute couldn't be set.`)
+          continue
         }
+
+        const glType = meshNamedBuffer.glType
+        const glBuffer = meshNamedBuffer.glBuffer
+        const size = meshNamedBuffer.size
+        const normalize = meshNamedBuffer.normalize
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer)
+        gl.vertexAttribPointer(attribLoc, size, glType, normalize, 0, 0)
+      }
     }
 
-    private prepare_blending(gl: WebGLRenderingContext): void {
-        // Just use standard for now.
-        //canvas.glContext.blendFunc(canvas.glContext.SRC_ALPHA, canvas.glContext.ONE); // Additive blending.
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); // real transparency
+    private prepareUniformAttributes (gl: WebGLRenderingContext): void {
+      if (this.uniformAttrs === undefined) {
+        return
+      }
+
+      for (const [type, attributes] of this.uniformAttrs) {
+        for (const [uniformName, uniformValues] of attributes) {
+          const uniformLocation = gl.getUniformLocation(this.program.glShaderProgram, uniformName)
+          if (uniformLocation === null) {
+            console.error(`Uniform attribute ${uniformName} not found in shader program.`)
+            continue
+          }
+
+          switch (type) {
+            case 'mat4': gl.uniformMatrix4fv(uniformLocation, false, uniformValues as Array<number>); break
+
+            case 'float': gl.uniform1f(uniformLocation, uniformValues as number); break
+            case 'vec2': gl.uniform2fv(uniformLocation, uniformValues as Array<number>); break
+            case 'vec3': gl.uniform3fv(uniformLocation, uniformValues as Array<number>); break
+            case 'vec4': gl.uniform4fv(uniformLocation, uniformValues as Array<number>); break
+
+            case 'int': gl.uniform1i(uniformLocation, uniformValues as number); break
+            case 'ivec2': gl.uniform2iv(uniformLocation, uniformValues as Array<number>); break
+            case 'ivec3': gl.uniform3iv(uniformLocation, uniformValues as Array<number>); break
+            case 'ivec4': gl.uniform4iv(uniformLocation, uniformValues as Array<number>); break
+
+            default: console.error(`Uniform type unknown: ${type}`)
+          }
+        }
+      }
     }
 
+    private prepareTextures (gl: WebGLRenderingContext): void {
+      if (this.textures === undefined) {
+        return
+      }
+
+      for (const [textureOffset, texture] of this.textures) {
+        gl.activeTexture(gl.TEXTURE0 + textureOffset)
+        gl.bindTexture(gl.TEXTURE_2D, texture.glTexture)
+      }
+    }
+
+    private prepareBlending (_gl: WebGLRenderingContext): void {
+      // Just use standard for now.
+      // canvas.glContext.blendFunc(canvas.glContext.SRC_ALPHA, canvas.glContext.ONE); // Additive blending.
+      // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); // real transparency
+    }
 }

@@ -1,39 +1,43 @@
 
 export class InputController {
-    private _input_state: Map<number, boolean>
-    private _key_binding: Map<string, number>
+    private _inputState: Map<number, boolean>
+    private _keyBinding: Map<string, number>
 
-    constructor (document: Document, key_binding: Map<string, number>) {
-      this._input_state = new Map()
-      this._key_binding = key_binding
+    constructor (document: Document, keyBinding: Map<string, number>) {
+      this._inputState = new Map()
+      this._keyBinding = keyBinding
 
       document.addEventListener('keyup', this.keyPressCallback)
       document.addEventListener('keydown', this.keyReleaseCallback)
     }
 
-    set keyBinding (key_binding: Map<string, number>) {
-      this._key_binding = key_binding
+    set keyBinding (keyBinding: Map<string, number>) {
+      this._keyBinding = keyBinding
+    }
+
+    get keyBinding (): Readonly<Map<string, number>> {
+      return this._keyBinding
     }
 
     get inputState (): Readonly<Map<number, boolean>> {
-      return this._input_state
+      return this._inputState
     }
 
     private keyPressCallback (e: KeyboardEvent) {
-      if (!this._key_binding.has(e.code)) {
+      const keyCode = this._keyBinding.get(e.code)
+      if (!keyCode) {
         // Unknown binding.
         return
       }
-      const keyCode = this._key_binding.get(e.code)!
-      this._input_state.set(keyCode, true)
+      this._inputState.set(keyCode, true)
     }
 
     private keyReleaseCallback (e: KeyboardEvent) {
-      if (!this._key_binding.has(e.code)) {
+      const keyCode = this._keyBinding.get(e.code)
+      if (!keyCode) {
         // Unknown binding.
         return
       }
-      const keyCode = this._key_binding.get(e.code)!
-      this._input_state.set(keyCode, false)
+      this._inputState.set(keyCode, false)
     }
 }

@@ -1,33 +1,38 @@
-import { IAssetStorage } from "./IAssetStorage";
+import { IAssetStorage } from './IAssetStorage'
+import path from 'path'
 
 // Meshes
-import screen_space_rect_src from './local_assets/mesh/screen_space_rect.json'
+import screenSpaceRectSrc from './local_assets/mesh/screen_space_rect.json'
 
 // Shaders
-import blit_texture_vs_src from './local_assets/shader/blit_texture.vs.glsl'
-import blit_texture_ps_src from './local_assets/shader/blit_texture.ps.glsl'
+import blitTextureVsSrc from './local_assets/shader/blit_texture.vs.glsl'
+import blitTexturePsSrc from './local_assets/shader/blit_texture.ps.glsl'
 
-const LOCAL_ASSETS_PATH = process.env.VUE_APP_LOCAL_ASSETS_PATH!;
+const LOCAL_ASSETS_PATH = process.env.VUE_APP_LOCAL_ASSETS_PATH
 
 export class LocalAssetStorage implements IAssetStorage {
-    private _available_assets = new Set([
-        screen_space_rect_src,
-        blit_texture_vs_src,
-        blit_texture_ps_src
+    private _availableAssets = new Set([
+      screenSpaceRectSrc,
+      blitTextureVsSrc,
+      blitTexturePsSrc
     ]);
 
     // Impl IAssetStorage
-    get source(): string {
-        return "local";
+    get source (): string {
+      return 'local'
     }
 
-    read_file(asset_path: string): Promise<string | Buffer> {
-        return new Promise((resolve, reject) => {
-            if (this._available_assets.has(asset_path)) {
-                return fetch(LOCAL_ASSETS_PATH + asset_path).then(response => response.arrayBuffer())
-            } else {
-                reject(`Local asset ${asset_path} not found.`);
-            }
-        })
+    async readFile (assetPath: string): Promise<string | Buffer> {
+      if (!LOCAL_ASSETS_PATH) {
+        throw new Error('LOCAL_ASSETS_PATH not defined')
+      }
+
+      if (this._availableAssets.has(assetPath)) {
+        const result = await fetch(path.join(LOCAL_ASSETS_PATH, assetPath)).then(response => response.arrayBuffer())
+        // TODO: Avoid Buffer.from() since it allocates. Can I just forward a Blob instead?
+        return Buffer.from(result)
+      } else {
+        throw new Error(`Local asset ${assetPath} not found.`)
+      }
     }
 }

@@ -1,5 +1,5 @@
 import { PNG } from 'pngjs'
-import { IAssetStorage } from '../../assets/IAssetStorage';
+import { IAssetStorage } from '../../assets/IAssetStorage'
 
 type Components = 1 | 2 | 3 | 4; // Grayscale: 1, Gayscale+Alpha: 2 etc...
 type BitDepth = 1 | 2 | 4 | 8 | 16; // How many bits per one component. I don't know if less than 8 is realistic.
@@ -11,7 +11,7 @@ export class Image {
     grayscale: boolean;
     alpha: boolean;
     components: Components;
-    bit_depth: BitDepth;
+    bitDepth: BitDepth;
 
     constructor (
       imageData: Uint8Array,
@@ -20,7 +20,7 @@ export class Image {
       grayscale: boolean,
       alpha: boolean,
       components: Components,
-      bit_depth: BitDepth
+      bitDepth: BitDepth
     ) {
       this.data = imageData
       this.width = width
@@ -28,7 +28,7 @@ export class Image {
       this.grayscale = grayscale
       this.alpha = alpha
       this.components = components
-      this.bit_depth = bit_depth
+      this.bitDepth = bitDepth
     }
 
     static fromPNG (pngFileData: Readonly<Buffer>): Image {
@@ -51,7 +51,11 @@ export class Texture {
     private _texture: WebGLTexture;
 
     constructor (glContext: WebGLRenderingContext, textureImage: Image) {
-      this._texture = glContext.createTexture()!
+      const texture = glContext.createTexture()
+      if (!texture) {
+        throw new Error('Couldn\'t create texture')
+      }
+      this._texture = texture
 
       // TODO: I should parametrize these in construction. But right now wioth pngjs only, all images will be the same format.
       glContext.bindTexture(glContext.TEXTURE_2D, this._texture)
@@ -76,28 +80,30 @@ export class TextureStorage {
       this._gl = gl
     }
 
-    write(asset_path: string, texture: Texture) {
-      if (this._textureCache.has(asset_path)) {
-        throw new Error(`Asset with path ${asset_path} already exists in ${TextureStorage.name}`);
+    write (assetPath: string, texture: Texture) {
+      if (this._textureCache.has(assetPath)) {
+        throw new Error(`Asset with path ${assetPath} already exists in ${TextureStorage.name}`)
       }
-      this._textureCache.set(asset_path, texture);
+      this._textureCache.set(assetPath, texture)
     }
 
-    read (assetPath: string): Promise<Texture> {
-      return new Promise(async (resolve, reject) => {
-        if (!this._textureCache.has(assetPath)) {
-          try {
-            // For now we'll assume all images are PNG.
-            const pngFileData = await this._assetStorage.read_file(assetPath) as Buffer
-            const image = Image.fromPNG(pngFileData)
+    async read (assetPath: string): Promise<Texture> {
+      const texture = this._textureCache.get(assetPath)
+      if (texture) {
+        return texture
+      }
 
-            const texture = new Texture(this._gl, image)
-            this._textureCache.set(assetPath, texture)
-          } catch (e) {
-            reject(e)
-          }
-        }
-        resolve(this._textureCache.get(assetPath)!)
-      })
+      try {
+        // For now we'll assume all images are PNG.
+        const pngFileData = (await this._assetStorage.readFile(assetPath)) as Buffer
+        const image = Image.fromPNG(pngFileData)
+
+        const texture = new Texture(this._gl, image)
+        this._textureCache.set(assetPath, texture)
+
+        return texture
+      } catch (e) {
+        throw new Error(`Couldn't retrieve texture ${assetPath}: ${e}`)
+      }
     }
 }

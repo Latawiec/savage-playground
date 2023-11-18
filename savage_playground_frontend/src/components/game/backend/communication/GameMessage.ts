@@ -2,15 +2,15 @@
 export namespace Renderer {
 
     export interface Assets {
-        vertex_shader?: string;
-        pixel_shader?: string;
+        vertexShader?: string;
+        pixelShader?: string;
         mesh?: string;
         textures?: Record<number, string>;
     }
 
     export interface VertexAttributes {
         vertices?: string;
-        named_buffers?: Record<string, string>;
+        namedBuffers?: Record<string, string>;
     }
 
     // Predefined global attributes. Not mandatory.
@@ -22,41 +22,40 @@ export namespace Renderer {
     // Or just don't put the names of them here.
     export interface GlobalUniformAttributes {
         mat4?: {
-            camera_view?: string,
-            camera_proj?: string,
+            cameraView?: string,
+            cameraProj?: string,
         },
         vec3?: {
-            camera_forward?: string,
+            cameraForward?: string,
         }
     }
 
     export interface UniformAttributes {
         float?: Record<string, number>;
-        vec2?:  Record<string, Array<number>>;
-        vec3?:  Record<string, Array<number>>;
-        vec4?:  Record<string, Array<number>>;
-        int?:   Record<string, number>;
+        vec2?: Record<string, Array<number>>;
+        vec3?: Record<string, Array<number>>;
+        vec4?: Record<string, Array<number>>;
+        int?: Record<string, number>;
         ivec2?: Record<string, Array<number>>;
         ivec3?: Record<string, Array<number>>;
         ivec4?: Record<string, Array<number>>;
-        mat4?:  Record<string, Array<number>>;
+        mat4?: Record<string, Array<number>>;
     }
 
     export interface Drawable {
-        transform?: Array<number>;
         blending?: number;
         layer?: number;
         billboard?: boolean;
 
         assets?: Assets;
-        vertex_attributes?: VertexAttributes;
-        local_uniform_attributes?: UniformAttributes;
-        global_uniform_attributes?: GlobalUniformAttributes;
+        vertexAttributes?: VertexAttributes;
+        localUniformAttributes?: UniformAttributes;
+        globalUniformAttributes?: GlobalUniformAttributes;
     }
 
     export interface Camera {
-        view_transform?: Array<number>;
-        proj_transform?: Array<number>;
+        viewTransform?: Array<number>;
+        projTransform?: Array<number>;
     }
 
     export interface Snapshot {
@@ -73,13 +72,13 @@ export namespace Renderer {
 export namespace Settings {
 
     export interface Assets {
-        assets_package_path?: string
+        assetsPackagePath?: string
     }
 
     export interface Window {
-        aspect_ratio?: number;
-        render_target_width?: number;
-        render_target_height?: number;
+        aspectRatio?: number;
+        renderTargetWidth?: number;
+        renderTargetHeight?: number;
     }
 
     export interface Snapshot {
@@ -91,5 +90,5 @@ export namespace Settings {
 export interface GameMessage {
     renderer?: Renderer.Snapshot;
     settings?: Settings.Snapshot;
-    ui?: any; // Each game will have it's very own UI. We'll forward this raw so that Vue Component can parse it however it wants.
+    ui?: unknown; // Each game will have it's very own UI. We'll forward this raw so that Vue Component can parse it however it wants.
 }
