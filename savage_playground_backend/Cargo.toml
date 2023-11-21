@@ -3,9 +3,11 @@
 members = [
     "debug/echo",
     "debug/pong",
+    "debug/test_proto",
     "build_utils",
     "framework",
     "testing",
+    "proto",
     "worlds",
     "game_host_server",
 ]

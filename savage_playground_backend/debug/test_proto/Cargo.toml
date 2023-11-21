@@ -1,0 +1,12 @@
+[package]
+name = "test_proto"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+prost = "0.12.2"
+prost-types = "0.12.2"
+proto = { path = "../../proto" }
+
+[build-dependencies]
+prost-build = "0.12.2"
