@@ -7,6 +7,7 @@ fn main() -> Result<()> {
     let protos_list = [
         fs::canonicalize(format!("{protos_dir}/game_message/renderer/gl_types.proto"))?,
         fs::canonicalize(format!("{protos_dir}/game_message/renderer/drawable.proto"))?,
+        fs::canonicalize(format!("{protos_dir}/game_message/renderer/assets.proto"))?,
         fs::canonicalize(format!("{protos_dir}/game_message/renderer/vertex_attributes.proto"))?,
         fs::canonicalize(format!("{protos_dir}/game_message/renderer/uniform_attributes.proto"))?,
     ];
@@ -17,7 +18,7 @@ fn main() -> Result<()> {
     ];
 
     for proto_path in &protos_list {
-        println!("cargo:rerun-if-changed={}", proto_path.to_str().unwrap());    
+        println!("cargo:rerun-if-changed={}", proto_path.to_str().unwrap());  
     }
 
     let proto_output: String = std::env::var("CARGO_MANIFEST_DIR").unwrap();

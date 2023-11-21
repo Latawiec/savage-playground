@@ -15,4 +15,6 @@ pub struct Drawable {
     pub shared_attributes: ::core::option::Option<
         super::uniform_attributes::SharedUniformAttributes,
     >,
+    #[prost(message, optional, tag = "5")]
+    pub assets: ::core::option::Option<super::assets::Assets>,
 }
