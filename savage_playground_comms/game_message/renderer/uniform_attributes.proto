@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "gl_types.proto";
 
-package game_message.renderer.uniform_attributes;
+package uniform_attributes;
 
 message UniformAttributes {
     map<string, float> float = 1;

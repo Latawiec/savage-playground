@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+import "drawable.proto";
+import "gl_types.proto";
+
+package snapshot;
+
+enum UpdateType {
+    Reset = 0;
+    Increment = 1;
+}
+
+message Entity {
+    string id = 1;
+    optional drawable.Drawable drawable = 2;
+}
+
+message Camera {
+    optional gl_types.float_array view = 1;
+    optional gl_types.float_array proj = 2;
+}
+
+message Snapshot {
+    optional UpdateType update_type = 1;
+    repeated Entity entities = 2;
+}

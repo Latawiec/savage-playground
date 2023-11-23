@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package game_message.renderer.gl_types;
+package gl_types;
 
 message float_array {
     repeated float values = 1 [packed = true];

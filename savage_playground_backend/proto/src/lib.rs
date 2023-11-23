@@ -1,2 +1,1 @@
-
-// include!(concat!(env!("OUT_DIR"), "/vertex_attributes.rs"));
+pub mod game_message;

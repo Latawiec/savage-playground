@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package game_message.renderer.vertex_attributes;
+package vertex_attributes;
 
 message VertexAttributes {
     optional string vertices = 1;

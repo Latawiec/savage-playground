@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package game_message.renderer.assets;
+package assets;
 
 message Texture {
     uint32 offset = 1;
