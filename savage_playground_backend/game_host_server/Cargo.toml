@@ -18,4 +18,4 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [build-dependencies]
-build_utils = { path = "../build_utils" }
+build_io = { path = "../build_util/build_io" }

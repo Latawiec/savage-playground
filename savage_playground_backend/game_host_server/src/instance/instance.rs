@@ -1,5 +1,8 @@
-use std::{process::{Stdio, ExitStatus}, path::{Path, PathBuf}};
-use tokio::process::{Command, Child, ChildStdin, ChildStdout, ChildStderr};
+use std::{
+    path::{Path, PathBuf},
+    process::{ExitStatus, Stdio},
+};
+use tokio::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command};
 
 #[derive(Debug)]
 pub enum Error {
@@ -24,12 +27,15 @@ impl Instance {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .spawn() {
-                Err(error) => {
-                    return Err(Error::StartupError { reason: error.to_string() })
-                },
-                Ok (process) => process,
-            };
+            .spawn()
+        {
+            Err(error) => {
+                return Err(Error::StartupError {
+                    reason: error.to_string(),
+                })
+            }
+            Ok(process) => process,
+        };
 
         Ok(Instance {
             path: path.to_owned(),
@@ -50,8 +56,8 @@ impl Instance {
     }
 
     pub fn try_wait(&mut self) -> Result<Option<ExitStatus>, Error> {
-        self.process.try_wait().map_err(|err| {
-            Error::ProcessError { reason: err.to_string() }
+        self.process.try_wait().map_err(|err| Error::ProcessError {
+            reason: err.to_string(),
         })
     }
 }

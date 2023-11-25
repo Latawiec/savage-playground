@@ -1,14 +1,16 @@
 [workspace]
 
 members = [
+    "build_util/build_io",
+    "build_util/proto_gen",
     "debug/echo",
     "debug/pong",
-    "build_utils",
     "framework",
     "testing",
-    "proto",
     "worlds",
     "game_host_server",
+    "game_interface",
+    "host_runtime_interface",
 ]
 
 [workspace.dependencies]
@@ -16,6 +18,11 @@ bevy = { version = "*", features = ["dynamic_linking"] }
 tokio = { version = "1.32.0", features = ["process", "rt-multi-thread", "tracing", "macros", "test-util", "signal", "sync"] }
 serde = { version = "*", features = ["derive"] }
 serde_json = { version = "*" }
+prost = { version = "*" }
+prost-types = { version = "*" }
+
+# Build dependencies
+prost-build = { version = "*" }
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

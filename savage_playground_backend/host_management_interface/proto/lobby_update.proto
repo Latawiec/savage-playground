@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+message ClientID {
+    string value = 1;
+}
+
+message LobbyUpdate {
+    repeated ClientID joined = 1;
+    repeated ClientID left = 2;
+}

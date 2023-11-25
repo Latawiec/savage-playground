@@ -1166,7 +1166,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "build_utils"
+name = "build_io"
 version = "0.1.0"
 
 [[package]]
@@ -1947,7 +1947,7 @@ dependencies = [
 name = "game_host_server"
 version = "0.1.0"
 dependencies = [
- "build_utils",
+ "build_io",
  "clap",
  "futures-util",
  "serde",
@@ -1956,6 +1956,24 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "warp",
+]
+
+[[package]]
+name = "game_interface"
+version = "0.1.0"
+dependencies = [
+ "prost",
+ "prost-types",
+ "proto_gen",
+]
+
+[[package]]
+name = "game_runtime_interface"
+version = "0.1.0"
+dependencies = [
+ "prost",
+ "prost-types",
+ "proto_gen",
 ]
 
 [[package]]
@@ -3394,7 +3412,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "proto"
+name = "proto_gen"
 version = "0.1.0"
 dependencies = [
  "prost",
