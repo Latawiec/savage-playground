@@ -7,7 +7,7 @@
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint",
-    "proto": "cross-env PROTO_SOURCE_DIR=../savage_playground_comms node ./src/_proto/build.js"
+    "proto": "cross-env PROTO_HOST_RUNTIME_INTERFACE_DIR=../savage_playground_communication/host_runtime_interface/proto PROTO_GAME_INTERFACE_DIR=../savage_playground_communication/game_interface/proto node ./src/_script/proto.js"
   },
   "dependencies": {
     "core-js": "^3.8.3",

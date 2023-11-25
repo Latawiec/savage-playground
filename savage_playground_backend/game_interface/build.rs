@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use proto_gen::build_protos_from_dir;
 
 fn main() -> Result<()> {
-    let protos_dir: PathBuf = PathBuf::from(std::env::var("PROTO_GAME_INTERFACE").unwrap());
+    let protos_dir: PathBuf = PathBuf::from(std::env::var("PROTO_GAME_INTERFACE_DIR").unwrap());
     let project_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
 
     build_protos_from_dir(
