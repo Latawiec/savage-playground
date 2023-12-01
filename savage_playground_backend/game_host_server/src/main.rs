@@ -36,7 +36,7 @@ async fn main() {
         let mut receiver = room_server.subscribe();
         while let Ok(notification) = receiver.recv().await {
             match notification {
-                room_server::server::RoomServerNotification::RoomCreated { room_id, client_id: _ } => {
+                room_server::server::RoomServerNotification::RoomCreated { room_id, config, client_id: _ } => {
                     if let Some((mut receiver, sender)) = room_server.get_room_channels(room_id) {
                         let game_dir = PathBuf::from_str(&std::env::var("DEBUG_ECHO_PROGRAM_FILE").unwrap()).unwrap();
                         let mut process = Instance::new(&game_dir).unwrap();

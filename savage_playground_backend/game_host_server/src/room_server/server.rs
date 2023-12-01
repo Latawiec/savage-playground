@@ -17,7 +17,7 @@ use super::{
 
 #[derive(Clone)]
 pub enum RoomServerNotification {
-    RoomCreated{ room_id: RoomID, client_id: ClientID },
+    RoomCreated{ room_id: RoomID, config: serde_json::Value, client_id: ClientID },
     RoomEmpty{ room_id: RoomID },
     RoomClosed{ room_id: RoomID },
 }
@@ -137,6 +137,7 @@ impl RoomServerHandle {
             .and(warp::ws())
             .and(warp::addr::remote())
             .and(server_handle_filter.clone())
+            .and(Self::json_body())
             .and_then(Self::create_room)
             .recover(error::return_error);
 
@@ -183,6 +184,7 @@ impl RoomServerHandle {
         ws: warp::ws::Ws,
         addr: Option<SocketAddr>,
         server_handle: RoomServerHandle,
+        body: serde_json::Value,
     ) -> Result<impl warp::Reply, warp::Rejection> {
         {
             if server_handle.check_room_exists(room_id) {
@@ -191,7 +193,7 @@ impl RoomServerHandle {
 
             let new_room = RoomHandle::new(room_id);
             server_handle.insert_room_handle(room_id, new_room.clone());
-            let _ = server_handle.server_notification_sender.send(RoomServerNotification::RoomCreated { room_id, client_id });
+            let _ = server_handle.server_notification_sender.send(RoomServerNotification::RoomCreated { room_id, config: body, client_id });
 
             tokio::spawn(Self::empty_room_watch(server_handle.clone(), new_room.clone()));
         }
@@ -217,5 +219,13 @@ impl RoomServerHandle {
                 _ => {},
             }
         }
+    }
+
+// Filters
+    fn json_body() -> impl Filter<Extract = (serde_json::Value,), Error = warp::Rejection> + Clone {
+        const CONTENT_LENGTH_BYTES_LIMIT: u64 = 4 * 1024;
+
+        warp::body::content_length_limit(CONTENT_LENGTH_BYTES_LIMIT)
+            .and(warp::body::json::<serde_json::Value>())
     }
 }

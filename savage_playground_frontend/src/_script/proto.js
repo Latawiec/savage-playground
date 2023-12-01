@@ -34,10 +34,6 @@ async function buildHostRuntimeInterface() {
   const protosDir = path.join(process.env.PWD, process.env.PROTO_HOST_RUNTIME_INTERFACE_DIR);
   const outputDir = path.join(process.env.PWD, outputPath, '/host_runtime_interface');
 
-  if (!fs.existsSync(protosDir)) {
-    throw new Error(`Proto source dir [${protosDir}] doesn't exist.`)
-  }
-
   buildProtosFromDir(protosDir, outputDir);
 }
 
@@ -45,16 +41,10 @@ async function buildGameInterface() {
   const protosDir = path.join(process.env.PWD, process.env.PROTO_GAME_INTERFACE_DIR);
   const outputDir = path.join(process.env.PWD, outputPath, '/game_interface');
 
-  if (!fs.existsSync(protosDir)) {
-    throw new Error(`Proto source dir [${protosDir}] doesn't exist.`)
-  }
-
   buildProtosFromDir(path.join(protosDir, '/game_output/renderer'), path.join(outputDir, '/game_output/renderer'));
   buildProtosFromDir(path.join(protosDir, '/game_output/settings'), path.join(outputDir, '/game_output/settings'));
   buildProtosFromDir(path.join(protosDir, '/game_output/ui'), path.join(outputDir, '/game_output/ui'));
 }
-
-
 
 
 if (!fs.existsSync(pluginPath)) {

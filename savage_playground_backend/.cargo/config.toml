@@ -17,5 +17,7 @@ DEBUG_ECHO_PROGRAM_FILE = { value = "./target/debug/echo", relative = true}
 
 # This is for building protobuf types.
 PROTO_HOST_MANAGEMENT_INTERFACE_DIR = { value = "../savage_playground_communication/host_management_interface/proto", relative = true }
+SCHEMA_HOST_MANAGEMENT_INTERFACE_DIR = { value = "../savage_playground_communication/host_management_interface/schema", relative = true }
+
 PROTO_HOST_RUNTIME_INTERFACE_DIR = { value = "../savage_playground_communication/host_runtime_interface/proto", relative = true }
 PROTO_GAME_INTERFACE_DIR = { value = "../savage_playground_communication/game_interface/proto", relative = true }

@@ -3,6 +3,7 @@
 members = [
     "build_util/build_io",
     "build_util/proto_gen",
+    "build_util/schema_gen",
     "debug/echo",
     "debug/pong",
     "framework",
@@ -11,6 +12,7 @@ members = [
     "game_host_server",
     "game_interface",
     "host_runtime_interface",
+    "host_management_interface",
 ]
 
 [workspace.dependencies]

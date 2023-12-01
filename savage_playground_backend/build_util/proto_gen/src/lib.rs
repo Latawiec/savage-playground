@@ -1,4 +1,4 @@
-use std::{io::Result, path::{self, Path, PathBuf}, fs};
+use std::{io::Result, path::{Path, PathBuf}, fs};
 
 pub fn generate_mod_file(proto_files: &[PathBuf], output_dir: &Path) -> Result<()> {
     fs::create_dir_all(&output_dir)?;

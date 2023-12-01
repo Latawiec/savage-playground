@@ -1,12 +1,12 @@
 [package]
-name = "host_management_interface"
+name = "schema_gen"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
-
-[build-dependencies]
-schema_gen = { path = "../build_util/schema_gen" }
-
+typify = "0.0.14"
+schemars = "0.8.16"
+syn = "2.0.39"
+prettyplease = "0.2.15"

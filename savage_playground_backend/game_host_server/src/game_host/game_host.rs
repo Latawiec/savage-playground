@@ -54,7 +54,7 @@ pub struct GameHost {
 }
 
 impl GameHost {
-    pub fn new(owner_id: ClientID, room_handle: RoomHandle) -> GameHost {
+    pub fn new(game_config: serde_json::Value, owner_id: ClientID, room_handle: RoomHandle) -> GameHost {
         GameHost {
             game_owner: owner_id,
             room_handle,
