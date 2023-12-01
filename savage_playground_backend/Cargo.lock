@@ -293,6 +293,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9441c6b2fe128a7c2bf680a44c34d0df31ce09e5b7e401fcca3faa483dbc921"
 
 [[package]]
+name = "async-trait"
+version = "0.1.74"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a66537f1bb974b254c98ed142ff995236e81b9d0fe4db0575f46612cb15eb0f9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.39",
+]
+
+[[package]]
 name = "atomic"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1953,9 +1964,14 @@ dependencies = [
 name = "game_host_server"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "build_io",
  "clap",
  "futures-util",
+ "host_management_interface",
+ "host_runtime_interface",
+ "prost",
+ "prost-types",
  "serde",
  "serde_json",
  "tokio",
@@ -1966,15 +1982,6 @@ dependencies = [
 
 [[package]]
 name = "game_interface"
-version = "0.1.0"
-dependencies = [
- "prost",
- "prost-types",
- "proto_gen",
-]
-
-[[package]]
-name = "game_runtime_interface"
 version = "0.1.0"
 dependencies = [
  "prost",
@@ -2314,6 +2321,16 @@ dependencies = [
  "schema_gen",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "host_runtime_interface"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "prost",
+ "prost-types",
+ "proto_gen",
 ]
 
 [[package]]

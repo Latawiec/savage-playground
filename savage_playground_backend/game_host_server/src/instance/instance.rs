@@ -11,7 +11,8 @@ pub enum Error {
 }
 
 pub struct Instance {
-    path: PathBuf,
+    cwd_path: PathBuf,
+    exe_path: PathBuf,
     process: Child,
 }
 
@@ -22,8 +23,9 @@ impl Drop for Instance {
 }
 
 impl Instance {
-    pub fn new(path: &Path) -> Result<Instance, Error> {
-        let process = match Command::new(&path)
+    pub fn new(cwd_path: &Path, exe_path: &Path) -> Result<Instance, Error> {
+        let process = match Command::new(&exe_path)
+            .current_dir(&cwd_path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -38,7 +40,8 @@ impl Instance {
         };
 
         Ok(Instance {
-            path: path.to_owned(),
+            cwd_path: cwd_path.to_owned(),
+            exe_path: exe_path.to_owned(),
             process,
         })
     }

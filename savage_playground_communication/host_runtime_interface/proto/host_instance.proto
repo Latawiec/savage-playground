@@ -5,7 +5,7 @@ import "google/protobuf/any.proto";
 package host_instance;
 
 message ClientID {
-    string value = 1;
+    uint64 value = 1;
 }
 
 // Origin: Client

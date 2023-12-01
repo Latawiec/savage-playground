@@ -1,6 +1,9 @@
+use async_trait::async_trait;
+
 use crate::proto::host_instance::{ClientMessage, InstanceMessage};
 
+#[async_trait]
 pub trait InstanceInterface {
-    fn send(msg: &InstanceMessage);
-    fn read() -> Option<ClientMessage>;
+    async fn send(&self, msg: &InstanceMessage);
+    async fn read(&self) -> Option<ClientMessage>;
 }

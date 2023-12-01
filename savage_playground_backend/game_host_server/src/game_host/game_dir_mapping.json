@@ -1,4 +1,7 @@
 {
-    "echo_test": "./echo"
+    "echo_test": {
+        "cwd": "path/to/game_working_dir",
+        "runnable": "runnable/relative/to/cwd"
+    }
 
 }

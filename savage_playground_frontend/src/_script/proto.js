@@ -18,8 +18,6 @@ async function buildProtosFromDir(buildSourceDir, buildOutputDir) {
   const buildCmd =
     `protoc --plugin="${pluginPath}" --proto_path="${buildSourceDir}" --ts_proto_out="${buildOutputDir}" "${buildSourceDir}"/*.proto`
 
-  // console.log(`Running:\n${build_cmd}\n`);
-
   await exec(buildCmd, (_err, stdout, stderr) => {
     if (stderr) {
       console.log(`Errors:\n${stderr}\n`)
