@@ -10,9 +10,9 @@ members = [
     "testing",
     "worlds",
     "game_host_server",
+    
     "game_interface",
-    "host_runtime_interface",
-    "host_management_interface",
+    "room_server_interface",
 ]
 
 [workspace.dependencies]

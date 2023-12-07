@@ -1968,10 +1968,9 @@ dependencies = [
  "build_io",
  "clap",
  "futures-util",
- "host_management_interface",
- "host_runtime_interface",
  "prost",
  "prost-types",
+ "room_server_interface",
  "serde",
  "serde_json",
  "tokio",
@@ -2312,25 +2311,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5444c27eef6923071f7ebcc33e3444508466a76f7a2b93da00ed6e19f30c1ddb"
 dependencies = [
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "host_management_interface"
-version = "0.1.0"
-dependencies = [
- "schema_gen",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "host_runtime_interface"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "prost",
- "prost-types",
- "proto_gen",
 ]
 
 [[package]]
@@ -3655,6 +3635,18 @@ dependencies = [
  "bitflags 2.4.0",
  "serde",
  "serde_derive",
+]
+
+[[package]]
+name = "room_server_interface"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "prost",
+ "prost-types",
+ "proto_gen",
+ "schema_gen",
+ "serde",
 ]
 
 [[package]]

@@ -4,7 +4,6 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use host_management_interface::proto::game_config;
 use serde::{Deserialize, Serialize};
 use tokio::task::JoinHandle;
 
@@ -27,7 +26,7 @@ mod error {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct GameDirConfig {
     cwd: String,
     runnable: String,
@@ -93,7 +92,7 @@ impl GameHostManagerHandle {
         owner_id: u64,
     ) {
         let game_config = serde_json::from_value::<
-            host_management_interface::proto::game_config::GameConfig,
+            room_server_interface::schema::game_config::GameConfig,
         >(config);
 
         if game_config.is_err() {
@@ -107,10 +106,10 @@ impl GameHostManagerHandle {
         let game_dir_config = game_host_manager.game_dir_mapping.0.get(&game_config.game_path.unwrap());
 
         if let None = &game_dir_config {
-            tracing::error!("Requested game {} not registered.", &game_config.game_path.unwrap());
+            // tracing::error!("Requested game {} not registered.", game_config.game_path.);
             return;
         }
-        let game_dir_config = game_dir_config.unwrap();
+        let game_dir_config = game_dir_config.unwrap().to_owned();
 
         let task_handle = tokio::spawn(async move {
             let room_handle = game_host_manager.server_handle.get_room_handle(room_id);
@@ -120,7 +119,7 @@ impl GameHostManagerHandle {
 
             let room_handle = room_handle.unwrap();
 
-            let game_host = GameHost::new(owner_id, room_handle, PathBuf::from(game_dir_config.cwd), PathBuf::from(game_dir_config.runnable));
+            let mut game_host = GameHost::new(owner_id, room_handle, PathBuf::from(game_dir_config.cwd), PathBuf::from(game_dir_config.runnable));
             game_host.run().await;
         });
         if let Ok(mut map_lock) = game_host_manager.room_host_handle_map.write() {

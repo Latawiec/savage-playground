@@ -39,7 +39,7 @@ async fn main() {
                 room_server::server::RoomServerNotification::RoomCreated { room_id, config, client_id: _ } => {
                     if let Some((mut receiver, sender)) = room_server.get_room_channels(room_id) {
                         let game_dir = PathBuf::from_str(&std::env::var("DEBUG_ECHO_PROGRAM_FILE").unwrap()).unwrap();
-                        let mut process = Instance::new(&game_dir).unwrap();
+                        let mut process = Instance::new(&PathBuf::from("./"), &game_dir).unwrap();
                         let (mut stdin, mut stdout, mut _stderr) = (process.take_stdin().unwrap(), process.take_stdout().unwrap(), process.take_stderr().unwrap());
 
                         tracing::info!("Room {} created.", room_id);

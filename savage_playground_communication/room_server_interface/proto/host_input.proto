@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "common.proto";
+
+package host_input;
+
+message HostInput {
+    optional common.ClientID joined = 1;
+    optional common.ClientID left = 2;
+}
+

@@ -31,11 +31,11 @@ async function buildSchemasFromDir(buildSourceDir, buildOutputDir) {
     }
 }
 
-async function buildHostManagementInterface() {
-    const schemasDir = path.join(process.env.PWD, process.env.SCHEMA_HOST_MANAGEMENT_INTERFACE_DIR);
-    const outputDir = path.join(process.env.PWD, outputPath, '/host_management_interface');
+async function buildRoomServerInterface() {
+    const schemasDir = path.join(process.env.PWD, process.env.SCHEMA_ROOM_SERVER_INTERFACE_DIR);
+    const outputDir = path.join(process.env.PWD, outputPath, '/room_server_interface');
 
     buildSchemasFromDir(schemasDir, outputDir);
 }
 
-buildHostManagementInterface();
+buildRoomServerInterface();

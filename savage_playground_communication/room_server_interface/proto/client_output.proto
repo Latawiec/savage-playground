@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "common.proto";
+
+package client_output;
+
+message ClientOutput {
+    google.protobuf.Any game_output_message = 1;
+}
+
+message DirectMessage {
+    common.ClientID client_id = 1;
+    ClientOutput client_output = 2;
+}
+
+message RoomBroadcast {
+    ClientOutput client_output = 1;
+}
+
+message ClientOutputBatch {
+    repeated DirectMessage direct_messages = 1;
+    optional RoomBroadcast broadcast = 2;    
+}

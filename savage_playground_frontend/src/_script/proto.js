@@ -28,9 +28,9 @@ async function buildProtosFromDir(buildSourceDir, buildOutputDir) {
   })
 }
 
-async function buildHostRuntimeInterface() {
-  const protosDir = path.join(process.env.PWD, process.env.PROTO_HOST_RUNTIME_INTERFACE_DIR);
-  const outputDir = path.join(process.env.PWD, outputPath, '/host_runtime_interface');
+async function buildRoomServerInterface() {
+  const protosDir = path.join(process.env.PWD, process.env.PROTO_ROOM_SERVER_INTERFACE_DIR);
+  const outputDir = path.join(process.env.PWD, outputPath, '/room_server_interface');
 
   buildProtosFromDir(protosDir, outputDir);
 }
@@ -49,5 +49,5 @@ if (!fs.existsSync(pluginPath)) {
   throw new Error(`TS Proto Generator plugin not found [${pluginPath}]`)
 }
 
-buildHostRuntimeInterface();
+buildRoomServerInterface();
 buildGameInterface();

@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "common.proto";
+
+package client_input;
+
+message ClientInput {
+    common.ClientID client_id = 1;
+    google.protobuf.Any game_input_message = 2;
+}

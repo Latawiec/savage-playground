@@ -1,11 +1,12 @@
 /* eslint-disable */
 import * as _m0 from "protobufjs/minimal";
 import { Any } from "./google/protobuf/any";
+import Long = require("long");
 
 export const protobufPackage = "host_instance";
 
 export interface ClientID {
-  value: string;
+  value: number;
 }
 
 /**
@@ -40,13 +41,13 @@ export interface InstanceMessage {
 }
 
 function createBaseClientID(): ClientID {
-  return { value: "" };
+  return { value: 0 };
 }
 
 export const ClientID = {
   encode(message: ClientID, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.value !== "") {
-      writer.uint32(10).string(message.value);
+    if (message.value !== 0) {
+      writer.uint32(8).uint64(message.value);
     }
     return writer;
   },
@@ -59,11 +60,11 @@ export const ClientID = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
+          if (tag !== 8) {
             break;
           }
 
-          message.value = reader.string();
+          message.value = longToNumber(reader.uint64() as Long);
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -75,13 +76,13 @@ export const ClientID = {
   },
 
   fromJSON(object: any): ClientID {
-    return { value: isSet(object.value) ? globalThis.String(object.value) : "" };
+    return { value: isSet(object.value) ? globalThis.Number(object.value) : 0 };
   },
 
   toJSON(message: ClientID): unknown {
     const obj: any = {};
-    if (message.value !== "") {
-      obj.value = message.value;
+    if (message.value !== 0) {
+      obj.value = Math.round(message.value);
     }
     return obj;
   },
@@ -91,7 +92,7 @@ export const ClientID = {
   },
   fromPartial<I extends Exact<DeepPartial<ClientID>, I>>(object: I): ClientID {
     const message = createBaseClientID();
-    message.value = object.value ?? "";
+    message.value = object.value ?? 0;
     return message;
   },
 };
@@ -400,6 +401,18 @@ export type DeepPartial<T> = T extends Builtin ? T
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 export type Exact<P, I extends P> = P extends Builtin ? P
   : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
+
+function longToNumber(long: Long): number {
+  if (long.gt(globalThis.Number.MAX_SAFE_INTEGER)) {
+    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
+  }
+  return long.toNumber();
+}
+
+if (_m0.util.Long !== Long) {
+  _m0.util.Long = Long as any;
+  _m0.configure();
+}
 
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;

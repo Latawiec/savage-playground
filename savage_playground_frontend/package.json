@@ -7,8 +7,8 @@
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint",
-    "proto": "cross-env PROTO_HOST_RUNTIME_INTERFACE_DIR=../savage_playground_communication/host_runtime_interface/proto PROTO_GAME_INTERFACE_DIR=../savage_playground_communication/game_interface/proto node ./src/_script/proto.js",
-    "schema": "cross-env SCHEMA_HOST_MANAGEMENT_INTERFACE_DIR=../savage_playground_communication/host_management_interface/schema node ./src/_script/schema.js",
+    "proto": "cross-env PROTO_ROOM_SERVER_INTERFACE_DIR=../savage_playground_communication/host_runtime_interface/proto PROTO_GAME_INTERFACE_DIR=../savage_playground_communication/game_interface/proto node ./src/_script/proto.js",
+    "schema": "cross-env SCHEMA_ROOM_SERVER_INTERFACE_DIR=../savage_playground_communication/room_server_interface/schema node ./src/_script/schema.js",
     "generate": "npm run proto; npm run schema;"
   },
   "dependencies": {
