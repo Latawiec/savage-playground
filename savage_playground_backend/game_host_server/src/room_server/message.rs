@@ -29,8 +29,3 @@ pub enum ServerMessage {
     /// Sent to a specific single client.
     Client { client_id: ClientID, message: Message },
 }
-
-/// Messages that are meant for internal use only.
-pub (super) enum InternalMessage {
-    
-}

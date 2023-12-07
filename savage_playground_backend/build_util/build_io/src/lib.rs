@@ -27,7 +27,7 @@ pub fn copy_file(src: &Path, dest: &Path) {
     {
         let file = OpenOptions::new()
                                 .write(true)
-                                .create_new(true)
+                                .create(true)
                                 .open(&dest);
         match &file {
             Ok(_) => {},

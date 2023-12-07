@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "assets.proto";
+import "window.proto";
+
+package snapshot;
+
+message Snapshot {
+    optional assets.Assets assets = 1;
+    optional window.Window window = 2;
+}

@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package vertex_attributes;
+
+message VertexAttributes {
+    optional string vertices = 1;
+    map<string, string> named_buffers = 2;
+}

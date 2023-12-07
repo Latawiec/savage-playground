@@ -1,16 +1,21 @@
 use std::path::{Path, PathBuf};
 
-use tokio::{
-    io::AsyncWriteExt,
-    process::{ChildStderr, ChildStdin, ChildStdout},
-};
-
 use crate::{
     instance::instance::Instance,
-    room_server::{client::{ClientID, self}, message::Message, room::RoomHandle},
+    room_server::{
+        client::ClientID,
+        message::{ClientMessage, ServerMessage},
+        room::RoomHandle, self,
+    },
 };
-
-use super::message::{self, Request};
+use prost::Message;
+use tokio::io::BufReader;
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt},
+    process::{ChildStderr, ChildStdin, ChildStdout},
+    sync::broadcast,
+    task::JoinHandle,
+};
 
 mod error {
 
@@ -45,140 +50,222 @@ pub struct GameHost {
     game_owner: ClientID,
     room_handle: RoomHandle,
 
-    game_dir: Option<PathBuf>,
+    game_dir: PathBuf,
+    game_runnable: PathBuf,
     game_instance: Option<Instance>,
+}
 
-    game_stdin: Option<ChildStdin>,
-    game_stdout: Option<ChildStdout>,
-    game_stderr: Option<ChildStderr>,
+struct ProtoStdin {
+    stdin: ChildStdin,
+}
+
+impl ProtoStdin {
+    pub async fn send<T: prost::Message>(&mut self, msg: &T) {
+        let mut data = Vec::<u8>::new();
+        msg.encode(&mut data).unwrap();
+        let data_len = data.len();
+        _ = self.stdin.write_u64(data_len as u64).await;
+        _ = self.stdin.write(&data).await;
+        _ = self.stdin.flush().await;
+    }
+}
+
+struct ProtoStdout {
+    stdout: BufReader<ChildStdout>,
+}
+
+impl ProtoStdout {
+    pub async fn read<T: prost::Message + Default>(&mut self) -> Option<T> {
+        let data_len = self.stdout.read_u64().await.unwrap();
+        let mut data = Vec::<u8>::new();
+        data.resize(data_len as usize, 0);         
+        _ = self.stdout.read_exact(&mut data).await;
+
+        let message = T::decode(data.as_slice());
+        return Some(message.unwrap());
+    }
+}
+
+struct ProtoStderr {
+    stderr: BufReader<ChildStderr>,
+}
+
+impl ProtoStderr {
+    pub async fn read<T: prost::Message + Default>(&mut self) -> Option<T> {
+        let data_len = self.stderr.read_u64().await.unwrap();
+        let mut data = Vec::<u8>::new();
+        data.resize(data_len as usize, 0);         
+        _ = self.stderr.read_exact(&mut data).await;
+
+        let message = T::decode(data.as_slice());
+        return Some(message.unwrap());
+    }
 }
 
 impl GameHost {
-    pub fn new(owner_id: ClientID, room_handle: RoomHandle) -> GameHost {
+    pub fn new(
+        owner_id: ClientID,
+        room_handle: RoomHandle,
+        game_dir: PathBuf,
+        game_runnable: PathBuf,
+    ) -> GameHost {
         GameHost {
             game_owner: owner_id,
             room_handle,
-            game_dir: None,
+            game_dir,
+            game_runnable,
             game_instance: None,
-            game_stdin: None,
-            game_stdout: None,
-            game_stderr: None,
         }
     }
 
-    pub async fn serve(&mut self) {
-        let mut receiver = self.room_handle.receiver();
-        let _sender = self.room_handle.sender();
+    pub async fn run(&mut self) {
+        let receiver = self.room_handle.receiver();
+        let sender = self.room_handle.sender();
 
-        while let Ok(msg) = receiver.recv().await {
-            match msg {
-                crate::room_server::message::ClientMessage::Data { client_id, message } => {
-                    if let Some(request) = Self::parse_client_message(message) {
-                        match request {
-                            Request::StartGame { game_name } => {
-                                if self.game_owner != client_id {
-                                    // let _ = Err(error::GameAuthorithyError::NotAuthorized{ reason: "Only current game owner can start the game.".to_owned() });
-                                    // Pass error somehow.
+        let game_instance = Self::try_start_game(&self.game_dir, &self.game_runnable).await;
+        if let Err(error) = &game_instance {
+            tracing::error!("Failed starting game instance: {:?}", error);
+            return;
+        }
+        let mut game_instance = game_instance.unwrap();
+
+        let proto_stdin = ProtoStdin { stdin: game_instance.take_stdin().unwrap() };
+        let proto_stdout = ProtoStdout { stdout: BufReader::new(game_instance.take_stdout().unwrap()) };
+        let proto_stderr = ProtoStderr { stderr: BufReader::new(game_instance.take_stderr().unwrap()) };
+
+        self.game_instance = Some(game_instance);
+        Self::start_game_input_task(proto_stdin, receiver);
+        Self::start_game_output_task(proto_stdout, sender, self.room_handle.room_id);
+    }
+
+    fn start_game_input_task(
+        mut proto_pipe: ProtoStdin,
+        mut client_msg_receiver: broadcast::Receiver<ClientMessage>,
+    ) -> JoinHandle<()> {
+        tokio::spawn(async move {
+            const CLIENT_INPUT_PROTO_FILE: &str = "room_server_interface/proto/client_input.proto";
+            const ENCODE_BUFFER_SIZE: usize = 8192; // 8kiB
+            
+            let mut encode_buffer = Vec::<u8>::new();
+            encode_buffer.resize(ENCODE_BUFFER_SIZE, 0);
+            while let Ok(msg) = client_msg_receiver.recv().await {
+                match msg {
+                    ClientMessage::Data { client_id, message } => {
+                        match message {
+                            crate::room_server::message::Message::Text { data } => todo!(),
+                            crate::room_server::message::Message::Binary { data } => {
+                                let client_game_message_proto = ::prost_types::Any::decode(data.as_slice());
+                                if let Err(error) = &client_game_message_proto {
+                                    tracing::error!("Couldn't decode client message: {:?}", error);
+                                    return;
+                                }
+                                let client_game_message_proto = client_game_message_proto.unwrap();
+                                let client_id = room_server_interface::proto::common::ClientId {
+                                    value: client_id,
+                                };
+                                let client_input_proto = room_server_interface::proto::client_input::ClientInput {
+                                    client_id: Some(client_id),
+                                    game_input_message: Some(client_game_message_proto),
+                                };
+                                
+                                encode_buffer.clear();
+                                let client_input_encoded = client_input_proto.encode(&mut encode_buffer);
+                                
+                                if let Err(error) = &client_input_encoded {
+                                    tracing::error!("Couldn't encode client message: {:?}", error);
                                     return;
                                 }
 
-                                let game_path = Self::try_get_game_dir(&game_name).await;
-                                if let Err(error) = game_path {
-                                    // Err(error)
-                                    return;
-                                }
-
-                                let game_path = game_path.unwrap();
-                                let game_instance = Self::try_start_game(&game_path).await;
-                                if let Err(error) = game_instance {
-                                    // Err(error)
-                                    return;
-                                }
-
-                                let mut game_instance = game_instance.unwrap();
-                                self.game_stdin = game_instance.take_stdin();
-                                self.game_stdout = game_instance.take_stdout();
-                                self.game_stderr = game_instance.take_stderr();
-                                self.game_instance = Some(game_instance);
-                                self.game_dir = Some(game_path);
+                                // Build message forwarded to the instance:
+                                let instance_input = room_server_interface::proto::instance_input::InstanceInput {
+                                    instance_input_msg: Some(::prost_types::Any {
+                                        type_url: CLIENT_INPUT_PROTO_FILE.to_owned(),
+                                        value: encode_buffer.clone(),
+                                    })
+                                };
+                                
+                                proto_pipe.send(&instance_input);
                             }
-                            Request::StopGame => {
-                                if self.game_owner != client_id {
-                                    // let _ = Err(error::GameAuthorithyError::NotAuthorized{ reason: "Only current game owner can start the game.".to_owned() });
-                                    // Pass error somehow.
-                                    return;
-                                }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        })
+    }
 
-                                if self.game_instance.is_none() {
-                                    // Err(error::GameError::NoGameRunning)
-                                    return;
-                                }
+    fn start_game_output_task(
+        mut proto_pipe: ProtoStdout,
+        server_msg_sender: broadcast::Sender<ServerMessage>,
+        room_id: u64,
+    ) -> JoinHandle<()> {
+        const CLIENT_OUPUT_PROTO_FILE: &str = "room_server_interface/proto/client_output.proto";
+        const HOST_OUTPUT_PROTO_FILE: &str = "room_server_interface/proto/host_output.proto";
+        const ENCODE_BUFFER_SIZE: usize = 8192; // 8kiB
+            
+        let mut encode_buffer = Vec::<u8>::new();
+        encode_buffer.resize(ENCODE_BUFFER_SIZE, 0);
+        tokio::spawn(async move {
+            // This is very sketchy. What if stdin is already dead? I need to get rid of these interfaces I introduced. It only makes it harder.
+            // I need to be able to distinguish None as "couldn't decode message" from pipe errors (e.g. pipe dead).
+            while let Some(msg) = proto_pipe.read::<room_server_interface::proto::instance_output::InstanceOutput>().await {
 
-                                self.game_dir = None;
-                                self.game_stdin = None;
-                                self.game_stdout = None;
-                                self.game_stderr = None;
-                                self.game_instance = None;
+                let instance_output_msg = msg.instance_output_msg.unwrap();
+
+                match instance_output_msg.type_url.as_str() {
+                    CLIENT_OUPUT_PROTO_FILE => {
+                        let client_output_proto = room_server_interface::proto::client_output::ClientOutputBatch::decode(instance_output_msg.value.as_slice());
+                        if let Err(error) = &client_output_proto {
+                            tracing::error!("Couldn't decode instance message: {:?}", error);
+                            return;
+                        }
+                        let client_output_proto = client_output_proto.unwrap();
+                        if let Some(broadcast_proto) = &client_output_proto.broadcast {
+
+                            encode_buffer.clear();
+                            let _ = client_output_proto.broadcast.unwrap().client_output.unwrap().encode(&mut encode_buffer);
+
+                            let room_broadcast = room_server::message::Message::Binary {
+                                data: encode_buffer.as_slice().to_owned()
+                            };
+                            server_msg_sender.send(ServerMessage::Room { room_id, message:  room_broadcast } );
+
+                            for direct_client_output in &client_output_proto.direct_messages {
+                                encode_buffer.clear();
+                                let client_id = direct_client_output.client_id.as_ref().unwrap().value;
+                                let _ = direct_client_output.client_output.as_ref().unwrap().encode(&mut encode_buffer);
+                                let direct_message = room_server::message::Message::Binary {
+                                    data: encode_buffer.as_slice().to_owned()
+                                };
+                                server_msg_sender.send(ServerMessage::Client { client_id, message: direct_message });
                             }
-                            Request::SetGameOwner { new_game_owner } => {
-                                if self.game_owner != client_id {
-                                    // let _ = Err(error::GameAuthorithyError::NotAuthorized{ reason: "Only current game owner can assign a new owner.".to_owned() });
-                                    // Pass error somehow.
-                                    return;
-                                }
+                        }
+                    }
+                    HOST_OUTPUT_PROTO_FILE => {
+                        let host_output_proto = room_server_interface::proto::host_output::HostOutput::decode(instance_output_msg.value.as_slice());
+                        if let Err(error) = &host_output_proto {
+                            tracing::error!("Couldn't decode instance message: {:?}", error);
+                            return;
+                        }
+                        let host_output_proto = host_output_proto.unwrap();
+                    }
+                    _ => {
 
-                                self.set_game_owner(client_id, new_game_owner).await;
-                            }
-                            Request::GameMessage { mut message } => {
-                                if self.game_instance.is_none() {
-                                    // Err(error::GameError::NoGameRunning);
-                                    // Pass error somehow
-                                    return;
-                                }
-
-                                // Add client_id.
-                                message.as_object_mut().unwrap().insert("client_id".to_owned(), serde_json::json!(client_id));
-
-                                let stdin = self.game_stdin.as_mut();
-                                if stdin.is_none() {
-                                    // Err(error::GameError::StdInClosed);
-                                    return;
-                                }
-
-                                let stdin = stdin.unwrap();
-
-                                let serialized_message = message.to_string();
-                                let _ = stdin.write_all(serialized_message.as_bytes()).await;
-                            }
-                        };
-                    } else {
-                        tracing::warn!("Unsupported message format");
                     }
                 }
-                _ => {}
-            };
-        }
-    }
-
-    fn parse_client_message(message: Message) -> Option<message::Request> {
-        match message {
-            Message::Binary { data: _ } => None, // I dont use binary format yet
-            Message::Text { data } => match serde_json::from_str::<Request>(&data) {
-                Ok(request) => Some(request),
-                Err(err) => {
-                    tracing::error!("Couldn't deserialize message: {:?}", err);
-                    None
-                }
-            },
-        }
+            }
+        })
     }
 
     async fn set_game_owner(&mut self, _client_id: u64, new_owner_id: u64) {
         self.game_owner = new_owner_id;
     }
 
-    async fn try_start_game(game_dir: &Path) -> Result<Instance, error::GameInstanceError> {
-        match Instance::new(&game_dir) {
+    async fn try_start_game(
+        game_dir: &Path,
+        game_runnable: &Path,
+    ) -> Result<Instance, error::GameInstanceError> {
+        match Instance::new(&game_dir, &game_runnable) {
             Ok(instance) => Ok(instance),
             Err(error) => match error {
                 crate::instance::instance::Error::StartupError { reason } => {
@@ -189,70 +276,5 @@ impl GameHost {
                 }
             },
         }
-    }
-
-    async fn try_get_game_dir(game_name: &str) -> Result<PathBuf, error::GamesMappingError> {
-        const GAME_DIR_MAPPING_FILENAME: &str = "game_dir_mapping.json";
-
-        let games_mapping_json = match tokio::fs::read_to_string(GAME_DIR_MAPPING_FILENAME).await {
-            Ok(game_dir_mapping) => {
-                match serde_json::from_str::<serde_json::Value>(&game_dir_mapping) {
-                    Ok(mapping) => mapping,
-                    Err(error) => {
-                        return Err(error::GamesMappingError::FileContentIllFormed {
-                            resason: error.to_string(),
-                        });
-                    }
-                }
-            }
-            Err(error) => {
-                return Err(error::GamesMappingError::GameMappingFileError {
-                    reason: error.to_string(),
-                });
-            }
-        };
-
-        let game_dir = match games_mapping_json.as_object() {
-            Some(game_dir_map) => {
-                if let Some(game_dir) = game_dir_map.get(game_name) {
-                    game_dir
-                } else {
-                    return Err(error::GamesMappingError::GameNotFound {
-                        reason: format!("Game {} doesn't exist in the mapping.", game_name),
-                    });
-                }
-            }
-            None => {
-                return Err(error::GamesMappingError::FileContentIllFormed {
-                    resason: "Expected object as root of the mapping".to_owned(),
-                });
-            }
-        };
-
-        let game_dir = match game_dir {
-            serde_json::Value::String(game_dir) => game_dir,
-            _ => {
-                return Err(error::GamesMappingError::FileContentIllFormed {
-                    resason: "Expected String as game mapping".to_owned(),
-                });
-            }
-        };
-
-        let game_dir_path = Path::new(game_dir);
-
-        if !tokio::fs::try_exists(game_dir_path).await.unwrap() {
-            return Err(error::GamesMappingError::GameDirError {
-                reason: "Directory does not exist".to_owned(),
-            });
-        }
-
-        // Can't find tokio replacement for this one.
-        if !game_dir_path.is_dir() {
-            return Err(error::GamesMappingError::GameDirError {
-                reason: "Path doesn't point to a directory".to_owned(),
-            });
-        }
-
-        Ok(game_dir_path.to_owned())
     }
 }

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package assets;
+
+message Texture {
+    uint32 offset = 1;
+    optional string asset = 2;;
+}
+
+message Assets {
+    optional string vertex_shader_asset = 1;
+    optional string pixel_shader_asset = 2;
+    optional string mesh_asset = 3;
+    repeated Texture textures = 4;
+}

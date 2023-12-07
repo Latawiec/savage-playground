@@ -32,6 +32,12 @@ module.exports = defineConfig({
     module: {
       rules: [
         {
+          test: /\.js$/,
+          exclude: [
+            'src/_proto/build.js'
+          ]
+        },
+        {
           test: /\.glsl$/,
           type: 'asset/resource',
           generator: {

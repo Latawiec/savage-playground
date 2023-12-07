@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package host_output;
+
+message HostOutput {
+    optional uint64 somethingNoIdeaWhatYet = 1;
+}

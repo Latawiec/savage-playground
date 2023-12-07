@@ -1,4 +1,7 @@
 {
-    "echo_test": "/mnt/b981039f-fbe8-4a78-be47-2fd24cb3be26/Programing/RustTesting/savage_playground/target/debug/echo"
+    "echo_test": {
+        "cwd": "path/to/game_working_dir",
+        "runnable": "runnable/relative/to/cwd"
+    }
 
 }

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+import "vertex_attributes.proto";
+import "uniform_attributes.proto";
+import "assets.proto";
+
+package drawable;
+
+message Drawable {
+    optional uint32 layer = 1;
+    optional vertex_attributes.VertexAttributes vertex_attributes = 2;
+    optional uniform_attributes.UniformAttributes uniform_attributes = 3;
+    optional uniform_attributes.SharedUniformAttributes shared_attributes = 4;
+    optional assets.Assets assets = 5;
+}

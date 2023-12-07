@@ -16,6 +16,11 @@ warp = { git = "https://github.com/Molkars/warp.git" }
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+async-trait = { workspace = true }
+
+room_server_interface = { path = "../room_server_interface" }
 
 [build-dependencies]
-build_utils = { path = "../build_utils" }
+build_io = { path = "../build_util/build_io" }

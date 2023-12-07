@@ -1,5 +1,8 @@
-use std::{process::{Stdio, ExitStatus}, path::{Path, PathBuf}};
-use tokio::process::{Command, Child, ChildStdin, ChildStdout, ChildStderr};
+use std::{
+    path::{Path, PathBuf},
+    process::{ExitStatus, Stdio},
+};
+use tokio::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command};
 
 #[derive(Debug)]
 pub enum Error {
@@ -8,7 +11,8 @@ pub enum Error {
 }
 
 pub struct Instance {
-    path: PathBuf,
+    cwd_path: PathBuf,
+    exe_path: PathBuf,
     process: Child,
 }
 
@@ -19,20 +23,25 @@ impl Drop for Instance {
 }
 
 impl Instance {
-    pub fn new(path: &Path) -> Result<Instance, Error> {
-        let process = match Command::new(&path)
+    pub fn new(cwd_path: &Path, exe_path: &Path) -> Result<Instance, Error> {
+        let process = match Command::new(&exe_path)
+            .current_dir(&cwd_path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .spawn() {
-                Err(error) => {
-                    return Err(Error::StartupError { reason: error.to_string() })
-                },
-                Ok (process) => process,
-            };
+            .spawn()
+        {
+            Err(error) => {
+                return Err(Error::StartupError {
+                    reason: error.to_string(),
+                })
+            }
+            Ok(process) => process,
+        };
 
         Ok(Instance {
-            path: path.to_owned(),
+            cwd_path: cwd_path.to_owned(),
+            exe_path: exe_path.to_owned(),
             process,
         })
     }
@@ -50,8 +59,8 @@ impl Instance {
     }
 
     pub fn try_wait(&mut self) -> Result<Option<ExitStatus>, Error> {
-        self.process.try_wait().map_err(|err| {
-            Error::ProcessError { reason: err.to_string() }
+        self.process.try_wait().map_err(|err| Error::ProcessError {
+            reason: err.to_string(),
         })
     }
 }
