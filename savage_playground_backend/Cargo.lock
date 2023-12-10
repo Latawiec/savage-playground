@@ -1968,12 +1968,14 @@ dependencies = [
  "build_io",
  "clap",
  "futures-util",
+ "http",
  "prost",
  "prost-types",
  "room_server_interface",
  "serde",
  "serde_json",
  "tokio",
+ "tokio-tungstenite",
  "tracing",
  "tracing-subscriber",
  "warp",
@@ -3430,6 +3432,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8339f32236f590281e2f6368276441394fcd1b2133b549cc895d0ae80f2f9a52"
 dependencies = [
  "prost",
+]
+
+[[package]]
+name = "proto_echo"
+version = "0.1.0"
+dependencies = [
+ "prost",
+ "prost-types",
+ "room_server_interface",
 ]
 
 [[package]]

@@ -28,8 +28,8 @@ mod error {
 
 #[derive(Serialize, Deserialize, Clone)]
 struct GameDirConfig {
-    cwd: String,
-    runnable: String,
+    cwd: PathBuf,
+    runnable: PathBuf,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -38,19 +38,22 @@ struct GameDirMapping(HashMap<String, GameDirConfig>);
 #[derive(Clone)]
 pub struct GameHostManagerHandle {
     pub(self) server_handle: RoomServerHandle,
-    pub(self) room_host_handle_map: Arc<RwLock<BTreeMap<RoomID, JoinHandle<()>>>>,
+    pub(self) room_host_map: Arc<RwLock<BTreeMap<RoomID, GameHost>>>,
     pub(self) game_dir_mapping: Arc<GameDirMapping>,
     pub(self) game_dir_mapping_file: PathBuf,
 }
 
 impl GameHostManagerHandle {
-    pub fn new(server_handle: RoomServerHandle, game_dir_mapping_file: &Path) {
-        let room_host_handle_map: Arc<RwLock<BTreeMap<RoomID, JoinHandle<()>>>> =
+    pub fn new(
+        server_handle: RoomServerHandle,
+        game_dir_mapping_file: &Path,
+    ) -> Option<GameHostManagerHandle> {
+        let room_host_map: Arc<RwLock<BTreeMap<RoomID, GameHost>>> =
             Default::default();
 
         let game_host_manager_handle = GameHostManagerHandle {
             server_handle,
-            room_host_handle_map,
+            room_host_map,
             game_dir_mapping: Default::default(),
             game_dir_mapping_file: game_dir_mapping_file.to_owned(),
         };
@@ -58,6 +61,8 @@ impl GameHostManagerHandle {
         tokio::spawn(Self::server_notification_listener(
             game_host_manager_handle.clone(),
         ));
+
+        Some(game_host_manager_handle)
     }
 
     async fn server_notification_listener(mut game_host_manager: GameHostManagerHandle) {
@@ -75,6 +80,9 @@ impl GameHostManagerHandle {
                 } => {
                     Self::on_room_created(game_host_manager.clone(), room_id, config, client_id);
                 }
+                RoomServerNotification::RoomUpdated { room_id, config, client_id } => {
+                    Self::on_room_updated(game_host_manager.clone(), room_id, config, client_id);
+                }
                 RoomServerNotification::RoomEmpty { room_id } => {
                     Self::on_room_empty(game_host_manager.clone(), room_id);
                 }
@@ -88,42 +96,55 @@ impl GameHostManagerHandle {
     fn on_room_created(
         game_host_manager: GameHostManagerHandle,
         room_id: u64,
+        config: HashMap<String, String>,
+        owner_id: u64,
+    ) {
+        let room_handle = game_host_manager.server_handle.get_room_handle(room_id);
+        if room_handle.is_none() {
+            return;
+        }
+
+        let room_handle = room_handle.unwrap();
+
+        let mut game_host = GameHost::new(
+            owner_id,
+            room_handle
+        );
+        
+        if let Ok(mut map_lock) = game_host_manager.room_host_map.write() {
+            map_lock.insert(room_id, game_host);
+        }
+    }
+
+    fn on_room_updated(
+        game_host_manager: GameHostManagerHandle,
+        room_id: u64,
         config: serde_json::Value,
         owner_id: u64,
     ) {
         let game_config = serde_json::from_value::<
             room_server_interface::schema::game_config::GameConfig,
         >(config);
-
-        if game_config.is_err() {
-            tracing::error!(
-                "Received invalid game config: {}",
-                game_config.err().unwrap()
-            );
-            return;
-        }
         let game_config = game_config.unwrap();
-        let game_dir_config = game_host_manager.game_dir_mapping.0.get(&game_config.game_path.unwrap());
+        let game_path = &game_config.game_path.as_ref();
+        let game_dir_config = game_host_manager
+            .game_dir_mapping
+            .0
+            .get(game_path.unwrap());
 
         if let None = &game_dir_config {
-            // tracing::error!("Requested game {} not registered.", game_config.game_path.);
+            tracing::error!("Requested game {:?} not registered.", game_path.unwrap());
             return;
         }
         let game_dir_config = game_dir_config.unwrap().to_owned();
 
-        let task_handle = tokio::spawn(async move {
-            let room_handle = game_host_manager.server_handle.get_room_handle(room_id);
-            if room_handle.is_none() {
-                return;
+        if let Ok(mut map_lock) = game_host_manager.room_host_map.write() {
+            if let Some(game_host) = map_lock.get_mut(&room_id) {
+                let result = game_host.start(&game_dir_config.cwd, &game_dir_config.runnable, &vec![]);
+                if let Err(error) = result {
+                    tracing::error!("Couldn't start the game: {:?}", error);
+                }
             }
-
-            let room_handle = room_handle.unwrap();
-
-            let mut game_host = GameHost::new(owner_id, room_handle, PathBuf::from(game_dir_config.cwd), PathBuf::from(game_dir_config.runnable));
-            game_host.run().await;
-        });
-        if let Ok(mut map_lock) = game_host_manager.room_host_handle_map.write() {
-            map_lock.insert(room_id, task_handle);
         }
     }
 
@@ -132,9 +153,9 @@ impl GameHostManagerHandle {
     }
 
     fn on_room_closed(game_host_manager: GameHostManagerHandle, room_id: u64) {
-        if let Ok(mut map_lock) = game_host_manager.room_host_handle_map.write() {
-            if let Some(host_handle) = map_lock.get(&room_id) {
-                host_handle.abort();
+        if let Ok(mut map_lock) = game_host_manager.room_host_map.write() {
+            if let Some(game_host) = map_lock.get_mut(&room_id) {
+                game_host.stop();
             }
             map_lock.remove(&room_id);
         }

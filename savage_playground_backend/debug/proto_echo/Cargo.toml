@@ -1,0 +1,10 @@
+[package]
+name = "proto_echo"
+description = "Anything that goes to STDIN is expected to be a protobuffer InstanceInput. Returns the same message as InstanceOutput protobuffer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+prost = { workspace = true }
+prost-types = { workspace = true }
+room_server_interface = { path = "../../room_server_interface" }

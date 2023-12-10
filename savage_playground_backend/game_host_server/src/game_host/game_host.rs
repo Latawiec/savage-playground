@@ -9,6 +9,7 @@ use crate::{
     },
 };
 use prost::Message;
+use room_server_interface::schema::game_config::GameConfig;
 use tokio::io::BufReader;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -16,6 +17,8 @@ use tokio::{
     sync::broadcast,
     task::JoinHandle,
 };
+
+use self::error::GameInstanceError;
 
 mod error {
 
@@ -49,10 +52,10 @@ mod error {
 pub struct GameHost {
     game_owner: ClientID,
     room_handle: RoomHandle,
-
-    game_dir: PathBuf,
-    game_runnable: PathBuf,
+    
     game_instance: Option<Instance>,
+    game_input_handle: Option<JoinHandle<()>>,
+    game_output_handle: Option<JoinHandle<()>>,
 }
 
 struct ProtoStdin {
@@ -103,29 +106,33 @@ impl ProtoStderr {
 }
 
 impl GameHost {
+
     pub fn new(
         owner_id: ClientID,
         room_handle: RoomHandle,
-        game_dir: PathBuf,
-        game_runnable: PathBuf,
     ) -> GameHost {
         GameHost {
             game_owner: owner_id,
             room_handle,
-            game_dir,
-            game_runnable,
             game_instance: None,
+            game_input_handle: None,
+            game_output_handle: None,
         }
     }
 
-    pub async fn run(&mut self) {
+    pub fn start(
+        &mut self,
+        cwd: &Path,
+        runnable: &Path,
+        args: &[&str]
+    ) -> Result<(), GameInstanceError> {
         let receiver = self.room_handle.receiver();
         let sender = self.room_handle.sender();
 
-        let game_instance = Self::try_start_game(&self.game_dir, &self.game_runnable).await;
-        if let Err(error) = &game_instance {
+        let game_instance = Self::try_start_game(&cwd, &runnable);
+        if let Err(error) = game_instance {
             tracing::error!("Failed starting game instance: {:?}", error);
-            return;
+            return Err(error);
         }
         let mut game_instance = game_instance.unwrap();
 
@@ -134,8 +141,18 @@ impl GameHost {
         let proto_stderr = ProtoStderr { stderr: BufReader::new(game_instance.take_stderr().unwrap()) };
 
         self.game_instance = Some(game_instance);
-        Self::start_game_input_task(proto_stdin, receiver);
-        Self::start_game_output_task(proto_stdout, sender, self.room_handle.room_id);
+        self.game_input_handle = Some(Self::start_game_input_task(proto_stdin, receiver));
+        self.game_output_handle = Some(Self::start_game_output_task(proto_stdout, sender, self.room_handle.room_id));
+
+        Ok(())
+    }
+
+    pub fn stop(
+        &mut self,
+    ) {
+        self.game_input_handle = Option::None;
+        self.game_output_handle = Option::None;
+        self.game_instance = Option::None;
     }
 
     fn start_game_input_task(
@@ -149,10 +166,13 @@ impl GameHost {
             let mut encode_buffer = Vec::<u8>::new();
             encode_buffer.resize(ENCODE_BUFFER_SIZE, 0);
             while let Ok(msg) = client_msg_receiver.recv().await {
+
                 match msg {
                     ClientMessage::Data { client_id, message } => {
                         match message {
-                            crate::room_server::message::Message::Text { data } => todo!(),
+                            crate::room_server::message::Message::Text { data } => {
+                                println!("Got: {}", data);
+                            },
                             crate::room_server::message::Message::Binary { data } => {
                                 let client_game_message_proto = ::prost_types::Any::decode(data.as_slice());
                                 if let Err(error) = &client_game_message_proto {
@@ -261,7 +281,7 @@ impl GameHost {
         self.game_owner = new_owner_id;
     }
 
-    async fn try_start_game(
+    fn try_start_game(
         game_dir: &Path,
         game_runnable: &Path,
     ) -> Result<Instance, error::GameInstanceError> {

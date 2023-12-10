@@ -1,21 +1,14 @@
 use clap::Parser;
 
-pub struct Error(pub String);
-
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
-pub struct ServerConfig {
+pub struct Config {
     #[arg(short, long, default_value_t = 0)]
-    port: u32,
+    pub game_host_server_port: u16,
+    #[arg(short, long, default_value_t = 0)]
+    pub asset_server_port: u16,
     #[arg(short, long)]
-    server_name: String,
-}
-
-impl ServerConfig {
-    pub fn parse_config() -> Result<ServerConfig, Error> {
-        match ServerConfig::try_parse() {
-            Ok(config) => Ok(config),
-            Err(error) => Err(Error(format!("{}", error))),
-        }
-    }
+    pub game_dir_mapping_file: String,
+    #[arg(short, long)]
+    pub server_name: String,
 }

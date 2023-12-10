@@ -6,6 +6,7 @@ members = [
     "build_util/schema_gen",
     "debug/echo",
     "debug/pong",
+    "debug/proto_echo",
     "framework",
     "testing",
     "worlds",

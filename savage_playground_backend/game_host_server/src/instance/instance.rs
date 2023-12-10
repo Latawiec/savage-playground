@@ -63,4 +63,8 @@ impl Instance {
             reason: err.to_string(),
         })
     }
+
+    pub async fn wait(&mut self) -> Result<ExitStatus, Error> {
+        self.process.wait().await.map_err(|err| Error::ProcessError { reason: err.to_string() })
+    }
 }

@@ -24,3 +24,8 @@ room_server_interface = { path = "../room_server_interface" }
 
 [build-dependencies]
 build_io = { path = "../build_util/build_io" }
+
+[dev-dependencies]
+# I need some simple Websocket client to test the host.
+tokio-tungstenite = "*"
+http = "*"
