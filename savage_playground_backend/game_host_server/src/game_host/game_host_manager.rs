@@ -4,13 +4,14 @@ use std::{
     sync::{Arc, RwLock},
 };
 
+use room_server_interface::schema::game_config::GameConfig;
 use serde::{Deserialize, Serialize};
-use tokio::task::JoinHandle;
 
 use crate::room_server::{
     client::ClientID,
-    room::RoomID,
-    server::{RoomServerHandle, RoomServerNotification},
+    room::{RoomHandle, RoomID},
+    room_server_handler::RoomServerBackend,
+    server::{self, RoomServerHandle},
 };
 
 use super::game_host::GameHost;
@@ -24,6 +25,16 @@ mod error {
         ConfigError { reason: String },
         GameNotFound { reason: String },
     }
+
+    use warp::{http::StatusCode, reject::Reject, reply::Reply, Rejection};
+
+    #[derive(Debug)]
+    pub enum Error {
+        GameConfigIllFormed,
+        GameNotFound,
+    }
+
+    impl Reject for Error {}
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -37,10 +48,127 @@ struct GameDirMapping(HashMap<String, GameDirConfig>);
 
 #[derive(Clone)]
 pub struct GameHostManagerHandle {
-    pub(self) server_handle: RoomServerHandle,
-    pub(self) room_host_map: Arc<RwLock<BTreeMap<RoomID, GameHost>>>,
-    pub(self) game_dir_mapping: Arc<GameDirMapping>,
+    pub(self) game_hosts: Arc<RwLock<BTreeMap<RoomID, GameHost>>>,
+    pub(self) game_configs: Arc<RwLock<BTreeMap<RoomID, GameConfig>>>,
+    pub(self) game_dir_mapping: Arc<RwLock<GameDirMapping>>,
     pub(self) game_dir_mapping_file: PathBuf,
+}
+
+impl RoomServerBackend for GameHostManagerHandle {
+    fn create_room(
+        &self,
+        client_id: ClientID,
+        room_handle: RoomHandle,
+    ) -> Result<(), warp::Rejection> {
+        let mut room_handles_lock = self
+            .room_handles
+            .write()
+            .map_err(|e| warp::reject::custom(server::error::Error::InternalError))?;
+
+        if room_handles_lock.contains_key(&room_id) {
+            return Err(warp::reject::custom(
+                server::error::Error::RoomAlreadyExists,
+            ));
+        }
+
+        let mut game_hosts_lock = self
+            .game_hosts
+            .write()
+            .map_err(|e| warp::reject::custom(server::error::Error::InternalError))?;
+
+        let room_handle = RoomHandle::new(room_id);
+        let game_host = GameHost::new(client_id, room_handle.clone());
+
+        room_handles_lock.insert(room_id, room_handle.clone());
+        game_hosts_lock.insert(room_id, game_host);
+
+        Ok(room_handle)
+    }
+
+    fn update_room(
+        &self,
+        room_id: RoomID,
+        client_id: ClientID,
+        config: serde_json::Value,
+    ) -> Result<(), warp::Rejection> {
+        let game_config = serde_json::from_value::<
+            room_server_interface::schema::game_config::GameConfig,
+        >(config)
+        .map_err(|e| warp::reject::custom(error::Error::GameConfigIllFormed))?;
+
+        // Empty, we assume they want to kill the game. Because my GameConfig isn't amazingly defined yet.
+        match &game_config.game_path {
+            Some(game_path) => {
+                let game_dir_mapping_lock = self
+                    .game_dir_mapping
+                    .read()
+                    .map_err(|e| warp::reject::custom(server::error::Error::InternalError))?;
+
+                if !game_dir_mapping_lock.0.contains_key(game_path) {
+                    return Err(warp::reject::custom(error::Error::GameNotFound));
+                }
+
+                let game_dir_config = game_dir_mapping_lock.0.get(game_path).unwrap();
+
+                let game_cwd = &game_dir_config.cwd;
+                let game_runnable = &game_dir_config.runnable;
+
+                let mut game_hosts_lock = self
+                    .game_hosts
+                    .write()
+                    .map_err(|e| warp::reject::custom(server::error::Error::InternalError))?;
+
+                if let Some(game_host) = game_hosts_lock.get_mut(&room_id) {
+                    if let Err(error) = game_host.start(&game_cwd, game_runnable, &vec![]) {
+                        tracing::error!("Couldn't start the game {game_path}: {:?}", error);
+                        game_host.stop();
+                        return Err(warp::reject::custom(error::Error::GameNotFound));
+                    }
+                }
+            }
+            None => {
+                let mut game_hosts_lock = self
+                    .game_hosts
+                    .write()
+                    .map_err(|e| warp::reject::custom(server::error::Error::InternalError))?;
+
+                if let Some(game_host) = game_hosts_lock.get_mut(&room_id) {
+                    game_host.stop();
+                }
+            }
+        }
+
+        // Save this config.
+        let mut game_configs_lock = self
+            .game_configs
+            .write()
+            .map_err(|e| warp::reject::custom(server::error::Error::InternalError))?;
+        game_configs_lock.insert(room_id, game_config);
+
+        Ok(())
+    }
+
+    fn join_room(&self, room_id: RoomID, client_id: ClientID) -> Result<(), warp::Rejection> {
+        let room_handles_lock = self
+            .room_handles
+            .read()
+            .map_err(|e| warp::reject::custom(server::error::Error::InternalError))?;
+
+        if !room_handles_lock.contains_key(&room_id) {
+            return Err(warp::reject::custom(
+                server::error::Error::RoomDoesNotExist,
+            ));
+        }
+
+        let room_handle = room_handles_lock.get(&room_id).unwrap();
+        room_handle.create_room_client(client_id, addr, websocket)
+
+        Ok(())
+    }
+
+    fn leave_room(&self, room_id: RoomID, client_id: ClientID) -> Result<(), warp::Rejection> {
+        todo!()
+    }
 }
 
 impl GameHostManagerHandle {
@@ -48,117 +176,19 @@ impl GameHostManagerHandle {
         server_handle: RoomServerHandle,
         game_dir_mapping_file: &Path,
     ) -> Option<GameHostManagerHandle> {
-        let room_host_map: Arc<RwLock<BTreeMap<RoomID, GameHost>>> =
-            Default::default();
-
         let game_host_manager_handle = GameHostManagerHandle {
-            server_handle,
-            room_host_map,
+            room_handles: Default::default(),
+            game_hosts: Default::default(),
+            game_configs: Default::default(),
             game_dir_mapping: Default::default(),
             game_dir_mapping_file: game_dir_mapping_file.to_owned(),
         };
 
-        tokio::spawn(Self::server_notification_listener(
-            game_host_manager_handle.clone(),
-        ));
-
         Some(game_host_manager_handle)
     }
 
-    async fn server_notification_listener(mut game_host_manager: GameHostManagerHandle) {
-        let mut server_receiver = game_host_manager.server_handle.subscribe();
-        if let Err(error) = game_host_manager.load_game_dir_mapping().await {
-            tracing::error!("Failed to load game dir mapping: {:?}", error);
-        }
-
-        while let Ok(notification) = server_receiver.recv().await {
-            match notification {
-                RoomServerNotification::RoomCreated {
-                    room_id,
-                    config,
-                    client_id,
-                } => {
-                    Self::on_room_created(game_host_manager.clone(), room_id, config, client_id);
-                }
-                RoomServerNotification::RoomUpdated { room_id, config, client_id } => {
-                    Self::on_room_updated(game_host_manager.clone(), room_id, config, client_id);
-                }
-                RoomServerNotification::RoomEmpty { room_id } => {
-                    Self::on_room_empty(game_host_manager.clone(), room_id);
-                }
-                RoomServerNotification::RoomClosed { room_id } => {
-                    Self::on_room_closed(game_host_manager.clone(), room_id);
-                }
-            }
-        }
-    }
-
-    fn on_room_created(
-        game_host_manager: GameHostManagerHandle,
-        room_id: u64,
-        config: HashMap<String, String>,
-        owner_id: u64,
-    ) {
-        let room_handle = game_host_manager.server_handle.get_room_handle(room_id);
-        if room_handle.is_none() {
-            return;
-        }
-
-        let room_handle = room_handle.unwrap();
-
-        let mut game_host = GameHost::new(
-            owner_id,
-            room_handle
-        );
-        
-        if let Ok(mut map_lock) = game_host_manager.room_host_map.write() {
-            map_lock.insert(room_id, game_host);
-        }
-    }
-
-    fn on_room_updated(
-        game_host_manager: GameHostManagerHandle,
-        room_id: u64,
-        config: serde_json::Value,
-        owner_id: u64,
-    ) {
-        let game_config = serde_json::from_value::<
-            room_server_interface::schema::game_config::GameConfig,
-        >(config);
-        let game_config = game_config.unwrap();
-        let game_path = &game_config.game_path.as_ref();
-        let game_dir_config = game_host_manager
-            .game_dir_mapping
-            .0
-            .get(game_path.unwrap());
-
-        if let None = &game_dir_config {
-            tracing::error!("Requested game {:?} not registered.", game_path.unwrap());
-            return;
-        }
-        let game_dir_config = game_dir_config.unwrap().to_owned();
-
-        if let Ok(mut map_lock) = game_host_manager.room_host_map.write() {
-            if let Some(game_host) = map_lock.get_mut(&room_id) {
-                let result = game_host.start(&game_dir_config.cwd, &game_dir_config.runnable, &vec![]);
-                if let Err(error) = result {
-                    tracing::error!("Couldn't start the game: {:?}", error);
-                }
-            }
-        }
-    }
-
-    fn on_room_empty(game_host_manager: GameHostManagerHandle, room_id: u64) {
-        game_host_manager.server_handle.close_room(room_id);
-    }
-
-    fn on_room_closed(game_host_manager: GameHostManagerHandle, room_id: u64) {
-        if let Ok(mut map_lock) = game_host_manager.room_host_map.write() {
-            if let Some(game_host) = map_lock.get_mut(&room_id) {
-                game_host.stop();
-            }
-            map_lock.remove(&room_id);
-        }
+    pub async fn reload_game_dir_mapping(&mut self) {
+        self.load_game_dir_mapping();
     }
 
     async fn load_game_dir_mapping(&mut self) -> Result<(), error::GameDirMappingError> {
@@ -223,7 +253,7 @@ impl GameHostManagerHandle {
         }
 
         // All good. Set new GameDirMapping
-        self.game_dir_mapping = Arc::new(games_mapping);
+        self.game_dir_mapping = Arc::new(RwLock::new(games_mapping));
 
         Ok(())
     }

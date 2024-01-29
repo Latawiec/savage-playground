@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, BTreeMap},
     net::SocketAddr,
     sync::{atomic::AtomicU64, Arc, RwLock},
 };
@@ -26,11 +26,11 @@ pub enum RoomServerNotification {
 #[derive(Clone)]
 pub struct RoomServerHandle {
     pub addr: SocketAddr,
+    pub room_handles: Arc<RwLock<BTreeMap<RoomID, RoomHandle>>>,
     server_notification_sender: broadcast::Sender<RoomServerNotification>,
-    rooms: Arc<RwLock<HashMap<RoomID, RoomHandle>>>,
 }
 
-mod error {
+pub mod error {
     use warp::{http::StatusCode, reject::Reject, reply::Reply, Rejection};
 
     #[derive(Debug)]
@@ -40,6 +40,7 @@ mod error {
         RoomIsFull,
 
         LockError,
+        InternalError,
     }
 
     impl Reject for Error {}
@@ -61,7 +62,7 @@ impl RoomServerHandle {
     const SERVER_NOTIFICATION_CHANNEL_CAPACITY: usize = 128;
 
     pub fn get_room_channels(&self, room_id: RoomID) -> Option<(broadcast::Receiver<ClientMessage>, broadcast::Sender<ServerMessage>)> {
-        if let Some(room) = self.rooms.read().unwrap().get(&room_id) {
+        if let Some(room) = self.room_handles.read().unwrap().get(&room_id) {
             Some((room.receiver(), room.sender()))
         } else {
             None
@@ -69,7 +70,7 @@ impl RoomServerHandle {
     }
 
     pub fn get_room_handle(&self, room_id: RoomID) -> Option<RoomHandle> {
-        if let Some(room_handle) = self.rooms.read().unwrap().get(&room_id) {
+        if let Some(room_handle) = self.room_handles.read().unwrap().get(&room_id) {
             Some(room_handle.clone())
         } else {
             None
@@ -77,7 +78,7 @@ impl RoomServerHandle {
     }
 
     pub fn check_room_exists(&self, room_id: RoomID) -> bool {
-        if let Some(_room_handle) = self.rooms.read().unwrap().get(&room_id) {
+        if let Some(_room_handle) = self.room_handles.read().unwrap().get(&room_id) {
             true
         } else {
             false
@@ -85,7 +86,7 @@ impl RoomServerHandle {
     }
 
     pub fn insert_room_handle(&self, room_id: RoomID, room_handle: RoomHandle) -> Result<(), error::Error> {
-        match self.rooms.write() {
+        match self.room_handles.write() {
             Err(error) => {
                 tracing::error!("Couldn't lock rooms for insertion: {:?}", error);
                 Err(error::Error::LockError)
@@ -164,7 +165,7 @@ impl RoomServerHandle {
         }
         // Between first check and the next one room might disappear. I think... We'll see
         Ok(ws.on_upgrade(move |websocket| async move {
-            let room_handle = { 
+            let room_handle = {
                 if let Some(room_handle) = server_handle.get_room_handle(room_id) {
                     Some(room_handle.clone())
                 } else {
@@ -172,7 +173,7 @@ impl RoomServerHandle {
                 }
             };
             if let Some(room_handle) = room_handle {
-                let _ = room_handle.create_room_client(client_id, addr, websocket).await;
+                let _ = room_handle.create_room_client(client_id, addr, websocket);
             } else {
                 tracing::error!("Room does not exist.");
                 return;
@@ -187,7 +188,6 @@ impl RoomServerHandle {
         addr: Option<SocketAddr>,
         server_handle: RoomServerHandle,
         query: HashMap<String, String>,
-        // body: serde_json::Value,
     ) -> Result<impl warp::Reply, warp::Rejection> {
         {
             if server_handle.check_room_exists(room_id) {

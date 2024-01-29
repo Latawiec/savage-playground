@@ -46,7 +46,7 @@ impl RoomHandle {
         self.server_msg_sender.clone()
     }
 
-    pub (crate) async fn create_room_client(&self, client_id: ClientID, addr: Option<SocketAddr>, websocket: WebSocket) -> Result<(), RoomError> {
+    pub (crate) fn create_room_client(&self, client_id: ClientID, addr: Option<SocketAddr>, websocket: WebSocket) -> Result<(), RoomError> {
         let client_msg_sender = self.client_msg_sender.clone();
         let mut room_msg_receiver = self.server_msg_sender.subscribe();
 

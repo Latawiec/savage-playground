@@ -11,6 +11,7 @@ mod asset_server;
 mod instance;
 mod game_host;
 mod room_server;
+mod room_host;
 
 // Starts both Asset Server and Game Host Server
 pub struct BundledServer {
