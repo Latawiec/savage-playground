@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum RoomHostError {
     Unknown,
     InternalError { message: String },

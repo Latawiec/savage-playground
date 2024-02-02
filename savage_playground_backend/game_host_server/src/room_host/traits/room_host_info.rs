@@ -12,6 +12,12 @@ pub trait RoomHostInfo {
     async fn get_rooms(&self)
         -> Result<BTreeSet<RoomHandle>, RoomHostError>;
 
+    async fn get_client_rooms(&self, client: ClientHandle)
+        -> Result<BTreeSet<RoomHandle>, RoomHostError>;
+
+    async fn get_clients(&self)
+        -> Result<BTreeSet<ClientHandle>, RoomHostError>;
+        
     fn subscribe_host_info(&self)
         -> Result<tokio::sync::broadcast::Receiver<RoomHostNotification>, RoomHostError>;
 }

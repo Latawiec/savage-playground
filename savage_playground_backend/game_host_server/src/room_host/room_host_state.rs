@@ -14,6 +14,7 @@ use crate::room_host::{
     },
 };
 
+#[derive(Default)]
 struct RoomHostDataMapping {
     room_clients_map: BTreeMap<RoomHandle, BTreeSet<ClientHandle>>,
     client_rooms_map: BTreeMap<ClientHandle, BTreeSet<RoomHandle>>,
@@ -21,7 +22,7 @@ struct RoomHostDataMapping {
 
 pub struct RoomHostState {
     room_host_data: RwLock<RoomHostDataMapping>,
-    broadcast_sender: tokio::sync::broadcast::Sender<RoomHostNotification>,
+    notification_sender: tokio::sync::broadcast::Sender<RoomHostNotification>,
     client_handle_monotonic_counter: AtomicU64,
     room_handle_monotonic_counter: AtomicU64,
 }
@@ -52,6 +53,20 @@ impl RoomHostState {
     }
 }
 
+impl Default for RoomHostState {
+    fn default() -> Self {
+        const DEFAULT_BROADCAST_QUEUE_SIZE: usize = 1024;
+        let (notification_sender, _) =
+            tokio::sync::broadcast::channel(DEFAULT_BROADCAST_QUEUE_SIZE);
+        Self {
+            room_host_data: Default::default(),
+            notification_sender,
+            client_handle_monotonic_counter: Default::default(),
+            room_handle_monotonic_counter: Default::default(),
+        }
+    }
+}
+
 impl RoomHostInfo for RoomHostState {
     async fn get_room_clients(
         &self,
@@ -71,29 +86,67 @@ impl RoomHostInfo for RoomHostState {
         Ok(lock.room_clients_map.keys().copied().collect())
     }
 
+    async fn get_client_rooms(
+        &self,
+        client: ClientHandle,
+    ) -> Result<BTreeSet<RoomHandle>, RoomHostError> {
+        let lock = self.data_read_lock()?;
+
+        if let Some(rooms) = lock.client_rooms_map.get(&client) {
+            return Ok(rooms.clone());
+        } else {
+            return Err(RoomHostError::ClientNotFound);
+        }
+    }
+
+    async fn get_clients(&self) -> Result<BTreeSet<ClientHandle>, RoomHostError> {
+        let lock = self.data_read_lock()?;
+        Ok(lock.client_rooms_map.keys().copied().collect())
+    }
+
     fn subscribe_host_info(
         &self,
     ) -> Result<tokio::sync::broadcast::Receiver<RoomHostNotification>, RoomHostError> {
-        Ok(self.broadcast_sender.subscribe())
+        Ok(self.notification_sender.subscribe())
     }
 }
 
 impl RoomHostManagement for RoomHostState {
-    async fn create_client(&mut self) -> ClientHandle {
-        ClientHandle(
+    async fn create_client(&self) -> Result<ClientHandle, RoomHostError> {
+        let client = ClientHandle(
             self.client_handle_monotonic_counter
                 .fetch_add(1, Ordering::Relaxed),
-        )
+        );
+
+        let mut lock = self.data_write_lock()?;
+        if let Some(_) = lock.client_rooms_map.insert(client, Default::default()) {
+            return Err(RoomHostError::StatePoisoned);
+        }
+        drop(lock);
+
+        self.notification_sender
+            .send(RoomHostNotification::ClientCreated { client });
+        Ok(client)
     }
 
-    async fn create_room(&mut self) -> RoomHandle {
-        RoomHandle(
+    async fn create_room(&self) -> Result<RoomHandle, RoomHostError> {
+        let room = RoomHandle(
             self.room_handle_monotonic_counter
                 .fetch_add(1, Ordering::Relaxed),
-        )
+        );
+
+        let mut lock = self.data_write_lock()?;
+        if let Some(_) = lock.room_clients_map.insert(room, Default::default()) {
+            return Err(RoomHostError::StatePoisoned);
+        }
+        drop(lock);
+
+        self.notification_sender
+            .send(RoomHostNotification::RoomCreated { room });
+        Ok(room)
     }
 
-    async fn remove_client(&mut self, client: ClientHandle) -> Result<(), RoomHostError> {
+    async fn remove_client(&self, client: ClientHandle) -> Result<(), RoomHostError> {
         let mut lock = self.data_write_lock()?;
 
         let client_rooms = lock.client_rooms_map.remove(&client);
@@ -123,28 +176,16 @@ impl RoomHostManagement for RoomHostState {
 
         // Notify
         for room in client_rooms {
-            self.broadcast_sender
+            self.notification_sender
                 .send(RoomHostNotification::ClientLeft { room, client });
         }
-        self.broadcast_sender
+        self.notification_sender
             .send(RoomHostNotification::ClientRemoved { client });
 
         Ok(())
     }
 
-    async fn update_room(
-        &mut self,
-        _client: ClientHandle,
-        _room: RoomHandle,
-    ) -> Result<(), RoomHostError> {
-        todo!()
-    }
-
-    async fn remove_room(
-        &mut self,
-        client: ClientHandle,
-        room: RoomHandle,
-    ) -> Result<(), RoomHostError> {
+    async fn remove_room(&self, room: RoomHandle) -> Result<(), RoomHostError> {
         let mut lock = self.data_write_lock()?;
 
         let clients = lock.room_clients_map.remove(&room);
@@ -167,20 +208,16 @@ impl RoomHostManagement for RoomHostState {
         drop(lock);
 
         for client in clients {
-            self.broadcast_sender
+            self.notification_sender
                 .send(RoomHostNotification::ClientLeft { room, client });
         }
-        self.broadcast_sender
+        self.notification_sender
             .send(RoomHostNotification::RoomDestroyed { room });
 
         Ok(())
     }
 
-    async fn join_room(
-        &mut self,
-        client: ClientHandle,
-        room: RoomHandle,
-    ) -> Result<(), RoomHostError> {
+    async fn join_room(&self, client: ClientHandle, room: RoomHandle) -> Result<(), RoomHostError> {
         let mut lock = self.data_write_lock()?;
 
         let opt_room_clients = lock.room_clients_map.get_mut(&room);
@@ -198,12 +235,13 @@ impl RoomHostManagement for RoomHostState {
         }
         drop(lock);
 
-        self.broadcast_sender.send(RoomHostNotification::ClientJoined { room, client });
+        self.notification_sender
+            .send(RoomHostNotification::ClientJoined { room, client });
         Ok(())
     }
 
     async fn leave_room(
-        &mut self,
+        &self,
         client: ClientHandle,
         room: RoomHandle,
     ) -> Result<(), RoomHostError> {
@@ -212,7 +250,7 @@ impl RoomHostManagement for RoomHostState {
         let opt_room_clients = lock.room_clients_map.get_mut(&room);
         if let None = &opt_room_clients {
             return Err(RoomHostError::RoomNotFound);
-        } 
+        }
         let room_clients = opt_room_clients.unwrap();
 
         if !room_clients.remove(&client) {
@@ -223,7 +261,8 @@ impl RoomHostManagement for RoomHostState {
             client_rooms.remove(&room);
         }
 
-        self.broadcast_sender.send(RoomHostNotification::ClientLeft { room, client });
+        self.notification_sender
+            .send(RoomHostNotification::ClientLeft { room, client });
         Ok(())
     }
 }
