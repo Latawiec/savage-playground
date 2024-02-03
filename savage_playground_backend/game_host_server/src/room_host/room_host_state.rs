@@ -124,7 +124,8 @@ impl RoomHostManagement for RoomHostState {
         }
         drop(lock);
 
-        self.notification_sender
+        let _ = self
+            .notification_sender
             .send(RoomHostNotification::ClientCreated { client });
         Ok(client)
     }
@@ -141,7 +142,8 @@ impl RoomHostManagement for RoomHostState {
         }
         drop(lock);
 
-        self.notification_sender
+        let _ = self
+            .notification_sender
             .send(RoomHostNotification::RoomCreated { room });
         Ok(room)
     }
@@ -166,20 +168,17 @@ impl RoomHostManagement for RoomHostState {
             }
         }
 
-        // Then remove from clients map.
-        if let None = lock.client_rooms_map.remove(&client) {
-            return Err(RoomHostError::StatePoisoned);
-        }
-
         // Unlock
         drop(lock);
 
         // Notify
         for room in client_rooms {
-            self.notification_sender
+            let _ = self
+                .notification_sender
                 .send(RoomHostNotification::ClientLeft { room, client });
         }
-        self.notification_sender
+        let _ = self
+            .notification_sender
             .send(RoomHostNotification::ClientRemoved { client });
 
         Ok(())
@@ -208,10 +207,12 @@ impl RoomHostManagement for RoomHostState {
         drop(lock);
 
         for client in clients {
-            self.notification_sender
+            let _ = self
+                .notification_sender
                 .send(RoomHostNotification::ClientLeft { room, client });
         }
-        self.notification_sender
+        let _ = self
+            .notification_sender
             .send(RoomHostNotification::RoomDestroyed { room });
 
         Ok(())
@@ -235,7 +236,8 @@ impl RoomHostManagement for RoomHostState {
         }
         drop(lock);
 
-        self.notification_sender
+        let _ = self
+            .notification_sender
             .send(RoomHostNotification::ClientJoined { room, client });
         Ok(())
     }
@@ -256,13 +258,22 @@ impl RoomHostManagement for RoomHostState {
         if !room_clients.remove(&client) {
             return Err(RoomHostError::ClientNotInRoom);
         }
+        let is_room_empty = room_clients.is_empty();
 
         if let Some(client_rooms) = lock.client_rooms_map.get_mut(&client) {
             client_rooms.remove(&room);
         }
+        drop(lock);
 
-        self.notification_sender
+        let _ = self
+            .notification_sender
             .send(RoomHostNotification::ClientLeft { room, client });
+
+        if is_room_empty {
+            let _ = self
+                .notification_sender
+                .send(RoomHostNotification::RoomEmpty { room });
+        }
         Ok(())
     }
 }

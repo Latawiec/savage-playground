@@ -3,26 +3,33 @@ use crate::room_host::types::{
 };
 
 pub trait RoomHostManagement {
-    async fn create_client(&self) -> Result<ClientHandle, RoomHostError>;
+    fn create_client(
+        &self,
+    ) -> impl std::future::Future<Output = Result<ClientHandle, RoomHostError>> + Send;
 
-    async fn create_room(&self) -> Result<RoomHandle, RoomHostError>;
+    fn create_room(
+        &self,
+    ) -> impl std::future::Future<Output = Result<RoomHandle, RoomHostError>> + Send;
 
-    async fn remove_client(&self, client: ClientHandle) -> Result<(), RoomHostError>;
+    fn remove_client(
+        &self,
+        client: ClientHandle,
+    ) -> impl std::future::Future<Output = Result<(), RoomHostError>> + Send;
 
-    async fn remove_room(
+    fn remove_room(
         &self,
         room: RoomHandle,
-    ) -> Result<(), RoomHostError>;
+    ) -> impl std::future::Future<Output = Result<(), RoomHostError>> + Send;
 
-    async fn join_room(
+    fn join_room(
         &self,
         client: ClientHandle,
         room: RoomHandle,
-    ) -> Result<(), RoomHostError>;
+    ) -> impl std::future::Future<Output = Result<(), RoomHostError>> + Send;
 
-    async fn leave_room(
+    fn leave_room(
         &self,
         client: ClientHandle,
         room: RoomHandle,
-    ) -> Result<(), RoomHostError>;
+    ) -> impl std::future::Future<Output = Result<(), RoomHostError>> + Send;
 }

@@ -4,8 +4,10 @@ use crate::room_host::types::{
 };
 
 pub trait RoomHostInput {
-    async fn send_client_msg(&self, client_message: RoomClientMessage)
-        -> Result<(), RoomHostError>;
+    fn send_client_msg(
+        &self,
+        client_message: RoomClientMessage,
+    ) -> impl std::future::Future<Output = Result<(), RoomHostError>> + Send;
 
     fn subscribe_client_msg(
         &self,
@@ -13,8 +15,10 @@ pub trait RoomHostInput {
 }
 
 pub trait RoomHostOutput {
-    async fn send_host_msg(&self, host_message: RoomHostMessage)
-        -> Result<(), RoomHostError>;
+    fn send_host_msg(
+        &self,
+        host_message: RoomHostMessage,
+    ) -> impl std::future::Future<Output = Result<(), RoomHostError>> + Send;
 
     fn subscribe_host_msg(
         &self,
