@@ -1,4 +1,3 @@
-use asset_server::server::AssetServerHandle;
 use clap::Parser;
 use config::Config;
 // use game_host::game_host_manager::GameHostManagerHandle;
@@ -8,7 +7,6 @@ use std::path::PathBuf;
 
 pub mod config;
 // pub mod game_host;
-mod asset_server;
 mod instance;
 // mod game_host;
 // mod room_server;

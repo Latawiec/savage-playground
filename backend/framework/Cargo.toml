@@ -11,8 +11,8 @@ serde_json = "1.0.106"
 uuid = {version = "*", features = ["v1", "v6", "serde", "fast-rng"]}
 tracing = { version = "0.1", features = ["log"] }
 rand = "*"
-rand_chacha = "0.3.1"
-bevy = { workspace = true }
+rand_chacha = "*"
+bevy = { version = "*", features = ["dynamic_linking"] }
 datazoo = "*"
 
 [dependencies.bevy_rapier2d]
@@ -23,3 +23,11 @@ features = ["debug-render-2d", "simd-stable"]
 debug_collider_renderer = []
 debug_local_input = []
 debug_diagnostics = []
+
+# Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy)
+[profile.dev.package."*"]
+opt-level = 3

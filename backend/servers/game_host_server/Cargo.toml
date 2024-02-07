@@ -10,8 +10,7 @@ futures-util = "0.3.28"
 tracing = "0.1.37"
 tracing-subscriber = "0.3.17"
 
-# We're using this as warp version until https://github.com/seanmonstar/warp/pull/1049 is merged.
-warp = { git = "https://github.com/Molkars/warp.git" }
+warp = "*"
 
 tokio = { workspace = true }
 serde = { workspace = true }
@@ -20,10 +19,10 @@ prost = { workspace = true }
 prost-types = { workspace = true }
 async-trait = { workspace = true }
 
-room_server_interface = { path = "../room_server_interface" }
+room_server_interface = { path = "../../communication/room_server_interface" }
 
 [build-dependencies]
-build_io = { path = "../build_util/build_io" }
+build_io = { path = "../../build_util/build_io" }
 
 [dev-dependencies]
 # I need some simple Websocket client to test the host.

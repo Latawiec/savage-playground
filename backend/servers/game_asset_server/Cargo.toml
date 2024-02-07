@@ -1,0 +1,18 @@
+[package]
+name = "game_asset_server"
+version = "0.1.0"
+description = "Starts an Asset Server for games."
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.4.6", features = ["derive"] }
+futures-util = "0.3.28"
+
+# We're using this as warp version until https://github.com/seanmonstar/warp/pull/1049 is merged.
+warp = { git = "https://github.com/Molkars/warp.git" }
+
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

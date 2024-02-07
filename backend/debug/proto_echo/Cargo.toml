@@ -7,4 +7,4 @@ edition = "2021"
 [dependencies]
 prost = { workspace = true }
 prost-types = { workspace = true }
-room_server_interface = { path = "../../room_server_interface" }
+room_server_interface = { path = "../../communication/room_server_interface" } 

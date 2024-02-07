@@ -10,5 +10,5 @@ async-trait = { workspace = true }
 serde = { workspace = true }
 
 [build-dependencies]
-proto_gen = { path = "../build_util/proto_gen" }
-schema_gen = { path = "../build_util/schema_gen" }
+proto_gen = { path = "../../build_util/proto_gen" }
+schema_gen = { path = "../../build_util/schema_gen" }

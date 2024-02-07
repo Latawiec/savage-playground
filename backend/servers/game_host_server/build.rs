@@ -22,6 +22,6 @@ fn copy_game_dir_mapping() {
 // }
 
 fn main() {
-    copy_game_dir_mapping();
+    // copy_game_dir_mapping();
     //copy_game_asset_mapping();
 }
