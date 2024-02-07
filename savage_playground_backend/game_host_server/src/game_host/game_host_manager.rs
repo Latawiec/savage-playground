@@ -161,7 +161,7 @@ impl RoomServerBackend for GameHostManagerHandle {
         }
 
         let room_handle = room_handles_lock.get(&room_id).unwrap();
-        room_handle.create_room_client(client_id, addr, websocket)
+        room_handle.create_room_client(client_id, addr, websocket);
 
         Ok(())
     }

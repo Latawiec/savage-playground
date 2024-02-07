@@ -8,6 +8,17 @@ use tokio::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command};
 pub enum Error {
     StartupError { reason: String },
     ProcessError { reason: String },
+    KillError { reason: String },
+}
+
+impl ToString for Error {
+    fn to_string(&self) -> String {
+        match self {
+            Error::StartupError { reason } => reason.to_owned(),
+            Error::ProcessError { reason } => reason.to_owned(),
+            Error::KillError { reason } => reason.to_owned(),
+        }
+    }
 }
 
 pub struct Instance {
@@ -18,7 +29,8 @@ pub struct Instance {
 
 impl Drop for Instance {
     fn drop(&mut self) {
-        let _ = self.process.kill();
+        // We can't do anything better here - Drop is sync operation.
+        let _ = self.process.start_kill();
     }
 }
 
@@ -66,5 +78,12 @@ impl Instance {
 
     pub async fn wait(&mut self) -> Result<ExitStatus, Error> {
         self.process.wait().await.map_err(|err| Error::ProcessError { reason: err.to_string() })
+    }
+
+    pub async fn kill(&mut self) -> Result<ExitStatus, Error> {
+        if let Err(error) = self.process.start_kill() {
+            return Err(Error::KillError{ reason: error.to_string() })
+        }
+        self.wait().await
     }
 }
