@@ -5,12 +5,13 @@ use config::Config;
 use tokio::task::JoinHandle;
 use std::path::PathBuf;
 
+pub mod server;
 pub mod config;
 // pub mod game_host;
 mod instance;
 // mod game_host;
 // mod room_server;
-pub mod room_host;
+// pub mod room_host;
 pub mod game_launcher;
 
 // Starts both Asset Server and Game Host Server

@@ -10,7 +10,9 @@ futures-util = "0.3.28"
 tracing = "0.1.37"
 tracing-subscriber = "0.3.17"
 
-warp = "*"
+rocket = { version = "*", features = ["json"] }
+rocket_ws = "*"
+tokio-tungstenite = "*"
 
 tokio = { workspace = true }
 serde = { workspace = true }
@@ -26,5 +28,4 @@ build_io = { path = "../../build_util/build_io" }
 
 [dev-dependencies]
 # I need some simple Websocket client to test the host.
-tokio-tungstenite = "*"
 http = "*"

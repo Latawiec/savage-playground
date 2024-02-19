@@ -1,4 +1,5 @@
 
+#[derive(Debug)]
 pub enum GameLauncherError {
     GameMappingFileError { reason: String },
     GameMappingFileIllFormed { reason: String},

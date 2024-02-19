@@ -5,7 +5,7 @@
     "description": "Game configuration.",
     "type": "object",
     "properties": {
-        "game_path": {
+        "game_id": {
             "description": "Path for the game to start. Make sure game exists in game mapping file on the server.",
             "type": "string"
         }

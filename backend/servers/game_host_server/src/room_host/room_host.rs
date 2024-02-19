@@ -9,19 +9,19 @@ pub struct RoomHost {
 }
 
 impl RoomHost {
-    pub fn get_client_messenger(&self) -> Arc<impl RoomHostInput + Send + Sync> {
+    pub fn get_client_messenger(&self) -> Arc<impl RoomHostInput + Send + Sync + 'static> {
         self.messenger.clone()
     }
 
-    pub fn get_host_messenger(&self) -> Arc<impl RoomHostOutput + Send + Sync> {
+    pub fn get_host_messenger(&self) -> Arc<impl RoomHostOutput + Send + Sync + 'static> {
         self.messenger.clone()
     }
 
-    pub fn get_host_manager(&self) -> Arc<impl RoomHostManagement + Send + Sync> {
+    pub fn get_host_manager(&self) -> Arc<impl RoomHostManagement + Send + Sync + 'static> {
         self.state.clone()
     }
 
-    pub fn get_host_info(&self) -> Arc<impl RoomHostInfo + Send + Sync> {
+    pub fn get_host_info(&self) -> Arc<impl RoomHostInfo + Send + Sync + 'static> {
         self.state.clone()
     }
 }

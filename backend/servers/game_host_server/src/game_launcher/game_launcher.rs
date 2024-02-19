@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use super::{
     error::GameLauncherError,
     game_instance::game_instance::GameInstance,
-    game_mapping::GameMapping,
+    game_mapping::{GameInfo, GameMapping},
 };
 
 pub struct GameLauncher {
@@ -36,7 +36,21 @@ impl GameLauncher {
         let game_info = self.game_mapping.get_game_info(game_id)?;
         let game_cwd = self.games_root_directory.join(game_info.cwd);
         let game_exe = self.games_root_directory.join(game_info.exe);
+        println!("cwd: {:?}, exe: {:?}", &game_cwd, &game_exe);
+        
+        match GameInstance::new(&game_cwd, &game_exe, args) {
+            Ok(ok) => Ok(ok),
+            Err(err) => {
+                println!("Err: {:?}", err);
+                Err(err)
+            },
+        }
+    }
 
-        GameInstance::new(&game_cwd, &game_exe, args)
+    pub fn get_game_info(
+        &self,
+        game_id: &str,
+    ) -> Result<GameInfo, GameLauncherError> {
+        Ok(self.game_mapping.get_game_info(game_id)?)
     }
 }
