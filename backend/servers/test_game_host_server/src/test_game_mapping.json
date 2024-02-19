@@ -2,5 +2,9 @@
     "test_game": {
         "cwd": "",
         "exe": "/usr/bin/echo"
+    },
+    "proto_echo": {
+        "cwd": "",
+        "exe": "/mnt/UbuntuNVMe/Programing/RustTesting/savage_playground/backend/target/debug/proto_echo"
     }
 }
