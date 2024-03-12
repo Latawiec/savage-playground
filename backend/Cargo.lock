@@ -1976,6 +1976,7 @@ dependencies = [
  "rand_chacha",
  "serde",
  "serde_json",
+ "tokio",
  "tracing",
  "uuid",
 ]
@@ -4451,6 +4452,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6093bad37da69aab9d123a8091e4be0aa4a03e4d601ec641c327398315f62b64"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "test-local-set"
+version = "0.1.0"
+dependencies = [
+ "tokio",
 ]
 
 [[package]]

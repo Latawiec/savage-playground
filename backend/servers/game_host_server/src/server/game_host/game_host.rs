@@ -4,11 +4,7 @@ use rocket_ws::stream::DuplexStream;
 use room_server_interface::schema::game_config::GameConfig;
 
 use crate::{game_launcher::{self, game_instance, game_launcher::GameLauncher}, server::connection::client_connection::ConnectionCloseHandle};
-
 use super::{game_room::GameRoom, handle_gen::HandleGenerator, types::RoomHandle};
-
-
-
 
 pub struct GameHost {
     game_rooms: Arc<RwLock<BTreeMap<RoomHandle, GameRoom>>>,
@@ -43,6 +39,14 @@ impl GameHost {
             if let Some(room) = rlock.get(&room_handle) {
                 return Some(room.connect(ws_stream));
             }
+        }
+        None
+    }
+
+    pub fn delete_room(&self, room_handle: RoomHandle) -> Option<()> {
+        if let Ok(mut wlock) = self.game_rooms.write() {
+            let _ = wlock.remove(&room_handle);
+            return Some(());
         }
         None
     }

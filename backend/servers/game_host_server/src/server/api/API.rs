@@ -32,7 +32,7 @@ pub fn create_room(
     let game_host = game_host.inner().clone();
     let room_handle = match game_host.create_room(game_room_config.0, game_launcher) {
         Some(ok) => ok,
-        None => return Err(APIError::Bad("Couldn't create the room".to_owned())),
+        None => return Err(APIError::Bad("Couldn't create the room".to_owned()))
     };
 
     Ok(
@@ -51,19 +51,38 @@ pub fn create_room(
     )
 }
 
-#[put("/update_room/<room_id>", data = "<room_data>")]
-pub fn update_room(remote_addr: std::net::SocketAddr, room_id: RoomId, room_data: Json<GameConfig>) -> &'static str {
-    "woop woop"
-}
-
 #[get("/join_room/<room_id>")]
-pub fn join_room(remote_addr: std::net::SocketAddr, ws: rocket_ws::WebSocket, room_id: RoomId) -> &'static str {
-    "oof."
+pub fn join_room(
+    remote_addr: std::net::SocketAddr,
+    ws: rocket_ws::WebSocket,
+    room_id: u64,
+    game_host: &State<Arc<GameHost>>,
+) -> Result<rocket_ws::Channel<'static>, APIError> {
+    println!("Huh?");
+    let game_host = game_host.inner().clone();
+
+    Ok(
+        ws.channel(move |stream| {
+            Box::pin(async move{                
+                let mut connection_handle = match game_host.join_room(room_id.into(), stream) {
+                    Some(ok) => ok,
+                    None => return Err(rocket_ws::result::Error::ConnectionClosed),
+                };
+
+                let result = connection_handle.wait().await;
+                println!("Disconnected: {:?}", result);
+                Ok(())
+            })
+        })
+    )
 }
 
 #[delete("/destroy_room/<room_id>")]
-pub fn destroy_room(room_id: RoomId) -> () {
-    ()
+pub fn destroy_room(
+    room_id: u64,
+    game_host: &State<Arc<GameHost>>,
+) -> () {
+    game_host.delete_room(room_id.into());
 }
 
 #[get("/rooms_data")]

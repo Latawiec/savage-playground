@@ -1,22 +1,22 @@
-use bevy::prelude::{EventReader, EventWriter, Local};
+use std::time;
 
-use crate::io::interface::IOInterface;
+use bevy::{ecs::system::{NonSend, NonSendMut, SystemState}, prelude::{EventReader, EventWriter, Local}};
 
 use super::{
-    event::{GameInputMessage, GameOutputMessage},
-    interface::unnamed_pipes::UnnamedPipesGameIO,
+    event::{GameInputMessage, GameOutputMessage}, time_sliced_io::TimeSlicedIO
 };
 
 pub fn io_exchange_system(
     mut ev_input_message: EventWriter<GameInputMessage>,
     mut ev_output_message: EventReader<GameOutputMessage>,
-    mut io_interface: Local<UnnamedPipesGameIO>,
+    mut io: NonSendMut<TimeSlicedIO>,
 ) {
     for out_message in ev_output_message.iter() {
-        io_interface.write_msg(&out_message.0);
+        io.stdout(out_message.0.clone());
     }
+    io.run_for(time::Duration::from_millis(5));
 
-    while let Some(in_message) = io_interface.read_msg() {
-        ev_input_message.send(GameInputMessage(in_message.to_owned()));
+    while let Some(in_message) = io.stdin() {
+        ev_input_message.send(GameInputMessage(in_message));
     }
 }

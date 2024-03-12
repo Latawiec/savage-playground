@@ -14,6 +14,7 @@ rand = "*"
 rand_chacha = "*"
 bevy = { version = "*", features = ["dynamic_linking"] }
 datazoo = "*"
+tokio = { verison = "*", features = ["rt", "time", "io-std", "io-util", "sync"]}
 
 [dependencies.bevy_rapier2d]
 version = "*"

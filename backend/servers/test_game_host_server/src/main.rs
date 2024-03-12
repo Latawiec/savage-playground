@@ -17,7 +17,9 @@ fn rocket() -> _ {
             "/",
             routes![
                 game_host_server::server::api::API::create_room,
-                game_host_server::server::api::API::get_rooms
+                game_host_server::server::api::API::get_rooms,
+                game_host_server::server::api::API::join_room,
+                game_host_server::server::api::API::destroy_room,
             ],
         )
 }
