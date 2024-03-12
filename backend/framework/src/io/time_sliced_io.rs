@@ -20,11 +20,11 @@ impl TimeSlicedIO {
     const STDERR_CHANNEL_CAPACITY: usize = 16;
 
     pub fn stdout(&mut self, data: Vec<u8>) {
-        self.stdout_channel.send(data);
+        self.stdout_channel.blocking_send(data);
     }
 
     pub fn stderr(&mut self, data: Vec<u8>) {
-        self.stderr_channel.send(data);
+        self.stderr_channel.blocking_send(data);
     }
 
     pub fn stdin(&mut self) -> Option<Vec<u8>> {
@@ -96,4 +96,9 @@ impl Default for TimeSlicedIO {
             rt,
         }
     }
+}
+
+#[cfg(test)]
+mod test {
+    // TODO tests
 }
