@@ -14,10 +14,21 @@ impl ProtoStdin {
 
     pub async fn send<T: prost::Message>(&mut self, msg: &T) {
         let mut data = Vec::<u8>::new();
-        msg.encode(&mut data).unwrap();
+        msg.encode(&mut data).expect("Message couldn't be encoded.");
         let data_len = data.len();
         _ = self.stdin.write_u64(data_len as u64).await;
         _ = self.stdin.write(&data).await;
+        _ = self.stdin.flush().await;
+    }
+
+    pub async fn send_many<T: prost::Message>(&mut self, msgs: &[T]) {
+        let mut data = Vec::<u8>::new();
+        for msg in msgs {
+            msg.encode(&mut data).expect("Message couldn't be encoded.");
+            let data_len = data.len();
+            _ = self.stdin.write_u64(data_len as u64).await;
+            _ = self.stdin.write(&data).await;
+        }
         _ = self.stdin.flush().await;
     }
 }

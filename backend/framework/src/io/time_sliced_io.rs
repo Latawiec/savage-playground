@@ -45,8 +45,8 @@ impl TimeSlicedIO {
         let mut stdout = io::stdout();
         while let Some(msg) = channel.recv().await {
             let message_size_data = msg.len().to_ne_bytes();
-            stdout.write_all(&message_size_data).await;
-            stdout.write_all(&msg).await;
+            let _ = stdout.write_all(&message_size_data).await;
+            let _ = stdout.write_all(&msg).await;
         }
     }
 

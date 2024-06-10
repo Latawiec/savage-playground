@@ -6,6 +6,7 @@ use super::{
     game_mapping::{GameInfo, GameMapping},
 };
 
+/// Game launcher is used to start up games that can communicate with the server.
 pub struct GameLauncher {
     games_root_directory: PathBuf,
     _games_mapping_file: PathBuf,
@@ -13,6 +14,12 @@ pub struct GameLauncher {
 }
 
 impl GameLauncher {
+    /// Creates a new Game Launcher.
+    /// 
+    /// * `game_root_directory` - base directory to look for games.
+    /// * `games_mapping_file` - file describing games mapping. Any game that you want to be able to
+    /// launch by the GameLauncher should be defined in this file. To see the file format check
+    /// `crate::GameMapping`.
     pub fn new(
         games_root_directory: &Path,
         games_mapping_file: &Path,
@@ -28,6 +35,12 @@ impl GameLauncher {
         })
     }
 
+    /// Launches a game.
+    /// 
+    /// Remember that only games registered when creating the GameLauncher can be launched.
+    /// 
+    /// * `game_id` - name of the game (defined by game_mapping_file contents) to be launched.
+    /// * `args` - arguments to be passed to the game on launch.
     pub fn launch_game(
         &self,
         game_id: &str,

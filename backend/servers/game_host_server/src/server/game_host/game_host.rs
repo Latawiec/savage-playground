@@ -1,10 +1,16 @@
-use std::{borrow::Borrow, collections::BTreeMap, sync::{Arc, RwLock}};
+use std::{
+    collections::BTreeMap,
+    sync::{Arc, RwLock},
+};
 
 use rocket_ws::stream::DuplexStream;
 use room_server_interface::schema::game_config::GameConfig;
 
-use crate::{game_launcher::{self, game_instance, game_launcher::GameLauncher}, server::connection::client_connection::ConnectionCloseHandle};
-use super::{game_room::GameRoom, handle_gen::HandleGenerator, types::RoomHandle};
+use super::{
+    disconnect_reason::DisconnectReason, game_room::GameRoom, handle_gen::HandleGenerator,
+    types::RoomHandle,
+};
+use crate::game_launcher::game_launcher::GameLauncher;
 
 pub struct GameHost {
     game_rooms: Arc<RwLock<BTreeMap<RoomHandle, GameRoom>>>,
@@ -12,7 +18,6 @@ pub struct GameHost {
 }
 
 impl GameHost {
-
     pub fn new() -> GameHost {
         GameHost {
             game_rooms: Default::default(),
@@ -20,7 +25,11 @@ impl GameHost {
         }
     }
 
-    pub fn create_room(&self, game_config: GameConfig, game_launcher: &GameLauncher) -> Option<RoomHandle> {
+    pub fn create_room(
+        &self,
+        game_config: GameConfig,
+        game_launcher: &GameLauncher,
+    ) -> Option<RoomHandle> {
         let room_handle = self.room_handle_gen.next();
         let game_id = game_config.game_id.as_ref()?;
         let game_instance = game_launcher.launch_game(game_id, &vec![]);
@@ -34,13 +43,27 @@ impl GameHost {
         Some(room_handle)
     }
 
-    pub fn join_room(&self, room_handle: RoomHandle, ws_stream: DuplexStream) -> Option<ConnectionCloseHandle> {
-        if let Ok(rlock) = self.game_rooms.read() {
-            if let Some(room) = rlock.get(&room_handle) {
-                return Some(room.connect(ws_stream));
+    pub async fn join_room(
+        &self,
+        room_handle: RoomHandle,
+        ws_stream: DuplexStream,
+    ) -> DisconnectReason {
+        let connect_join_handle = match self.game_rooms.read() {
+            Ok(rlock) => match rlock.get(&room_handle) {
+                Some(room) => Some(room.connect(ws_stream)),
+                None => None,
+            },
+            Err(_) => None,
+        };
+
+        if let Some(connect_join_handle) = connect_join_handle {
+            match connect_join_handle.await {
+                Ok(disconnect_reason) => return disconnect_reason,
+                Err(err) => DisconnectReason::UnexpectedError(err.to_string()),
             }
+        } else {
+            DisconnectReason::RoomDoesNotExist
         }
-        None
     }
 
     pub fn delete_room(&self, room_handle: RoomHandle) -> Option<()> {
