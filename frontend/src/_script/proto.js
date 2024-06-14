@@ -8,7 +8,7 @@ const outputPath = '/src/components/game/backend/.generated'
 async function buildProtosFromDir(buildSourceDir, buildOutputDir) {
 
   if (!fs.existsSync(buildSourceDir)) {
-    throw new Error(`Proto source dir [${buildOutputDir}] doesn't exist.`)
+    throw new Error(`Proto source dir [${buildSourceDir}] doesn't exist.`)
   }
 
   if (!fs.existsSync(buildOutputDir)) {
@@ -39,9 +39,10 @@ async function buildGameInterface() {
   const protosDir = path.join(process.env.PWD, process.env.PROTO_GAME_INTERFACE_DIR);
   const outputDir = path.join(process.env.PWD, outputPath, '/game_interface');
 
-  buildProtosFromDir(path.join(protosDir, '/game_output/renderer'), path.join(outputDir, '/game_output/renderer'));
-  buildProtosFromDir(path.join(protosDir, '/game_output/settings'), path.join(outputDir, '/game_output/settings'));
-  buildProtosFromDir(path.join(protosDir, '/game_output/ui'), path.join(outputDir, '/game_output/ui'));
+  // buildProtosFromDir(path.join(protosDir, '/game_output/renderer'), path.join(outputDir, '/game_output/renderer'));
+  // buildProtosFromDir(path.join(protosDir, '/game_output/settings'), path.join(outputDir, '/game_output/settings'));
+  // buildProtosFromDir(path.join(protosDir, '/game_output/ui'), path.join(outputDir, '/game_output/ui'));
+  buildProtosFromDir(path.join(protosDir, '/game_output'), path.join(outputDir, '/game_output'));
 }
 
 

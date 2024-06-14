@@ -48,7 +48,7 @@ export interface Camera {
   proj?: floatArray | undefined;
 }
 
-export interface RendererSnapshot {
+export interface Snapshot {
   updateType?: UpdateType | undefined;
   entities: Entity[];
 }
@@ -207,12 +207,12 @@ export const Camera = {
   },
 };
 
-function createBaseRendererSnapshot(): RendererSnapshot {
+function createBaseSnapshot(): Snapshot {
   return { updateType: undefined, entities: [] };
 }
 
-export const RendererSnapshot = {
-  encode(message: RendererSnapshot, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const Snapshot = {
+  encode(message: Snapshot, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.updateType !== undefined) {
       writer.uint32(8).int32(message.updateType);
     }
@@ -222,10 +222,10 @@ export const RendererSnapshot = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): RendererSnapshot {
+  decode(input: _m0.Reader | Uint8Array, length?: number): Snapshot {
     const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRendererSnapshot();
+    const message = createBaseSnapshot();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -252,14 +252,14 @@ export const RendererSnapshot = {
     return message;
   },
 
-  fromJSON(object: any): RendererSnapshot {
+  fromJSON(object: any): Snapshot {
     return {
       updateType: isSet(object.updateType) ? updateTypeFromJSON(object.updateType) : undefined,
       entities: globalThis.Array.isArray(object?.entities) ? object.entities.map((e: any) => Entity.fromJSON(e)) : [],
     };
   },
 
-  toJSON(message: RendererSnapshot): unknown {
+  toJSON(message: Snapshot): unknown {
     const obj: any = {};
     if (message.updateType !== undefined) {
       obj.updateType = updateTypeToJSON(message.updateType);
@@ -270,11 +270,11 @@ export const RendererSnapshot = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<RendererSnapshot>, I>>(base?: I): RendererSnapshot {
-    return RendererSnapshot.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<Snapshot>, I>>(base?: I): Snapshot {
+    return Snapshot.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<RendererSnapshot>, I>>(object: I): RendererSnapshot {
-    const message = createBaseRendererSnapshot();
+  fromPartial<I extends Exact<DeepPartial<Snapshot>, I>>(object: I): Snapshot {
+    const message = createBaseSnapshot();
     message.updateType = object.updateType ?? undefined;
     message.entities = object.entities?.map((e) => Entity.fromPartial(e)) || [];
     return message;

@@ -22,6 +22,7 @@ prost-types = { workspace = true }
 async-trait = { workspace = true }
 
 room_server_interface = { path = "../../communication/room_server_interface" }
+arc-swap = "1.7.1"
 
 [build-dependencies]
 build_io = { path = "../../build_util/build_io" }

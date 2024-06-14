@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package assets;
+package settings;
 
 message Assets {
     optional string assets_package_path = 1;

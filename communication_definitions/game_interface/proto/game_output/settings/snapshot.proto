@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-import "assets.proto";
-import "window.proto";
+import "settings/assets.proto";
+import "settings/window.proto";
 
-package snapshot;
+package settings;
 
-message Snapshot {
-    optional assets.Assets assets = 1;
-    optional window.Window window = 2;
+message SettingsSnapshot {
+    optional Assets assets = 1;
+    optional Window window = 2;
 }

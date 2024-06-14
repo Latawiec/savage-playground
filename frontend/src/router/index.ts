@@ -19,6 +19,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/pong',
     name: 'pong',
     component: () => import('../views/PongView.vue')
+  },
+  {
+    path: '/debug',
+    name: 'debug',
+    component: () => import('../debug/views/DebugView.vue')
   }
 ]
 

@@ -5,17 +5,17 @@ import { Window } from "./window";
 
 export const protobufPackage = "settings";
 
-export interface SettingsSnapshot {
+export interface Snapshot {
   assets?: Assets | undefined;
   window?: Window | undefined;
 }
 
-function createBaseSettingsSnapshot(): SettingsSnapshot {
+function createBaseSnapshot(): Snapshot {
   return { assets: undefined, window: undefined };
 }
 
-export const SettingsSnapshot = {
-  encode(message: SettingsSnapshot, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const Snapshot = {
+  encode(message: Snapshot, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.assets !== undefined) {
       Assets.encode(message.assets, writer.uint32(10).fork()).ldelim();
     }
@@ -25,10 +25,10 @@ export const SettingsSnapshot = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): SettingsSnapshot {
+  decode(input: _m0.Reader | Uint8Array, length?: number): Snapshot {
     const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSettingsSnapshot();
+    const message = createBaseSnapshot();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -55,14 +55,14 @@ export const SettingsSnapshot = {
     return message;
   },
 
-  fromJSON(object: any): SettingsSnapshot {
+  fromJSON(object: any): Snapshot {
     return {
       assets: isSet(object.assets) ? Assets.fromJSON(object.assets) : undefined,
       window: isSet(object.window) ? Window.fromJSON(object.window) : undefined,
     };
   },
 
-  toJSON(message: SettingsSnapshot): unknown {
+  toJSON(message: Snapshot): unknown {
     const obj: any = {};
     if (message.assets !== undefined) {
       obj.assets = Assets.toJSON(message.assets);
@@ -73,11 +73,11 @@ export const SettingsSnapshot = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<SettingsSnapshot>, I>>(base?: I): SettingsSnapshot {
-    return SettingsSnapshot.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<Snapshot>, I>>(base?: I): Snapshot {
+    return Snapshot.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<SettingsSnapshot>, I>>(object: I): SettingsSnapshot {
-    const message = createBaseSettingsSnapshot();
+  fromPartial<I extends Exact<DeepPartial<Snapshot>, I>>(object: I): Snapshot {
+    const message = createBaseSnapshot();
     message.assets = (object.assets !== undefined && object.assets !== null)
       ? Assets.fromPartial(object.assets)
       : undefined;

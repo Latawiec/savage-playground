@@ -2,12 +2,13 @@ use super::{
     client_connection::ClientConnectionHandle,
     disconnect_reason::DisconnectReason,
     handle_gen::HandleGenerator,
-    types::{ClientHandle, RoomHandle},
+    types::ClientHandle,
 };
 use crate::game_launcher::game_instance::{
     game_instance::GameInstance,
-    proto_pipe::{ProtoStderr, ProtoStdin, ProtoStdout},
+    proto_pipe::{ProtoStdin, ProtoStdout},
 };
+use arc_swap::ArcSwap;
 use rocket_ws::stream::DuplexStream;
 use room_server_interface::{
     proto::{
@@ -16,20 +17,26 @@ use room_server_interface::{
     },
     schema::game_config::GameConfig,
 };
+use tokio::task::JoinHandle;
 use std::{
-    collections::BTreeMap,
-    sync::{Arc, Mutex, RwLock},
+    collections::BTreeMap, sync::{atomic::AtomicBool, Arc, Mutex}
 };
 
 pub struct GameRoom {
-    room_handle: RoomHandle,
-    game_room_config: GameConfig,
-    game_instance: GameInstance,
+    _game_room_config: GameConfig,
+    _game_instance: GameInstance,
+
+    client_input_task: JoinHandle<()>,
+    game_output_task: JoinHandle<()>,
+
     client_handle_gen: HandleGenerator<ClientHandle>,
     client_input_sender: tokio::sync::mpsc::Sender<ClientInput>,
-    client_input_receiver: tokio::sync::mpsc::Receiver<ClientInput>,
-    client_output_senders: Arc<Mutex<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<ClientOutput>>>>,
-    open_connections: Arc<Mutex<BTreeMap<ClientHandle, ClientConnectionHandle>>>,
+
+    shared_open_senders: Arc<ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<ClientOutput>>>>,
+    lock_open_senders: Arc<Mutex<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<ClientOutput>>>>,
+    lock_open_connections: Arc<Mutex<BTreeMap<ClientHandle, ClientConnectionHandle>>>,
+
+    closed: AtomicBool,
 }
 
 impl GameRoom {
@@ -37,25 +44,36 @@ impl GameRoom {
     const CLIENT_MESSAGE_SENDER_CAPACITY: usize = 128;
 
     pub fn new(
-        room_handle: RoomHandle,
-        game_instance: GameInstance,
+        mut game_instance: GameInstance,
         game_room_config: GameConfig,
     ) -> GameRoom {
+        
         let (client_input_sender, client_input_receiver) =
             tokio::sync::mpsc::channel(Self::CLIENT_MESSAGE_RECEIVER_CAPACITY);
+
+        let shared_open_senders: Arc<ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<ClientOutput>>>> = Default::default();
+
+        let client_input_task = tokio::spawn(Self::client_input_task(client_input_receiver, game_instance.stdin.take().unwrap()));
+        let game_output_task = tokio::spawn(Self::game_output_task(shared_open_senders.clone(), game_instance.stdout.take().unwrap()));
+        
         GameRoom {
-            room_handle,
-            game_room_config,
-            game_instance,
-            open_connections: Default::default(),
+            _game_room_config: game_room_config,
+            _game_instance: game_instance,
+            client_input_task,
+            game_output_task,
             client_handle_gen: Default::default(),
             client_input_sender,
-            client_input_receiver,
-            client_output_senders: Default::default(),
+            shared_open_senders,
+            lock_open_senders: Default::default(),
+            lock_open_connections: Default::default(),
+            closed: AtomicBool::new(false)
         }
     }
 
     pub fn connect(&self, ws_stream: DuplexStream) -> tokio::task::JoinHandle<DisconnectReason> {
+        if self.closed.load(std::sync::atomic::Ordering::Relaxed) {
+            return tokio::spawn(async move { DisconnectReason::RoomClosed });
+        }
         let client_handle = self.client_handle_gen.next();
         let (output_sender, output_receiver) =
             tokio::sync::mpsc::channel::<ClientOutput>(Self::CLIENT_MESSAGE_SENDER_CAPACITY);
@@ -67,28 +85,34 @@ impl GameRoom {
         let client_close_reason = client_connection_handle.close_reason.clone();
 
         {
-            let mut lock = self.client_output_senders.lock().unwrap();
+            let mut lock = self.lock_open_senders.lock().unwrap();
             lock.insert(client_handle, output_sender);
+            let new_senders = lock.clone();
+            drop(lock);
+            self.shared_open_senders.store(Arc::new(new_senders));
         }
         {
-            let mut lock = self.open_connections.lock().unwrap();
+            let mut lock = self.lock_open_connections.lock().unwrap();
             lock.insert(client_handle, client_connection_handle);
         }
 
-
-        let open_connections = self.open_connections.clone();
-        let client_output_senders = self.client_output_senders.clone();
+        let lock_open_connections = self.lock_open_connections.clone();
+        let lock_open_senders = self.lock_open_senders.clone();
+        let shared_open_senders = self.shared_open_senders.clone();
         tokio::spawn(async move {
             // Wait for connection to finish...
             client_close_notify.notified().await;
 
             {
-                let mut lock = open_connections.lock().unwrap();
+                let mut lock = lock_open_connections.lock().unwrap();
                 lock.remove(&client_handle);
             }
             {
-                let mut lock = client_output_senders.lock().unwrap();
+                let mut lock = lock_open_senders.lock().unwrap();
                 lock.remove(&client_handle);
+                let new_senders = lock.clone();
+                drop(lock);
+                shared_open_senders.store(Arc::new(new_senders));
             }
 
             client_close_reason
@@ -98,6 +122,7 @@ impl GameRoom {
         })
     }
 
+// private:
     async fn client_input_task(
         mut client_input_receiver: tokio::sync::mpsc::Receiver<ClientInput>,
         mut game_instance_input: ProtoStdin,
@@ -116,23 +141,24 @@ impl GameRoom {
                 break;
             }
             game_instance_input.send_many(&client_input_buffer).await;
+            println!("Sent");
             client_input_buffer.clear();
         }
     }
 
     async fn game_output_task(
-        client_output_senders: RwLock<
-            BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<ClientOutput>>,
-        >,
+        client_output_sender:  Arc<ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<ClientOutput>>>>,
         mut game_instance_output: ProtoStdout,
     ) {
+
         while let Some(game_output) = game_instance_output.read::<ClientOutputBatch>().await {
+            println!("Received");
+            let output_senders = client_output_sender.load();
             // Broadcast
             if let Some(broadcast_msg) = game_output.broadcast {
                 let client_output = broadcast_msg.client_output;
                 if let Some(client_output) = client_output {
-                    let client_output_senders = client_output_senders.read().unwrap();
-                    for (_client_handle, sender) in client_output_senders.iter() {
+                    for (_client_handle, sender) in output_senders.iter() {
                         let _ = sender.send(client_output.clone()).await;
                     }
                 } else {
@@ -157,15 +183,10 @@ impl GameRoom {
                 let client_id = client_id.unwrap();
                 let client_output = client_output.unwrap();
 
-                let client_output_senders = client_output_senders.read().unwrap();
-                if let Some(sender) = client_output_senders.get(&ClientHandle(client_id.value)) {
+                if let Some(sender) = output_senders.get(&ClientHandle(client_id.value)) {
                     let _ = sender.send(client_output).await;
                 }
             }
         }
-    }
-
-    async fn game_error_task(mut game_instance_error: ProtoStderr) {
-        // ???
     }
 }

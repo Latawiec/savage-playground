@@ -4,6 +4,7 @@ pub fn generate_mod_file(proto_files: &[PathBuf], output_dir: &Path) -> Result<(
     fs::create_dir_all(&output_dir)?;
     let mut contents = String::new();
     for proto_path in proto_files {
+        println!("cargo:warning={:?}", proto_path);
         let proto_file_name = proto_path.file_name().unwrap().to_str().unwrap().to_owned();
         let module_name = proto_file_name.strip_suffix(".proto").unwrap();
         contents.push_str(&format!("pub mod {module_name};\n"));

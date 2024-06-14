@@ -4,17 +4,17 @@ import { Any } from "../google/protobuf/any";
 
 export const protobufPackage = "ui";
 
-export interface UiSnapshot {
+export interface Snapshot {
   typeDesc: string;
   data?: Any | undefined;
 }
 
-function createBaseUiSnapshot(): UiSnapshot {
+function createBaseSnapshot(): Snapshot {
   return { typeDesc: "", data: undefined };
 }
 
-export const UiSnapshot = {
-  encode(message: UiSnapshot, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const Snapshot = {
+  encode(message: Snapshot, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.typeDesc !== "") {
       writer.uint32(10).string(message.typeDesc);
     }
@@ -24,10 +24,10 @@ export const UiSnapshot = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): UiSnapshot {
+  decode(input: _m0.Reader | Uint8Array, length?: number): Snapshot {
     const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseUiSnapshot();
+    const message = createBaseSnapshot();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -54,14 +54,14 @@ export const UiSnapshot = {
     return message;
   },
 
-  fromJSON(object: any): UiSnapshot {
+  fromJSON(object: any): Snapshot {
     return {
       typeDesc: isSet(object.typeDesc) ? globalThis.String(object.typeDesc) : "",
       data: isSet(object.data) ? Any.fromJSON(object.data) : undefined,
     };
   },
 
-  toJSON(message: UiSnapshot): unknown {
+  toJSON(message: Snapshot): unknown {
     const obj: any = {};
     if (message.typeDesc !== "") {
       obj.typeDesc = message.typeDesc;
@@ -72,11 +72,11 @@ export const UiSnapshot = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<UiSnapshot>, I>>(base?: I): UiSnapshot {
-    return UiSnapshot.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<Snapshot>, I>>(base?: I): Snapshot {
+    return Snapshot.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<UiSnapshot>, I>>(object: I): UiSnapshot {
-    const message = createBaseUiSnapshot();
+  fromPartial<I extends Exact<DeepPartial<Snapshot>, I>>(object: I): Snapshot {
+    const message = createBaseSnapshot();
     message.typeDesc = object.typeDesc ?? "";
     message.data = (object.data !== undefined && object.data !== null) ? Any.fromPartial(object.data) : undefined;
     return message;

@@ -2,7 +2,7 @@
 import * as _m0 from "protobufjs/minimal";
 import { floatArray, uint32Array } from "./gl_types";
 
-export const protobufPackage = "uniform_attributes";
+export const protobufPackage = "renderer";
 
 export interface UniformAttributes {
   float: { [key: string]: number };

@@ -12,6 +12,6 @@ export interface GameConfig {
   /**
    * Path for the game to start. Make sure game exists in game mapping file on the server.
    */
-  game_path?: string;
+  game_id?: string;
   [k: string]: unknown;
 }

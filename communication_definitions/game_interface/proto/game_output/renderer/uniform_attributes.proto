@@ -1,21 +1,21 @@
 syntax = "proto3";
 
-import "gl_types.proto";
+import "renderer/gl_types.proto";
 
-package uniform_attributes;
+package renderer;
 
 message UniformAttributes {
     map<string, float> float = 1;
-    map<string, gl_types.float_array> vec2 = 2;
-    map<string, gl_types.float_array> vec3 = 3;
-    map<string, gl_types.float_array> vec4 = 4;
+    map<string, float_array> vec2 = 2;
+    map<string, float_array> vec3 = 3;
+    map<string, float_array> vec4 = 4;
 
     map<string, uint32> int = 5;
-    map<string, gl_types.uint32_array> ivec2 = 6;
-    map<string, gl_types.uint32_array> ivec3 = 7;
-    map<string, gl_types.uint32_array> ivec4 = 8;
+    map<string, uint32_array> ivec2 = 6;
+    map<string, uint32_array> ivec3 = 7;
+    map<string, uint32_array> ivec4 = 8;
 
-    map<string, gl_types.float_array> mat4 = 9;
+    map<string, float_array> mat4 = 9;
 }
 
 message CameraUniformAttributes {

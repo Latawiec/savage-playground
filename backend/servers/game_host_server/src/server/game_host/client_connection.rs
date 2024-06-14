@@ -76,12 +76,14 @@ impl ClientConnectionHandle {
             println!("Read: {:?}", value_read);
             match value_read {
                 Err(error) => {
-                    close_reason.set(DisconnectReason::UnexpectedError(error.to_string()));
+                    println!("Err");
+                    let _ = close_reason.set(DisconnectReason::UnexpectedError(error.to_string()));
                     break;
                 }
                 Ok(message) => {
                     match message {
                         rocket_ws::Message::Binary(data) => {
+                            println!("Bin");
                             // Expect proto.
                             let proto_msg = match prost_types::Any::decode(data.as_slice()) {
                                 Ok(msg) => msg,
@@ -98,19 +100,22 @@ impl ClientConnectionHandle {
                                 game_input_message: Some(proto_msg),
                             };
                             let _ = input_sender.send(proto_client_input).await;
+                            println!("Sent to pipe.");
                         }
                         rocket_ws::Message::Close(_) => {
-                            close_reason.set(DisconnectReason::ClientClosedConnection);
+                            println!("close");
+                            let _ = close_reason.set(DisconnectReason::ClientClosedConnection);
                             break;
                         }
                         _ => {
+                            println!("Unexpected.");
                             // Unexpected message format... let it slide for now.
                         }
                     }
                 }
             }
         }
-        close_reason.set(DisconnectReason::ClientDisconnected);
+        let _ = close_reason.set(DisconnectReason::ClientDisconnected);
         close_notify.notify_waiters();
     }
 
@@ -122,15 +127,16 @@ impl ClientConnectionHandle {
         close_reason: Arc<OnceCell<DisconnectReason>>,
     ) {
         let mut output_receiver = output_receiver;
-        while let Some(msg) = output_receiver.recv().await {
+        while let Some(msg) = output_receiver.recv().await { 
+            println!("Read from pipe.");
             let proto_msg = msg.encode_to_vec();
 
             if let Err(error) = rx.send(rocket_ws::Message::Binary(proto_msg)).await {
-                close_reason.set(DisconnectReason::UnexpectedError(error.to_string()));
+                let _ = close_reason.set(DisconnectReason::UnexpectedError(error.to_string()));
                 break;
             }
         }
-        close_reason.set(DisconnectReason::ClientDisconnected);
+        let _ = close_reason.set(DisconnectReason::ClientDisconnected);
         close_notify.notify_waiters();
     }
 }

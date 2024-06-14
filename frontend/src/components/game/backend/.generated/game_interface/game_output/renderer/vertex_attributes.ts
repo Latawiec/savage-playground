@@ -1,7 +1,7 @@
 /* eslint-disable */
 import * as _m0 from "protobufjs/minimal";
 
-export const protobufPackage = "vertex_attributes";
+export const protobufPackage = "renderer";
 
 export interface VertexAttributes {
   vertices?: string | undefined;

@@ -34,7 +34,7 @@ impl GameHost {
         let game_id = game_config.game_id.as_ref()?;
         let game_instance = game_launcher.launch_game(game_id, &vec![]);
         if let Ok(game_instance) = game_instance {
-            let game_room = GameRoom::new(room_handle, game_instance, game_config);
+            let game_room = GameRoom::new(game_instance, game_config);
             if let Ok(mut wlock) = self.game_rooms.write() {
                 let _ = wlock.insert(room_handle, game_room);
             }

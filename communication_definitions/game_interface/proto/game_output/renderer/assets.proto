@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package assets;
+package renderer;
 
 message Texture {
     uint32 offset = 1;

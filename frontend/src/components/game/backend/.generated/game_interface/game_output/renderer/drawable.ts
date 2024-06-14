@@ -4,7 +4,7 @@ import { Assets } from "./assets";
 import { SharedUniformAttributes, UniformAttributes } from "./uniform_attributes";
 import { VertexAttributes } from "./vertex_attributes";
 
-export const protobufPackage = "drawable";
+export const protobufPackage = "renderer";
 
 export interface Drawable {
   layer?: number | undefined;

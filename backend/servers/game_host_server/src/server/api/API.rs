@@ -11,12 +11,6 @@ use room_server_interface::schema::game_config::GameConfig;
 use super::error::APIError;
 use super::types::RoomsData;
 
-type RoomId = u64;
-
-struct TestState {
-    val: String,
-}
-
 #[get("/create_room?<game_room_config..>")]
 pub fn create_room(
     remote_addr: std::net::SocketAddr,
@@ -41,21 +35,18 @@ pub fn join_room(
     room_id: u64,
     game_host: &State<Arc<GameHost>>,
 ) -> Result<rocket_ws::Channel<'static>, APIError> {
-    println!("Huh?");
     let game_host = game_host.inner().clone();
 
     Ok(ws.channel(move |stream| {
         Box::pin(async move {
             match game_host.join_room(room_id.into(), stream).await {
-                game_host::disconnect_reason::DisconnectReason::ClientDisconnected => todo!(),
-                game_host::disconnect_reason::DisconnectReason::ClientClosedConnection => todo!(),
-                game_host::disconnect_reason::DisconnectReason::ClientConnectionDestroyed => {
-                    todo!()
-                }
-                game_host::disconnect_reason::DisconnectReason::RoomClosed => todo!(),
-                game_host::disconnect_reason::DisconnectReason::RoomDoesNotExist => todo!(),
-                game_host::disconnect_reason::DisconnectReason::UnexpectedError(_) => todo!(),
-                game_host::disconnect_reason::DisconnectReason::GameCrashed => todo!(),
+                game_host::disconnect_reason::DisconnectReason::ClientDisconnected => { Ok(()) },
+                game_host::disconnect_reason::DisconnectReason::ClientClosedConnection => { Ok(()) },
+                game_host::disconnect_reason::DisconnectReason::ClientConnectionDestroyed => { Ok(()) },
+                game_host::disconnect_reason::DisconnectReason::RoomClosed => { Ok(()) },
+                game_host::disconnect_reason::DisconnectReason::RoomDoesNotExist => { Ok(()) },
+                game_host::disconnect_reason::DisconnectReason::UnexpectedError(_) => { Ok(()) },
+                game_host::disconnect_reason::DisconnectReason::GameCrashed => { Ok(()) },
             }
         })
     }))

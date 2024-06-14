@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package window;
+package settings;
 
 message Window {
     optional float aspect_ratio = 1;

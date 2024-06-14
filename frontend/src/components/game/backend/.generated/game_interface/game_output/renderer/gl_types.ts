@@ -1,7 +1,7 @@
 /* eslint-disable */
 import * as _m0 from "protobufjs/minimal";
 
-export const protobufPackage = "gl_types";
+export const protobufPackage = "renderer";
 
 export interface floatArray {
   values: number[];

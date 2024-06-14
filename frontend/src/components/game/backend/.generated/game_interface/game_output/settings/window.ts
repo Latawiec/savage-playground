@@ -1,7 +1,7 @@
 /* eslint-disable */
 import * as _m0 from "protobufjs/minimal";
 
-export const protobufPackage = "window";
+export const protobufPackage = "settings";
 
 export interface Window {
   aspectRatio?: number | undefined;

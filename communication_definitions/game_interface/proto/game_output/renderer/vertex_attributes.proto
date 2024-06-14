@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package vertex_attributes;
+package renderer;
 
 message VertexAttributes {
     optional string vertices = 1;
