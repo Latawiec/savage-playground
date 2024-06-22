@@ -17,6 +17,12 @@ export default defineComponent({
     methods: {
         write(message: string) {
             this.messages.push(message)
+        },
+        write_many(messages: string[]) {
+            this.messages.push(...messages)
+        },
+        clear() {
+            this.messages = []
         }
     }
 })

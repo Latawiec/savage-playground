@@ -3,8 +3,8 @@
         "cwd": "",
         "exe": "/usr/bin/echo"
     },
-    "proto_echo": {
+    "proto_chat": {
         "cwd": "",
-        "exe": "/mnt/UbuntuNVMe/Programing/RustTesting/savage_playground/backend/target/debug/proto_echo"
+        "exe": "/mnt/UbuntuNVMe/Programing/RustTesting/savage_playground/backend/target/debug/proto_chat"
     }
 }

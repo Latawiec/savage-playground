@@ -129,7 +129,7 @@ impl ClientConnectionHandle {
         let mut output_receiver = output_receiver;
         while let Some(msg) = output_receiver.recv().await { 
             println!("Read from pipe.");
-            let proto_msg = msg.encode_to_vec();
+            let proto_msg = msg.game_output_message.unwrap().encode_to_vec();
 
             if let Err(error) = rx.send(rocket_ws::Message::Binary(proto_msg)).await {
                 let _ = close_reason.set(DisconnectReason::UnexpectedError(error.to_string()));

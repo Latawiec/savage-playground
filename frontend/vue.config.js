@@ -31,12 +31,13 @@ module.exports = defineConfig({
     },
     module: {
       rules: [
-        {
-          test: /\.js$/,
-          exclude: [
-            'src/_proto/build.js'
-          ]
-        },
+        // {
+        //   test: /\.js$/,
+        //   exclude: [
+        //     'src/_script/proto.js',
+        //     'src/_script/schema.js'
+        //   ]
+        // },
         {
           test: /\.glsl$/,
           type: 'asset/resource',

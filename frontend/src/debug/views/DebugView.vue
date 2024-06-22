@@ -1,7 +1,6 @@
 <template>
     <div class="home">
-      <img alt="Vue logo" src="../assets/logo.png">
-      <DebugChat :chat_room_id="12"/>
+      <DebugChat ref="debug_chat"/>
     </div>
   </template>
   
@@ -13,6 +12,9 @@
     name: 'HomeView',
     components: {
         DebugChat
+    },
+    mounted() {
+      (this.$refs.debug_chat as InstanceType<typeof DebugChat>).connect();
     }
   })
   </script>

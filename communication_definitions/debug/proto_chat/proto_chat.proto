@@ -2,16 +2,17 @@ syntax = "proto3";
 
 package proto_chat;
 
-enum Request {
+enum ProtoChatRequestType {
     History = 0;
 }
 
 message ProtoChatRequest {
-    repeated Request requests = 1;
+    repeated ProtoChatRequestType requests = 1;
 }
 
 message ProtoChatMessage {
-    optional string user_message = 1;
+    optional uint64 user_id = 1;
+    optional string user_message = 2;
 }
 
 message ProtoChatHistory {
