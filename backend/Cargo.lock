@@ -3686,11 +3686,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "proto_echo"
+name = "proto_chat"
 version = "0.1.0"
 dependencies = [
  "prost",
  "prost-types",
+ "proto_gen",
  "room_server_interface",
 ]
 

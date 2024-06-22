@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-import "google/protobuf/any.proto";
-
-package instance_output;
-
-message InstanceOutput {
-    google.protobuf.Any instance_output_msg = 1;
-}

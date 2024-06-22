@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "common.proto";
+
+package game_input;
+
+message GameInputMessage {
+    repeated uint32 input_codes = 1;
+    optional uint64 timestamp = 2; // For latency debugging purposes.
+}

@@ -4,7 +4,7 @@ import { RendererSnapshot } from "./renderer/snapshot";
 import { SettingsSnapshot } from "./settings/snapshot";
 import { UiSnapshot } from "./ui/snapshot";
 
-export const protobufPackage = "message";
+export const protobufPackage = "game_output";
 
 export interface GameOutputMessage {
   renderer?: RendererSnapshot | undefined;

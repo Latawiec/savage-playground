@@ -4,7 +4,7 @@ import "renderer/snapshot.proto";
 import "settings/snapshot.proto";
 import "ui/snapshot.proto";
 
-package message;
+package game_output;
 
 message GameOutputMessage {
     optional renderer.RendererSnapshot renderer = 1;

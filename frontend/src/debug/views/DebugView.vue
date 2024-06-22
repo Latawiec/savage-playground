@@ -1,7 +1,7 @@
 <template>
     <div class="home">
       <img alt="Vue logo" src="../assets/logo.png">
-      <DebugChat chat_room_id="12"/>
+      <DebugChat :chat_room_id="12"/>
     </div>
   </template>
   

@@ -4,8 +4,8 @@
     <input v-model="connection_address">
     <button @click="connect">Connect</button>
     <div v-if="connected">
-        <DebugChatOutput/>
-        <DebugChatInput/>
+        <DebugChatOutput ref="chat_output"/>
+        <DebugChatInput ref="chat_input" @message-sent="send"/>
     </div>
 </template>
 
@@ -14,7 +14,9 @@ import { defineComponent, toHandlers } from 'vue';
 import DebugChatInput from './DebugChatInput.vue';
 import DebugChatOutput from './DebugChatOutput.vue';
 import { GameOutputMessage }  from '@/components/game/backend/.generated/game_interface/game_output/message'
+import { ClientOutput } from '@/components/game/backend/.generated/room_server_interface/client_output'
 import { Struct } from '@/components/game/backend/.generated/game_interface/game_output/google/protobuf/struct'
+import { send } from 'process';
 
 export default defineComponent({
     name: 'DebugChat',
@@ -52,14 +54,17 @@ export default defineComponent({
 
             this.socket.addEventListener("message", (event) => {
                 let data = event.data;
-                let message = GameOutputMessage.decode(new Uint8Array(data as ArrayBuffer));
-                if (message.ui) {
-                    if (message.ui.data?.typeUrl == 'type.googleapis.com/google.protobuf.Struct') {
-                        let struct = Struct.decode(message.ui.data?.value!);
-                        struct.fields.message;
-                    }
-                }
+                let message = ClientOutput.decode(new Uint8Array(data as ArrayBuffer));
+                console.log(message);
             })
+        },
+        send(message: string) {
+            if (this.socket) {
+                let proto_struct = Struct.create();
+                proto_struct.fields["message"] = message;
+                let bytes = Struct.encode(proto_struct).finish();
+                this.socket.send(bytes)
+            }
         }
     }
 })

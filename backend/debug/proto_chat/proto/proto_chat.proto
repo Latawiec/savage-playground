@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package proto_chat;
+
+enum Request {
+    History = 0;
+}
+
+message ProtoChatRequest {
+    repeated Request requests = 1;
+}
+
+message ProtoChatMessage {
+    optional string user_message = 1;
+}
+
+message ProtoChatHistory {
+    repeated ProtoChatMessage history = 1;
+}

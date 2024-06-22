@@ -3,7 +3,7 @@
 members = [
     "debug/echo",
     "debug/pong",
-    "debug/proto_echo",
+    "debug/proto_chat",
 
     "build_util/build_io",
     "build_util/proto_gen",
