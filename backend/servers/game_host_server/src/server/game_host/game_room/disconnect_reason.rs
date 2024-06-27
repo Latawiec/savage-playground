@@ -1,6 +1,8 @@
 
 #[derive(Clone, Debug)]
-pub enum DisconnectReason {
+pub enum GameRoomDisconnectReason {
+    Ok,
+    ConnectionClosedByHost,
     ClientDisconnected,
     ClientClosedConnection,
     ClientConnectionDestroyed,

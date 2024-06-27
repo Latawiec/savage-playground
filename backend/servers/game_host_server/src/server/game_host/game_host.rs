@@ -7,8 +7,7 @@ use rocket_ws::stream::DuplexStream;
 use room_server_interface::schema::game_config::GameConfig;
 
 use super::{
-    disconnect_reason::DisconnectReason, game_room::GameRoom, handle_gen::HandleGenerator,
-    types::RoomHandle,
+    _game_room::GameRoom, game_room::disconnect_reason::GameRoomDisconnectReason, handle_gen::HandleGenerator, types::RoomHandle
 };
 use crate::game_launcher::game_launcher::GameLauncher;
 
@@ -47,7 +46,7 @@ impl GameHost {
         &self,
         room_handle: RoomHandle,
         ws_stream: DuplexStream,
-    ) -> DisconnectReason {
+    ) -> GameRoomDisconnectReason {
         let connect_join_handle = match self.game_rooms.read() {
             Ok(rlock) => match rlock.get(&room_handle) {
                 Some(room) => Some(room.connect(ws_stream)),
@@ -59,10 +58,10 @@ impl GameHost {
         if let Some(connect_join_handle) = connect_join_handle {
             match connect_join_handle.await {
                 Ok(disconnect_reason) => return disconnect_reason,
-                Err(err) => DisconnectReason::UnexpectedError(err.to_string()),
+                Err(err) => GameRoomDisconnectReason::UnexpectedError(err.to_string()),
             }
         } else {
-            DisconnectReason::RoomDoesNotExist
+            GameRoomDisconnectReason::RoomDoesNotExist
         }
     }
 

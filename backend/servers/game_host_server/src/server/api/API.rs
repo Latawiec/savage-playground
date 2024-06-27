@@ -40,13 +40,14 @@ pub fn join_room(
     Ok(ws.channel(move |stream| {
         Box::pin(async move {
             match game_host.join_room(room_id.into(), stream).await {
-                game_host::disconnect_reason::DisconnectReason::ClientDisconnected => { Ok(()) },
-                game_host::disconnect_reason::DisconnectReason::ClientClosedConnection => { Ok(()) },
-                game_host::disconnect_reason::DisconnectReason::ClientConnectionDestroyed => { Ok(()) },
-                game_host::disconnect_reason::DisconnectReason::RoomClosed => { Ok(()) },
-                game_host::disconnect_reason::DisconnectReason::RoomDoesNotExist => { Ok(()) },
-                game_host::disconnect_reason::DisconnectReason::UnexpectedError(_) => { Ok(()) },
-                game_host::disconnect_reason::DisconnectReason::GameCrashed => { Ok(()) },
+                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::ClientDisconnected => { Ok(()) },
+                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::ClientClosedConnection => { Ok(()) },
+                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::ClientConnectionDestroyed => { Ok(()) },
+                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::RoomClosed => { Ok(()) },
+                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::RoomDoesNotExist => { Ok(()) },
+                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::UnexpectedError(_) => { Ok(()) },
+                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::GameCrashed => { Ok(()) },
+                _ => { Ok(()) }
             }
         })
     }))

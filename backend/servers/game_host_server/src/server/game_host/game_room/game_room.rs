@@ -1,13 +1,10 @@
 use super::{
-    client_connection::ClientConnectionHandle,
-    disconnect_reason::DisconnectReason,
-    handle_gen::HandleGenerator,
-    types::ClientHandle,
+    disconnect_reason::GameRoomDisconnectReason
 };
-use crate::game_launcher::game_instance::{
+use crate::{game_launcher::game_instance::{
     game_instance::GameInstance,
     proto_pipe::{ProtoStdin, ProtoStdout},
-};
+}, server::game_host::{handle_gen::HandleGenerator, types::ClientHandle}};
 use arc_swap::ArcSwap;
 use rocket_ws::stream::DuplexStream;
 use room_server_interface::{
@@ -70,9 +67,9 @@ impl GameRoom {
         }
     }
 
-    pub fn connect(&self, ws_stream: DuplexStream) -> tokio::task::JoinHandle<DisconnectReason> {
+    pub fn connect(&self, ws_stream: DuplexStream) -> tokio::task::JoinHandle<GameRoomDisconnectReason> {
         if self.closed.load(std::sync::atomic::Ordering::Relaxed) {
-            return tokio::spawn(async move { DisconnectReason::RoomClosed });
+            return tokio::spawn(async move { GameRoomDisconnectReason::RoomClosed });
         }
         let client_handle = self.client_handle_gen.next();
         let (output_sender, output_receiver) =

@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{atomic::AtomicBool, Arc};
 
 use futures_util::{
     stream::{SplitSink, SplitStream},
@@ -13,14 +13,15 @@ use tokio::sync::OnceCell;
 
 use crate::server::game_host::types::ClientHandle;
 
-use super::disconnect_reason::DisconnectReason;
+use super::game_room::disconnect_reason::GameRoomDisconnectReason;
 
 #[derive(Clone)]
 pub struct ClientConnectionHandle {
+    closed: Arc<AtomicBool>,
     input_task_handle: Arc<tokio::task::JoinHandle<()>>,
     output_task_handle: Arc<tokio::task::JoinHandle<()>>,
     pub close_notify: Arc<tokio::sync::Notify>,
-    pub close_reason: Arc<OnceCell<DisconnectReason>>,
+    pub close_reason: Arc<OnceCell<GameRoomDisconnectReason>>,
 }
 
 impl ClientConnectionHandle {
@@ -50,6 +51,7 @@ impl ClientConnectionHandle {
         ));
 
         ClientConnectionHandle {
+            closed: Default::default(),
             input_task_handle: Arc::new(input_task_handle),
             output_task_handle: Arc::new(output_task_handle),
             close_notify,
@@ -57,7 +59,10 @@ impl ClientConnectionHandle {
         }
     }
 
-    pub fn disconnect(&self, reason: DisconnectReason) {
+    pub fn disconnect(&self, reason: GameRoomDisconnectReason) {
+        if self.closed.load(std::sync::atomic::Ordering::Acquire) {
+            return;
+        }
         self.input_task_handle.abort();
         self.output_task_handle.abort();
         if let Ok(_) = self.close_reason.set(reason) {
@@ -70,14 +75,14 @@ impl ClientConnectionHandle {
         mut tx: SplitStream<DuplexStream>,
         input_sender: tokio::sync::mpsc::Sender<ClientInput>,
         close_notify: Arc<tokio::sync::Notify>,
-        close_reason: Arc<OnceCell<DisconnectReason>>,
+        close_reason: Arc<OnceCell<GameRoomDisconnectReason>>,
     ) {
         while let Some(value_read) = tx.next().await {
             println!("Read: {:?}", value_read);
             match value_read {
                 Err(error) => {
                     println!("Err");
-                    let _ = close_reason.set(DisconnectReason::UnexpectedError(error.to_string()));
+                    let _ = close_reason.set(GameRoomDisconnectReason::UnexpectedError(error.to_string()));
                     break;
                 }
                 Ok(message) => {
@@ -104,7 +109,7 @@ impl ClientConnectionHandle {
                         }
                         rocket_ws::Message::Close(_) => {
                             println!("close");
-                            let _ = close_reason.set(DisconnectReason::ClientClosedConnection);
+                            let _ = close_reason.set(GameRoomDisconnectReason::ClientClosedConnection);
                             break;
                         }
                         _ => {
@@ -115,7 +120,7 @@ impl ClientConnectionHandle {
                 }
             }
         }
-        let _ = close_reason.set(DisconnectReason::ClientDisconnected);
+        let _ = close_reason.set(GameRoomDisconnectReason::ClientDisconnected);
         close_notify.notify_waiters();
     }
 
@@ -124,7 +129,7 @@ impl ClientConnectionHandle {
         mut rx: SplitSink<DuplexStream, rocket_ws::Message>,
         output_receiver: tokio::sync::mpsc::Receiver<ClientOutput>,
         close_notify: Arc<tokio::sync::Notify>,
-        close_reason: Arc<OnceCell<DisconnectReason>>,
+        close_reason: Arc<OnceCell<GameRoomDisconnectReason>>,
     ) {
         let mut output_receiver = output_receiver;
         while let Some(msg) = output_receiver.recv().await { 
@@ -132,17 +137,17 @@ impl ClientConnectionHandle {
             let proto_msg = msg.game_output_message.unwrap().encode_to_vec();
 
             if let Err(error) = rx.send(rocket_ws::Message::Binary(proto_msg)).await {
-                let _ = close_reason.set(DisconnectReason::UnexpectedError(error.to_string()));
+                let _ = close_reason.set(GameRoomDisconnectReason::UnexpectedError(error.to_string()));
                 break;
             }
         }
-        let _ = close_reason.set(DisconnectReason::ClientDisconnected);
+        let _ = close_reason.set(GameRoomDisconnectReason::ClientDisconnected);
         close_notify.notify_waiters();
     }
 }
 
 impl Drop for ClientConnectionHandle {
     fn drop(&mut self) {
-        self.disconnect(DisconnectReason::ClientConnectionDestroyed);
+        self.disconnect(GameRoomDisconnectReason::ClientConnectionDestroyed);
     }
 }
