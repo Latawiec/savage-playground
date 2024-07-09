@@ -1,4 +1,4 @@
-use rocket::{FromForm, FromFormField};
+use rocket::FromForm;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, FromForm)]

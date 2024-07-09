@@ -7,7 +7,9 @@ use rocket_ws::stream::DuplexStream;
 use room_server_interface::schema::game_config::GameConfig;
 
 use super::{
-    _game_room::GameRoom, game_room::disconnect_reason::GameRoomDisconnectReason, handle_gen::HandleGenerator, types::RoomHandle
+    game_room::{disconnect_reason::GameRoomDisconnectReason, game_room::GameRoom},
+    handle_gen::HandleGenerator,
+    types::RoomHandle,
 };
 use crate::game_launcher::game_launcher::GameLauncher;
 
@@ -47,22 +49,14 @@ impl GameHost {
         room_handle: RoomHandle,
         ws_stream: DuplexStream,
     ) -> GameRoomDisconnectReason {
-        let connect_join_handle = match self.game_rooms.read() {
+        let game_room_connection_handle = match self.game_rooms.read() {
             Ok(rlock) => match rlock.get(&room_handle) {
                 Some(room) => Some(room.connect(ws_stream)),
-                None => None,
+                None => return GameRoomDisconnectReason::RoomDoesNotExist,
             },
-            Err(_) => None,
+            Err(err) => return GameRoomDisconnectReason::UnexpectedError(err.to_string()),
         };
-
-        if let Some(connect_join_handle) = connect_join_handle {
-            match connect_join_handle.await {
-                Ok(disconnect_reason) => return disconnect_reason,
-                Err(err) => GameRoomDisconnectReason::UnexpectedError(err.to_string()),
-            }
-        } else {
-            GameRoomDisconnectReason::RoomDoesNotExist
-        }
+        game_room_connection_handle.unwrap().wait().await
     }
 
     pub fn delete_room(&self, room_handle: RoomHandle) -> Option<()> {

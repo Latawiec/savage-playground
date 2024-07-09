@@ -1,3 +1,4 @@
+use core::fmt;
 use std::{
     path::{Path, PathBuf},
     process::{ExitStatus, Stdio},
@@ -31,6 +32,17 @@ impl Drop for Instance {
     fn drop(&mut self) {
         // We can't do anything better here - Drop is sync operation.
         let _ = self.process.start_kill();
+    }
+}
+
+impl fmt::Display for Instance {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{{ cwd: {}, exe: {} }}",
+            self.cwd_path.as_path().to_string_lossy(),
+            self.exe_path.as_path().to_string_lossy()
+        )
     }
 }
 
@@ -77,12 +89,19 @@ impl Instance {
     }
 
     pub async fn wait(&mut self) -> Result<ExitStatus, Error> {
-        self.process.wait().await.map_err(|err| Error::ProcessError { reason: err.to_string() })
+        self.process
+            .wait()
+            .await
+            .map_err(|err| Error::ProcessError {
+                reason: err.to_string(),
+            })
     }
 
     pub async fn kill(&mut self) -> Result<ExitStatus, Error> {
         if let Err(error) = self.process.start_kill() {
-            return Err(Error::KillError{ reason: error.to_string() })
+            return Err(Error::KillError {
+                reason: error.to_string(),
+            });
         }
         self.wait().await
     }

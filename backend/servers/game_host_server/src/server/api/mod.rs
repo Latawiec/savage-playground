@@ -1,3 +1,3 @@
 pub mod types;
-pub mod API;
+pub mod api;
 pub mod error;

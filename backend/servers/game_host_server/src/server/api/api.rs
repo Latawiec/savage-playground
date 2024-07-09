@@ -4,7 +4,6 @@ use rocket::serde::json::Json;
 use rocket::{delete, get, State};
 
 use crate::game_launcher::game_launcher::GameLauncher;
-use crate::server::game_host;
 use crate::server::game_host::game_host::GameHost;
 use room_server_interface::schema::game_config::GameConfig;
 
@@ -30,7 +29,7 @@ pub fn create_room(
 
 #[get("/join_room/<room_id>")]
 pub fn join_room(
-    remote_addr: std::net::SocketAddr,
+    _remote_addr: std::net::SocketAddr,
     ws: rocket_ws::WebSocket,
     room_id: u64,
     game_host: &State<Arc<GameHost>>,
@@ -40,14 +39,10 @@ pub fn join_room(
     Ok(ws.channel(move |stream| {
         Box::pin(async move {
             match game_host.join_room(room_id.into(), stream).await {
-                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::ClientDisconnected => { Ok(()) },
-                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::ClientClosedConnection => { Ok(()) },
-                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::ClientConnectionDestroyed => { Ok(()) },
-                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::RoomClosed => { Ok(()) },
-                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::RoomDoesNotExist => { Ok(()) },
-                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::UnexpectedError(_) => { Ok(()) },
-                game_host::game_room::disconnect_reason::GameRoomDisconnectReason::GameCrashed => { Ok(()) },
-                _ => { Ok(()) }
+                reason => {
+                    println!("Disconnected: {:?}", reason);
+                    Ok(())
+                }
             }
         })
     }))

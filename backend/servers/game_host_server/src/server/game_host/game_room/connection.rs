@@ -1,4 +1,4 @@
-use std::{sync::Arc, sync::OnceLock};
+use std::sync::Arc;
 
 use futures_util::{
     stream::{SplitSink, SplitStream},
@@ -15,87 +15,131 @@ use crate::server::game_host::types::ClientHandle;
 
 use super::disconnect_reason::GameRoomDisconnectReason;
 
-#[derive(Clone, Default)]
-pub struct GameRoomConnectionHandle {
-    close_notify: Arc<tokio::sync::Notify>,
-    close_reason: Arc<OnceLock<GameRoomDisconnectReason>>,
+struct OnceNotify<T: Clone> {
+    notify: tokio::sync::Notify,
+    value: tokio::sync::OnceCell<T>,
 }
 
-impl GameRoomConnectionHandle {
-    pub async fn close_fut(&self) -> GameRoomDisconnectReason {
-        self.close_notify.notified().await;
-        self.close_reason.get().expect("Close reason empty after being notified.").clone()
+impl<T: Clone> OnceNotify<T> {
+    pub async fn notified(&self) -> T {
+        let notified_fut = self.notify.notified();
+        if let Some(value) = self.value.get() {
+            return value.clone();
+        }
+
+        notified_fut.await;
+        self.value
+            .get()
+            .expect("Notified without result set.")
+            .clone()
+    }
+
+    pub fn notify(&self, value: T) {
+        let _ = self.value.set(value);
+        self.notify.notify_waiters();
     }
 }
 
-pub struct GameRoomConnection {
-    // Runtime.
-    client_reader_task: JoinHandle<()>,
-    client_sender_task: JoinHandle<()>,
-
-    // Closing.
-    connection_handle: GameRoomConnectionHandle,
+impl<T: Clone> Default for OnceNotify<T> {
+    fn default() -> Self {
+        Self {
+            notify: Default::default(),
+            value: Default::default(),
+        }
+    }
 }
 
-/***
- * Handles reading and writing of data sent by the connected client.
- */
-impl GameRoomConnection {
+#[derive(Clone, Default)]
+pub struct GameRoomConnectionHandle {
+    close_notify: Arc<OnceNotify<GameRoomDisconnectReason>>,
+    _actor: Arc<Option<GameRoomConnectionActor>>,
+}
+
+impl GameRoomConnectionHandle {
     pub fn new(
         client_handle: ClientHandle,
         client_connection: DuplexStream,
         client_message_tx: tokio::sync::mpsc::Sender<ClientInput>,
         client_message_rx: tokio::sync::mpsc::Receiver<ClientOutput>,
-    ) -> GameRoomConnection {
+    ) -> GameRoomConnectionHandle {
         let (rx, tx) = client_connection.split();
-        let close_notify: Arc<tokio::sync::Notify> = Default::default();
-        let close_reason: Arc<OnceLock<GameRoomDisconnectReason>> = Default::default();
-        let connection_handle = GameRoomConnectionHandle::default();
+        let close_notify = Arc::new(OnceNotify::<GameRoomDisconnectReason>::default());
 
-        let client_reader_task = {
-            let connection_handle = connection_handle.clone();
-            tokio::spawn(async move {
-                let _ = connection_handle.close_reason.set(
-                    Self::client_reader_task(client_handle.clone(), tx, client_message_tx).await,
-                );
-                connection_handle.close_notify.notify_waiters();
-            })
-        };
+        let client_reader_task = tokio::spawn({
+            let close_notify = close_notify.clone();
+            async move {
+                let close_reason = GameRoomConnectionActor::client_reader_task(
+                    client_handle.clone(),
+                    tx,
+                    client_message_tx,
+                )
+                .await;
+                close_notify.notify(close_reason);
+            }
+        });
 
-        let client_sender_task = {
-            let connection_handle = connection_handle.clone();
-            tokio::spawn(async move {
-                let _ = connection_handle.close_reason.set(
-                    Self::client_writer_task(client_handle.clone(), rx, client_message_rx).await,
-                );
-                connection_handle.close_notify.notify_waiters();
-            })
-        };
+        let client_sender_task = tokio::spawn({
+            let close_notify = close_notify.clone();
+            async move {
+                let close_reason = GameRoomConnectionActor::client_writer_task(
+                    client_handle.clone(),
+                    rx,
+                    client_message_rx,
+                )
+                .await;
+                close_notify.notify(close_reason);
+            }
+        });
 
-        GameRoomConnection {
+        let _actor = Arc::new(Some(GameRoomConnectionActor {
             client_reader_task,
             client_sender_task,
-            connection_handle
+        }));
+
+        GameRoomConnectionHandle {
+            close_notify,
+            _actor,
         }
     }
 
-    pub fn close_connection(self) {
-        let _ = self
-            .close_reason
-            .set(GameRoomDisconnectReason::ConnectionClosedByHost);
-        self.close_notify.notify_waiters();
+    pub fn new_closed(close_reason: GameRoomDisconnectReason) -> GameRoomConnectionHandle {
+        let close_notify = Arc::new(OnceNotify::<GameRoomDisconnectReason>::default());
+        close_notify.notify(close_reason);
+        GameRoomConnectionHandle {
+            close_notify,
+            _actor: Default::default(),
+        }
+    }
+
+    pub async fn wait(&self) -> GameRoomDisconnectReason {
+        self.close_notify.notified().await
+    }
+
+    fn close(&mut self, reason: GameRoomDisconnectReason) {
+        self.close_notify.notify(reason);
+    }
+}
+
+struct GameRoomConnectionActor {
+    client_reader_task: JoinHandle<()>,
+    client_sender_task: JoinHandle<()>,
+}
+
+impl Drop for GameRoomConnectionActor {
+    fn drop(&mut self) {
         self.client_reader_task.abort();
         self.client_sender_task.abort();
     }
+}
 
-    pub fn get_connection_handle(&self) {
-        self.connection_handle.clone()
-    }
-
-    pub async fn close_fut(self) -> GameRoomDisconnectReason {
-        self.connection_handle.close_fut().await
-    }
-
+/***
+ * Handles reading and writing of data sent by the connected client.
+ */
+impl GameRoomConnectionActor {
+    /***
+     * Reads messages from the GameRoom
+     * Writes to the Client
+     */
     async fn client_writer_task(
         _client_handle: ClientHandle,
         mut client_message_rx: SplitSink<DuplexStream, rocket_ws::Message>,
@@ -128,6 +172,10 @@ impl GameRoomConnection {
         GameRoomDisconnectReason::ConnectionClosedByHost
     }
 
+    /***
+     * Reads messages from the Client
+     * Writes to the GameRoom
+     */
     async fn client_reader_task(
         client_handle: ClientHandle,
         mut client_message_tx: SplitStream<DuplexStream>,
@@ -170,16 +218,5 @@ impl GameRoomConnection {
             }
         }
         GameRoomDisconnectReason::ClientDisconnected
-    }
-}
-
-impl Drop for GameRoomConnection {
-    fn drop(&mut self) {
-        let _ = self
-            .close_reason
-            .set(GameRoomDisconnectReason::ClientConnectionDestroyed);
-        self.close_notify.notify_waiters();
-        self.client_reader_task.abort();
-        self.client_sender_task.abort();
     }
 }

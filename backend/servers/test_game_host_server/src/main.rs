@@ -16,10 +16,10 @@ fn rocket() -> _ {
         .mount(
             "/",
             routes![
-                game_host_server::server::api::API::create_room,
-                game_host_server::server::api::API::get_rooms,
-                game_host_server::server::api::API::join_room,
-                game_host_server::server::api::API::destroy_room,
+                game_host_server::server::api::api::create_room,
+                game_host_server::server::api::api::get_rooms,
+                game_host_server::server::api::api::join_room,
+                game_host_server::server::api::api::destroy_room,
             ],
         )
 }

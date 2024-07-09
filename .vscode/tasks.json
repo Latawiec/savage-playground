@@ -1,0 +1,39 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "wscat: create room",
+            "type": "shell",
+            "command": "wscat",
+            "args": [
+                "-c",
+                "ws://localhost:8000/create_room?game_room_config={%22game_id%22: %22${input:game_id}%22}",
+            ],
+        },
+        {
+            "label": "wscat: join room",
+            "type": "shell",
+            "command": "wscat",
+            "args": [
+                "-c",
+                "ws://localhost:8000/join_room/${input:room_id}"
+            ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "game_id",
+            "description": "Game ID: ",
+            "default": "proto_chat",
+            "type": "promptString"
+        },
+        {
+            "id": "room_id",
+            "description": "Room ID: ",
+            "default": "0",
+            "type": "promptString"
+        }
+    ]
+}
