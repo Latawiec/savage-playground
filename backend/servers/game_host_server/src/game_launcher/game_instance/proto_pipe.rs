@@ -17,7 +17,7 @@ impl ProtoStdin {
         msg.encode(&mut data).expect("Message couldn't be encoded.");
         let data_len = data.len();
         _ = self.stdin.write_u64(data_len as u64).await;
-        _ = self.stdin.write(&data).await;
+        _ = self.stdin.write_all(&data).await;
         _ = self.stdin.flush().await;
     }
 
@@ -27,7 +27,7 @@ impl ProtoStdin {
             msg.encode(&mut data).expect("Message couldn't be encoded.");
             let data_len = data.len();
             _ = self.stdin.write_u64(data_len as u64).await;
-            _ = self.stdin.write(&data).await;
+            _ = self.stdin.write_all(&data).await;
         }
         _ = self.stdin.flush().await;
     }

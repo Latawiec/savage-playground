@@ -4,8 +4,8 @@
     <input v-model="connection_address">
     <button @click="connect">Connect</button>
     <div v-if="connected">
-        <DebugChatOutput ref="chat_output"/>
         <DebugChatInput ref="chat_input" @message-sent="send"/>
+        <DebugChatOutput ref="chat_output"/>
     </div>
 </template>
 

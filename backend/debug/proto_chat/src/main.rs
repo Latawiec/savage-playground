@@ -90,8 +90,8 @@ fn main() {
         };
         file.write_all(b"Left").unwrap();
         let output_encoded = client_output_proto.encode_to_vec();
-        let _ = io::stdout().write(&output_encoded.len().to_be_bytes());
-        let _ = io::stdout().write(output_encoded.as_slice());
+        let _ = io::stdout().write_all(&output_encoded.len().to_be_bytes());
+        let _ = io::stdout().write_all(output_encoded.as_slice());
         let _ = io::stdout().flush();
         let notify_string = format!("Sent {} bytes of data.\n", output_encoded.len());
         file.write_all(notify_string.as_bytes());
