@@ -1,8 +1,1 @@
-Let's go!
-MatchedLeftSent 30 bytes of data.
-MatchedHiError: DecodeError { description: "invalid wire type: LengthDelimited (expected Varint)", stack: [("ProtoChatMessage", "user_id")] }MatchedLeftSent 30 bytes of data.
-MatchedHiHeyPushedLeftSent 33 bytes of data.
-MatchedHiHeyPushedLeftSent 34 bytes of data.
-MatchedLeftSent 47 bytes of data.
-MatchedHiHeyPushedLeftSent 36 bytes of data.
-MatchedHiHeyPushedLeftSent 39 bytes of data.
+Hello!/mnt/UbuntuNVMe/Programing/RustTesting/savage_playground/backend/target/debug/proto_chat --log_file ./proto_chat_log_file.txt 

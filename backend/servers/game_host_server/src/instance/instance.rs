@@ -47,9 +47,10 @@ impl fmt::Display for Instance {
 }
 
 impl Instance {
-    pub fn new(cwd_path: &Path, exe_path: &Path) -> Result<Instance, Error> {
+    pub fn new(cwd_path: &Path, exe_path: &Path, args: &[String]) -> Result<Instance, Error> {
         let process = match Command::new(&exe_path)
-            // .current_dir(&cwd_path)
+            .current_dir(&cwd_path) // This makes invalid path. For "." it does "/." which is unusable.
+            .args(args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

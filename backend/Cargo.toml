@@ -19,9 +19,7 @@ members = [
     "servers/test_game_host_server",
     
     "communication/game_interface",
-    "communication/room_server_interface",
-    
-    "test-local-set",
+    "communication/room_server_interface"
 ]
 
 [workspace.dependencies]

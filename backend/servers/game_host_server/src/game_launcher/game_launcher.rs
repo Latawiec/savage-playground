@@ -44,14 +44,14 @@ impl GameLauncher {
     pub fn launch_game(
         &self,
         game_id: &str,
-        args: &[String],
     ) -> Result<GameInstance, GameLauncherError> {
         let game_info = self.game_mapping.get_game_info(game_id)?;
         let game_cwd = self.games_root_directory.join(game_info.cwd);
         let game_exe = self.games_root_directory.join(game_info.exe);
-        println!("cwd: {:?}, exe: {:?}", &game_cwd, &game_exe);
+        let game_args = game_info.args.unwrap_or(Vec::new());
+        println!("cwd: {:?}, exe: {:?}, args: {:?}", &game_cwd, &game_exe, &game_args);
         
-        match GameInstance::new(&game_cwd, &game_exe, args) {
+        match GameInstance::new(&game_cwd, &game_exe, &game_args) {
             Ok(ok) => Ok(ok),
             Err(err) => {
                 println!("Err: {:?}", err);

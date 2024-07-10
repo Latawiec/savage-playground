@@ -33,7 +33,7 @@ impl GameHost {
     ) -> Option<RoomHandle> {
         let room_handle = self.room_handle_gen.next();
         let game_id = game_config.game_id.as_ref()?;
-        let game_instance = game_launcher.launch_game(game_id, &vec![]);
+        let game_instance = game_launcher.launch_game(game_id);
         if let Ok(game_instance) = game_instance {
             let game_room = GameRoom::new(game_instance, game_config);
             if let Ok(mut wlock) = self.game_rooms.write() {

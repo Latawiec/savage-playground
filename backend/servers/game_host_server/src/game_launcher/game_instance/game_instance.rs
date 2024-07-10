@@ -13,9 +13,9 @@ impl GameInstance {
     pub fn new(
         cwd: &Path,
         exe: &Path,
-        _args: &[String],
+        args: &[String],
     ) -> Result<GameInstance, GameLauncherError> {
-        let instance_result = Instance::new(&cwd, &exe);
+        let instance_result = Instance::new(&cwd, &exe, &args);
 
         if let Err(error) = &instance_result {
             return Err(GameLauncherError::InstanceStartupError {

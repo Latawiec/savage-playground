@@ -8,7 +8,7 @@ use rocket::{launch, routes};
 
 #[launch]
 fn rocket() -> _ {
-    let dir_path = PathBuf::from("/");
+    let dir_path = PathBuf::from(".");
     let file_path = PathBuf::from("./src/test_game_mapping.json");
     rocket::build()
         .manage(Arc::new(GameLauncher::new(&dir_path, &file_path).unwrap()))

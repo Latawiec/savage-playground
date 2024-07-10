@@ -10,6 +10,7 @@ use std::{
 pub struct GameInfo {
     pub cwd: PathBuf,
     pub exe: PathBuf,
+    pub args: Option<Vec<String>>,
 }
 
 pub struct GameMapping {
