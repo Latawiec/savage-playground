@@ -8,7 +8,7 @@ edition = "2021"
 prost = { workspace = true }
 prost-types = { workspace = true }
 room_server_interface = { path = "../../communication/room_server_interface" } 
-config = { path = "../../../framework/game_interface/config", features = ["log_to_file"] }
+game_config = { path = "../../../framework/game_framework/game_config", features = ["log_to_file"] }
 tracing.workspace = true
 
 [build-dependencies]

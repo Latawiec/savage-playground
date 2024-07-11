@@ -3,6 +3,7 @@ use std::{fmt::format, fs::File, io::{self, Read, Write}};
 #[path = ".generated/proto/mod.rs"]
 mod proto_chat;
 
+use game_base::clap::{arg, command};
 use prost::Message;
 use prost_types::Any;
 use proto_chat::proto_chat::{ProtoChatHistory, ProtoChatMessage};
@@ -11,11 +12,25 @@ use tracing::info;
 
 
 fn main() {
-    let matches = config::build_command()
-        .about("ProtoChat - communicator that exchanges protobuf messages across stdin/stdout pipes.")
-        .get_matches();
+    let command = game_base::build_command()
+        .about("ProtoChat - communicator that exchanges protobuf messages across stdin/stdout pipes.");
 
-    config::configure(&matches);
+    let command = command.subcommand(command!().arg(
+        arg!(
+            -a --test "Test a thing"
+        )
+    ));
+
+    let command = command.subcommand(command!().arg(
+        arg!(
+            -u --huh "Another"
+        )
+    ));
+
+        let matches = command.get_matches();
+    
+
+        game_base::configure(&matches);
 
     let mut proto_chat_history = ProtoChatHistory::default();
     

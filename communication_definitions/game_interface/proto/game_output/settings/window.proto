@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package settings;
-
-message Window {
-    optional float aspect_ratio = 1;
-    optional uint32 rt_width = 2;
-    optional uint32 rt_height = 3;
-}

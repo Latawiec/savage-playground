@@ -1,0 +1,13 @@
+[package]
+name = "game_plugins"
+version = "0.1.0"
+description = "Provides a set of plugins with features commonly used in games."
+edition = "2021"
+
+[dependencies]
+bevy = { version="*", optional = true, features = ["dynamic_linking"] }
+tokio = { version="*", optional = true }
+
+[features]
+time_sliced_io = [ "dep:bevy", "dep:tokio" ]
+self_destruct = [ "dep:bevy" ]

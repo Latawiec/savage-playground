@@ -1,0 +1,21 @@
+[workspace]
+members = [
+    "communication/game_interface",
+
+    "framework/game_config",
+    "framework/game_plugins",
+
+    "games/debug/proto_chat",
+
+    "utils/build_io",
+    "utils/proto_gen",
+    "utils/schema_gen",
+]
+resolver="2"
+
+[workspace.dependencies]
+game_interface = { path = "communication/game_interface" }
+game_config = { path = "framework/game_config" }
+game_plugins = { path = "framework/game_plugins" }
+proto_gen = { path = "utils/proto_gen" }
+schema_gen = { path = "utils/schema_gen" }

@@ -34,8 +34,7 @@ pub mod builder {
             T: std::convert::TryInto<Option<String>>,
             T::Error: std::fmt::Display,
         {
-            self
-                .game_id = value
+            self.game_id = value
                 .try_into()
                 .map_err(|e| {
                     format!("error converting supplied value for game_id: {}", e)
