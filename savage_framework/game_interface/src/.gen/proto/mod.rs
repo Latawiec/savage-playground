@@ -1,2 +1,2 @@
-pub mod game_input;
 pub mod game_output;
+pub mod game_input;

@@ -1,0 +1,10 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "/savage_playground/game_host_server/asset_mapping.json",
+    "title": "AssetMapping",
+    "description": "Maps asset alias name to correct host-side asset file paths.",
+    "type": "object",
+    "additionalProperties": {
+        "type": "string"
+    }
+}

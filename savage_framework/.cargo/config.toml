@@ -6,4 +6,4 @@ linker = "clang"
 rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold"]
 
 [env]
-PROTO_COMMUNICATION_DIR = { value = "./communication/proto", relative = true }
+PROTO_COMMUNICATION_DIR = { value = "../savage_communication/proto", relative = true }

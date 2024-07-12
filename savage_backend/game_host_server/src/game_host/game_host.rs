@@ -1,14 +1,13 @@
+use rocket_ws::stream::DuplexStream;
 use std::{
     collections::BTreeMap,
     sync::{Arc, RwLock},
 };
 
-use rocket_ws::stream::DuplexStream;
-use room_server_interface::schema::game_config::GameConfig;
-
 use super::{
     game_room::{disconnect_reason::GameRoomDisconnectReason, game_room::GameRoom},
     handle_gen::HandleGenerator,
+    interface::schema::game_config::GameConfig,
     types::RoomHandle,
 };
 use crate::game_launcher::game_launcher::GameLauncher;

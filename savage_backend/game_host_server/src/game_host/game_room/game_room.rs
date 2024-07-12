@@ -1,24 +1,13 @@
+use crate::{game_host::{handle_gen::HandleGenerator, interface::schema::game_config::GameConfig, types::ClientHandle}, game_launcher::game_instance::{game_instance::GameInstance, proto_pipe::{ProtoStdin, ProtoStdout}}};
+
 use super::{connection::GameRoomConnectionHandle, disconnect_reason::GameRoomDisconnectReason};
-use crate::{
-    game_launcher::game_instance::{
-        game_instance::GameInstance,
-        proto_pipe::{ProtoStdin, ProtoStdout},
-    },
-    server::game_host::{handle_gen::HandleGenerator, types::ClientHandle},
-};
-use arc_swap::ArcSwap;
-use rocket_ws::stream::DuplexStream;
-use room_server_interface::{
-    proto::{
-        client_input::ClientInput,
-        client_output::{ClientOutput, ClientOutputBatch},
-    },
-    schema::game_config::GameConfig,
-};
 use std::{
     collections::BTreeMap,
     sync::{atomic::AtomicBool, Arc, Mutex},
 };
+use arc_swap::ArcSwap;
+use game_interface::proto::{game_input::ClientInput, game_output::{GameMessage, GameOutput}};
+use rocket_ws::stream::DuplexStream;
 use tokio::task::JoinHandle;
 
 pub struct GameRoom {
@@ -32,8 +21,8 @@ pub struct GameRoom {
     client_input_sender: tokio::sync::mpsc::Sender<ClientInput>,
 
     shared_open_senders:
-        Arc<ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<ClientOutput>>>>,
-    lock_open_senders: Arc<Mutex<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<ClientOutput>>>>,
+        Arc<ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<GameMessage>>>>,
+    lock_open_senders: Arc<Mutex<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<GameMessage>>>>,
 
     closed: AtomicBool,
 }
@@ -54,7 +43,7 @@ impl GameRoom {
             tokio::sync::mpsc::channel(Self::CLIENT_MESSAGE_RECEIVER_CAPACITY);
 
         let shared_open_senders: Arc<
-            ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<ClientOutput>>>,
+            ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<GameMessage>>>,
         > = Default::default();
 
         let client_input_task = tokio::spawn(Self::client_input_task(
@@ -86,7 +75,7 @@ impl GameRoom {
 
         let client_handle = self.client_handle_gen.next();
         let (output_sender, output_receiver) =
-            tokio::sync::mpsc::channel::<ClientOutput>(Self::CLIENT_MESSAGE_SENDER_CAPACITY);
+            tokio::sync::mpsc::channel::<GameMessage>(Self::CLIENT_MESSAGE_SENDER_CAPACITY);
         let input_sender = self.client_input_sender.clone();
 
         let client_connection_handle =
@@ -145,44 +134,33 @@ impl GameRoom {
 
     async fn game_output_task(
         client_output_sender: Arc<
-            ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<ClientOutput>>>,
+            ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<GameMessage>>>,
         >,
         mut game_instance_output: ProtoStdout,
     ) {
-        while let Some(game_output) = game_instance_output.read::<ClientOutputBatch>().await {
+        while let Some(game_output) = game_instance_output.read::<GameOutput>().await {
             println!("Received");
             let output_senders = client_output_sender.load();
             // Broadcast
             if let Some(broadcast_msg) = game_output.broadcast {
-                let client_output = broadcast_msg.client_output;
-                if let Some(client_output) = client_output {
-                    for (_client_handle, sender) in output_senders.iter() {
-                        let _ = sender.send(client_output.clone()).await;
-                    }
-                } else {
-                    tracing::warn!("Got empty broadcast message. Unexpected.");
-                }
+                for (_client_handle, sender) in output_senders.iter() {
+                    let _ = sender.send(broadcast_msg.clone()).await;
+                }    
             }
 
             // Direct messages
             for direct_message in game_output.direct_messages {
-                let client_id = direct_message.client_id;
-                let client_output = direct_message.client_output;
+                let client_id = direct_message.receiver_id;
+                let message = direct_message.game_output;
 
-                if client_id.is_none() {
-                    tracing::warn!("Direct message without client_id.");
-                    continue;
-                }
-                if client_output.is_none() {
+                if message.is_none() {
                     tracing::warn!("Direct message without body");
                     continue;
                 }
+                let message = message.unwrap();
 
-                let client_id = client_id.unwrap();
-                let client_output = client_output.unwrap();
-
-                if let Some(sender) = output_senders.get(&ClientHandle(client_id.value)) {
-                    let _ = sender.send(client_output).await;
+                if let Some(sender) = output_senders.get(&ClientHandle(client_id)) {
+                    let _ = sender.send(message).await;
                 }
             }
         }

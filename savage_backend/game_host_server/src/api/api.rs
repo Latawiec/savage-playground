@@ -3,9 +3,9 @@ use std::sync::Arc;
 use rocket::serde::json::Json;
 use rocket::{delete, get, State};
 
+use crate::game_host::game_host::GameHost;
+use crate::game_host::interface::schema::game_config::GameConfig;
 use crate::game_launcher::game_launcher::GameLauncher;
-use crate::server::game_host::game_host::GameHost;
-use room_server_interface::schema::game_config::GameConfig;
 
 use super::error::APIError;
 use super::types::RoomsData;

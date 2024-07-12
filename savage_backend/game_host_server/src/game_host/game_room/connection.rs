@@ -1,17 +1,14 @@
 use std::sync::Arc;
 
+use crate::game_host::types::ClientHandle;
 use futures_util::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
 };
+use game_interface::proto::{game_input::ClientInput, game_output::GameMessage};
 use prost::Message;
 use rocket_ws::stream::DuplexStream;
-use room_server_interface::proto::{
-    client_input::ClientInput, client_output::ClientOutput, common::ClientId,
-};
 use tokio::task::JoinHandle;
-
-use crate::server::game_host::types::ClientHandle;
 
 use super::disconnect_reason::GameRoomDisconnectReason;
 
@@ -60,7 +57,7 @@ impl GameRoomConnectionHandle {
         client_handle: ClientHandle,
         client_connection: DuplexStream,
         client_message_tx: tokio::sync::mpsc::Sender<ClientInput>,
-        client_message_rx: tokio::sync::mpsc::Receiver<ClientOutput>,
+        client_message_rx: tokio::sync::mpsc::Receiver<GameMessage>,
     ) -> GameRoomConnectionHandle {
         let (rx, tx) = client_connection.split();
         let close_notify = Arc::new(OnceNotify::<GameRoomDisconnectReason>::default());
@@ -143,20 +140,16 @@ impl GameRoomConnectionActor {
     async fn client_writer_task(
         _client_handle: ClientHandle,
         mut client_message_rx: SplitSink<DuplexStream, rocket_ws::Message>,
-        mut game_to_client_receiver: tokio::sync::mpsc::Receiver<ClientOutput>,
+        mut game_to_client_receiver: tokio::sync::mpsc::Receiver<GameMessage>,
     ) -> GameRoomDisconnectReason {
         let mut encoding_buffer = Vec::<u8>::new();
         while let Some(msg) = game_to_client_receiver.recv().await {
-            if let None = &msg.game_output_message {
-                tracing::error!("Ill formed message - game output part missing");
+            if let None = &msg.message {
+                tracing::error!("Ill formed message - message content missing");
                 continue;
             }
 
-            if let Err(error) = msg
-                .game_output_message
-                .unwrap()
-                .encode(&mut encoding_buffer)
-            {
+            if let Err(error) = msg.message.unwrap().encode(&mut encoding_buffer) {
                 tracing::error!("Message encoding error: {}", error);
                 continue;
             }
@@ -198,9 +191,7 @@ impl GameRoomConnectionActor {
                     };
 
                     let proto_client_input = ClientInput {
-                        client_id: Some(ClientId {
-                            value: client_handle.0,
-                        }),
+                        sender_id: client_handle.0,
                         game_input_message: Some(proto_msg),
                     };
 

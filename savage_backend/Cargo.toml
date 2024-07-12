@@ -1,6 +1,9 @@
 [workspace]
 members = [
-    "game_host_server"
+    "game_asset_server",
+    "game_host_server",
+
+    "_test/test_asset_server"
 ]
 resolver="2"
 
@@ -14,5 +17,5 @@ prost-types = { version = "*" }
 rocket = { version = "*", features = ["json"] }
 tracing = { version = "*" }
 tracing-subscriber = { version = "*" }
-
 game_interface = { path = "../savage_framework/game_interface" }
+schema_gen = { path = "../savage_framework/utility/schema_gen" }
