@@ -1,0 +1,15 @@
+[package]
+name = "game_host_server"
+version = "0.1.0"
+edition = "2021"
+description = "Game Room hosting server."
+
+[dependencies]
+rocket_ws = "*"
+
+rocket.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+prost.workspace = true
+prost-types.workspace = true
+tokio.workspace = true

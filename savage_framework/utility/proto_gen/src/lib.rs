@@ -30,7 +30,7 @@ pub fn build_protos_from_dir(source_rel_dir: &Path, output_rel_dir: &Path) -> Re
         if file_name.ends_with(".proto") {
             let proto_path = std::path::absolute(source_rel_dir.join(PathBuf::from(file_name)))?;
             // If any of these files changes, rebuild.
-            println!("cargo:rerun-if-changed={}", proto_path.to_str().unwrap());  
+            println!("cargo:rerun-if-changed={:?}", &proto_path);  
             protos_list.push(proto_path);
         }
     }
@@ -39,6 +39,8 @@ pub fn build_protos_from_dir(source_rel_dir: &Path, output_rel_dir: &Path) -> Re
     let includes_list = [
         std::path::absolute(source_rel_dir)?
     ];
+
+    println!("Includes list: {:?}", &includes_list);
 
     // Prepare output.
     fs::create_dir_all(&output_rel_dir)?;

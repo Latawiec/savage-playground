@@ -1,8 +1,0 @@
-[workspace]
-
-members = [ 
-    "game_config",
-    "game_plugins",
-    # "messages/client_message",
-    # "messages/game_message",
-]
