@@ -1,0 +1,9 @@
+[package]
+name = "test_asset_server"
+version = "0.1.0"
+edition = "2021"
+description = "Test Asset Server."
+
+[dependencies]
+tokio.workspace = true
+game_asset_server = { path = "../../game_asset_server" }

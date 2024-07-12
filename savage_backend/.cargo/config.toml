@@ -1,0 +1,10 @@
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"
+
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold"]
+
+[env]
+PROTO_COMMUNICATION_DIR = { value = "../savage_communication/proto", relative = true }
+SCHEMA_COMMUNICATION_DIR = { value = "../savage_communication/schema", relative = true }

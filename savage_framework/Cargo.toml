@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "game_config",
+    "game_interface",
+    "game_plugins",
+    "utility/build_io",
+    "utility/proto_gen",
+    "utility/schema_gen"
+]
+resolver="2"
+
+[workspace.dependencies]
+build_io = { path = "utility/build_io" }
+proto_gen = { path = "utility/proto_gen" }
+schema_gen = { path = "utility/schema_gen" }

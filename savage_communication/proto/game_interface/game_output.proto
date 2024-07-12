@@ -1,0 +1,18 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+package game_output;
+
+message GameMessage {
+    google.protobuf.Any message = 1;
+}
+
+message GameDirectOutput {
+    uint64 receiver_id = 1;
+    GameMessage game_output = 2;
+}
+
+message GameOutput {
+    repeated GameDirectOutput direct_messages = 1;
+    optional GameMessage broadcast = 2;
+}

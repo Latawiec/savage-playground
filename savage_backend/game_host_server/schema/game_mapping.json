@@ -1,0 +1,26 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "/savage_playground/game_host_server/game_mapping.json",
+    "title": "GameMapping",
+    "description": "Maps game alias name to correct host-side game info.",
+    "type": "object",
+    "additionalProperties": {
+        "$ref": "#/$defs/game_info"
+    },
+    "$defs": {
+        "game_info": {
+            "type": "object",
+            "properties": {
+                "cwd": { "type": "string" },
+                "exe": { "type": "string" },
+                "args": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": ["cwd", "exe"]
+        }
+    }
+}

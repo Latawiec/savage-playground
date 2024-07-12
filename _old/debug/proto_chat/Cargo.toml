@@ -1,0 +1,15 @@
+[package]
+name = "proto_chat"
+description = "Reads UI snapshot as proto.Struct, gets a [message] from it and propagates as broadcast with UI snapshot [message] type."
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+prost = { workspace = true }
+prost-types = { workspace = true }
+room_server_interface = { path = "../../communication/room_server_interface" } 
+game_config = { path = "../../../framework/game_framework/game_config", features = ["log_to_file"] }
+tracing.workspace = true
+
+[build-dependencies]
+proto_gen = { path = "../../build_util/proto_gen" }

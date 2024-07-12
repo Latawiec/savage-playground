@@ -1,0 +1,16 @@
+[package]
+name = "game_config"
+version = "0.1.0"
+description = "Provides functions to prepare game common config. If the argument is supported, it should be passed as a feature."
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.4.6", features = ["cargo", "derive"] }
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
+url = "2.5.2"
+
+[features]
+log_verbosity = []
+log_to_file = [ "log_verbosity" ]
+log_to_loki = [ "log_verbosity" ]

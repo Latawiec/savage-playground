@@ -1,0 +1,21 @@
+[workspace]
+members = [
+    "game_asset_server",
+    "game_host_server",
+
+    "_test/test_asset_server"
+]
+resolver="2"
+
+[workspace.dependencies]
+clap = { version = "*" }
+tokio = { version = "*", features = ["process", "rt-multi-thread", "tracing", "macros", "test-util", "signal", "sync"] }
+serde = { version = "*", features = ["derive"] }
+serde_json = { version = "*" }
+prost = { version = "*" }
+prost-types = { version = "*" }
+rocket = { version = "*", features = ["json"] }
+tracing = { version = "*" }
+tracing-subscriber = { version = "*" }
+game_interface = { path = "../savage_framework/game_interface" }
+schema_gen = { path = "../savage_framework/utility/schema_gen" }
