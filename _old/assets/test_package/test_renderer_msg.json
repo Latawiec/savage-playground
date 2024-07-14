@@ -1,2 +1,0 @@
-{ "renderer": { "type": "reset", "camera": { "projTransform": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], "viewTransform": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1] }, "entities": { "0": { "assets": { "vertexShader": "test_square.vs.glsl", "pixelShader": "test_square.ps.glsl", "mesh": "test_square.json" }, "vertexAttributes": { "vertices": "aVertexPosition", "namedBuffers": { "uv": "aUvCoord", "color": "aColor"} } } } } }
-{ "settings": { "assets": { "assetsPackagePath": "http://localhost:3001/get_asset/test_package"} } }

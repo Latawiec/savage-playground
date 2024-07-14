@@ -3,3 +3,4 @@
 members = [
     "proto_chat"
 ]
+resolver = "2"

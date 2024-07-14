@@ -6,6 +6,7 @@ description = "Game Room asset server."
 
 [dependencies]
 rocket.workspace = true
+rocket_cors.workspace = true
 tracing.workspace = true
 serde.workspace = true
 serde_json.workspace = true

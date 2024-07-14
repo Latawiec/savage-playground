@@ -1,9 +1,0 @@
-syntax = "proto3";
-import "google/protobuf/any.proto";
-
-package game_input;
-
-message ClientInput {
-    uint64 sender_id = 1;
-    google.protobuf.Any game_input_message = 2;
-}

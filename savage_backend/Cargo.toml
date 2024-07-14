@@ -3,7 +3,7 @@ members = [
     "game_asset_server",
     "game_host_server",
 
-    "_test/test_asset_server"
+    "_test/test_bundled_server"
 ]
 resolver="2"
 
@@ -15,6 +15,7 @@ serde_json = { version = "*" }
 prost = { version = "*" }
 prost-types = { version = "*" }
 rocket = { version = "*", features = ["json"] }
+rocket_cors = { version = "*" }
 tracing = { version = "*" }
 tracing-subscriber = { version = "*" }
 game_interface = { path = "../savage_framework/game_interface" }

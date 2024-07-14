@@ -8,3 +8,7 @@ rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold"]
 [env]
 PROTO_COMMUNICATION_DIR = { value = "../savage_communication/proto", relative = true }
 SCHEMA_COMMUNICATION_DIR = { value = "../savage_communication/schema", relative = true }
+GAMES_ROOT_DIR = { value = "../.build", relative = true }
+
+[build]
+target-dir = "../.build/target"
