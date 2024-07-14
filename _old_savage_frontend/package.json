@@ -1,0 +1,131 @@
+{
+  "name": "savage_playground_frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "test:unit": "vue-cli-service test:unit",
+    "lint": "vue-cli-service lint",
+    "proto": "cross-env COMMUNICATION_DEFINITIONS_DIR=../communication_definitions PROTO_ROOM_SERVER_INTERFACE_DIR=../communication_definitions/room_server_interface/proto PROTO_GAME_INTERFACE_DIR=../communication_definitions/game_interface/proto node ./src/_script/proto.js",
+    "schema": "cross-env SCHEMA_ROOM_SERVER_INTERFACE_DIR=../communication_definitions/room_server_interface/schema node ./src/_script/schema.js",
+    "generate": "npm run proto; npm run schema;"
+  },
+  "dependencies": {
+    "core-js": "^3.8.3",
+    "events": "^3.3.0",
+    "gl-matrix": "^3.4.3",
+    "jszip": "^3.10.1",
+    "jszip-utils": "^0.1.0",
+    "memfs": "^4.6.0",
+    "node-fetch": "^3.3.2",
+    "pngjs": "^7.0.0",
+    "ts-proto": "^1.164.0",
+    "ts-results": "^3.3.0",
+    "vue": "^3.2.13",
+    "vue-router": "^4.0.3"
+  },
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.23.3",
+    "@stylistic/eslint-plugin": "^1.3.3",
+    "@types/gl-matrix": "^3.2.0",
+    "@types/jest": "^27.0.1",
+    "@types/pngjs": "^6.0.4",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "@vue/cli-plugin-babel": "~5.0.0",
+    "@vue/cli-plugin-eslint": "~5.0.0",
+    "@vue/cli-plugin-router": "~5.0.0",
+    "@vue/cli-plugin-typescript": "~5.0.0",
+    "@vue/cli-plugin-unit-jest": "~5.0.0",
+    "@vue/cli-service": "~5.0.0",
+    "@vue/eslint-config-standard": "^6.1.0",
+    "@vue/eslint-config-typescript": "^9.1.0",
+    "@vue/test-utils": "^2.4.2",
+    "@vue/vue3-jest": "^27.0.0-alpha.1",
+    "assert": "^2.1.0",
+    "babel-jest": "^27.0.6",
+    "buffer": "^6.0.3",
+    "cross-env": "^7.0.3",
+    "eslint": "^7.32.0",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-vue": "^8.0.3",
+    "jest": "^27.5.1",
+    "json-schema-to-typescript": "^13.1.1",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "ts-jest": "^27.0.4",
+    "typescript": "~4.5.5",
+    "url": "^0.11.3"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/vue3-essential",
+      "@vue/standard",
+      "@vue/typescript/recommended"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 2020
+    },
+    "plugins": [
+      "@stylistic"
+    ],
+    "rules": {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrorsIgnorePattern": "^_"
+        }
+      ]
+    },
+    "overrides": [
+      {
+        "files": [
+          "**/__tests__/*.{j,t}s?(x)",
+          "**/tests/unit/**/*.test.{j,t}s?(x)",
+          "**/tests/unit/**/*.spec.{j,t}s?(x)"
+        ],
+        "env": {
+          "jest": true
+        }
+      },
+      {
+        "files": [
+          "**/*.ts"
+        ],
+        "parserOptions": {
+          "parser": "@typescript-eslint/parser",
+          "project": [
+            "./tsconfig.json"
+          ]
+        },
+        "rules": {
+          "@typescript-eslint/await-thenable": [
+            "error"
+          ],
+          "@typescript-eslint/no-namespace": [
+            "off"
+          ]
+        }
+      }
+    ]
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
+  "jest": {
+    "preset": "@vue/cli-plugin-unit-jest/presets/typescript-and-babel"
+  }
+}

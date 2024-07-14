@@ -1,0 +1,15 @@
+{
+  "name": "game_interface",
+  "version": "0.1.0",
+  "dependencies": {
+    "proto_gen": "../proto_gen",
+    "protobufjs": "^7.3.2"
+  },
+  "scripts": {
+    "proto": "node ./.scripts/proto.js ../../../savage_communication/proto/game_interface ./proto",
+    "prepare": "npm run proto"
+  },
+  "exports": {
+    "./proto/*": "./proto/*.ts"
+  }
+}

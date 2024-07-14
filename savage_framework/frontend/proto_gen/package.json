@@ -1,0 +1,9 @@
+{
+  "name": "proto_gen",
+  "version": "0.1.0",
+  "main": "./index.js",
+  "dependencies": {
+    "protobufjs": "^7.3.2",
+    "ts-proto": "^1.181.1"
+  }
+}

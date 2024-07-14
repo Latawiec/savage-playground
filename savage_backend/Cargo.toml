@@ -18,5 +18,5 @@ rocket = { version = "*", features = ["json"] }
 rocket_cors = { version = "*" }
 tracing = { version = "*" }
 tracing-subscriber = { version = "*" }
-game_interface = { path = "../savage_framework/game_interface" }
-schema_gen = { path = "../savage_framework/utility/schema_gen" }
+game_interface = { path = "../savage_framework/backend/game_interface" }
+schema_gen = { path = "../savage_framework/backend/utility/schema_gen" }
