@@ -9,7 +9,7 @@
                 <span class="input-group-text">/</span>
                 <input ref="connect_path_input" class="form-control" aria-label="Server path">
                 <button v-if="!connected" class="btn btn-outline-secondary" type="button" @click="connect">Connect</button>
-                <button v-if="connected" class="btn btn-danger" type="button" @click="disconnect">Disconnect</button>
+                <button v-if="!connected" class="btn btn-danger" type="button" @click="disconnect">Disconnect</button>
             </div>
         </div>
 
@@ -118,5 +118,5 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@import "bootstrap/scss/bootstrap";
+@import "bootstrap/scss/bootstrap"
 </style>
