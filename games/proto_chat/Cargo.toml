@@ -6,9 +6,10 @@ edition = "2021"
 
 [dependencies]
 prost = "*"
-prost-types = "*""
-room_server_interface = { path = "../../communication/room_server_interface" } 
-game_config = { path = "../../framework/game_framework/game_config", features = ["log_to_file"] }
+prost-types = "*"
+tracing = "*"
+game_interface = { path = "../../savage_framework/game_interface" }
+game_config = { path = "../../savage_framework/game_config", features = ["log_to_file"] }
 
 [build-dependencies]
-proto_gen = { path = "../../utils/rs_codegen/proto_gen" }
+proto_gen = { path = "../../savage_framework/utility/proto_gen" }

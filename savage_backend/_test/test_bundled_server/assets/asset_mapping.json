@@ -1,0 +1,4 @@
+{
+    "example/txt": "./files/example_asset.txt",
+    "example/json": "./files/example_json.json"
+}

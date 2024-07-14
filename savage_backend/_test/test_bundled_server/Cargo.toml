@@ -1,0 +1,10 @@
+[package]
+name = "test_bundled_server"
+version = "0.1.0"
+edition = "2021"
+description = "Test Bundled Server. It spins up both game-host and game-asset servers."
+
+[dependencies]
+tokio.workspace = true
+game_asset_server = { path = "../../game_asset_server" }
+game_host_server = { path = "../../game_host_server" }

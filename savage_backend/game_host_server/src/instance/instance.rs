@@ -58,7 +58,7 @@ impl Instance {
         {
             Err(error) => {
                 return Err(Error::StartupError {
-                    reason: error.to_string(),
+                    reason: format!("Error running [cwd: {:?}; exe: {:?}; args: {:?}]: {}", cwd_path, exe_path, args, error.to_string()),
                 })
             }
             Ok(process) => process,

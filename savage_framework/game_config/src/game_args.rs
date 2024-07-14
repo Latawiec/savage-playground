@@ -101,6 +101,13 @@ impl GameArgs {
     >(
         file_path: &std::path::PathBuf,
     ) -> Option<impl tracing_subscriber::Layer<S>> {
+        if let Some(parent) = std::path::Path::new(file_path).parent() {
+            if let Err(err) = std::fs::create_dir_all(parent) {
+                eprintln!("Could not create directories {:?}: {}", parent, err);
+                return None;
+            }
+        }
+
         let file = std::fs::File::create(file_path);
         if let Err(err) = &file {
             eprintln!("Could not open the file {:?}: {}", file_path, err);

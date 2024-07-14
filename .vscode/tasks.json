@@ -9,7 +9,7 @@
             "command": "wscat",
             "args": [
                 "-c",
-                "ws://localhost:8000/create_room?game_room_config={%22game_id%22: %22${input:game_id}%22}",
+                "ws://localhost:8001/host/create_room?game_room_config={%22game_id%22: %22${input:game_id}%22}",
             ],
         },
         {
@@ -18,7 +18,7 @@
             "command": "wscat",
             "args": [
                 "-c",
-                "ws://localhost:8000/join_room/${input:room_id}"
+                "ws://localhost:8001/host/join_room/${input:room_id}"
             ]
         }
     ],

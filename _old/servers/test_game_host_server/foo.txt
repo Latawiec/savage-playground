@@ -1,1 +1,0 @@
-Hello!/mnt/UbuntuNVMe/Programing/RustTesting/savage_playground/backend/target/debug/proto_chat --log_file ./proto_chat_log_file.txt 
