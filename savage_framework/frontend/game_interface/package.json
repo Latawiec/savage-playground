@@ -1,6 +1,7 @@
 {
   "name": "game_interface",
   "version": "0.1.0",
+  "type": "module",
   "dependencies": {
     "proto_gen": "../proto_gen",
     "protobufjs": "^7.3.2"

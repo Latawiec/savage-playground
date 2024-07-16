@@ -1,32 +1,50 @@
 {
-    "name": "proto_chat",
-    "version": "0.1.0",
+    "name": "proto-chat-frontend",
     "private": true,
-    "main": "src/plugin.ts",
+    "version": "0.0.0",
+    "type": "module",
+    "files": [
+        "dist"
+    ],
+    "main": "./dist/proto-chat-frontend.umd.cjs",
+    "module": "./dist/proto-chat-frontend.js",
+    "exports": {
+        ".": {
+            "import": "./dist/proto-chat-frontend.js",
+            "require": "./dist/proto-chat-frontend.umd.cjs",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "types": "./dist/index.d.ts",
     "scripts": {
-        "lint": "vue-cli-service lint",
-        "proto": "node ./src/.scripts/proto.js ../proto ./src/.gen/proto"
+        "postinstall": "npm run proto",
+
+        "dev": "vite",
+        "proto": "node ./src/.scripts/proto.js ../proto ./src/.gen/proto",
+        "types": "vue-tsc",
+        "build": "npm run proto && vite build && vue-tsc --emitDeclarationOnly",
+        "preview": "vite preview"
     },
     "dependencies": {
         "bootstrap": "^5.3.3",
-        "core-js": "^3.8.3",
-        "protobufjs": "^7.3.2",
-        "vue": "^3.4.31"
+        "vue": "^3.4.31",
+
+        "game_interface": "file:/../../../savage_framework/frontend/game_interface"
+    },
+    "peerDependencies": {
+        "vue": "^3.4.31",
+        "protobufjs": "^7.3.2"
     },
     "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^5.4.0",
-        "@typescript-eslint/parser": "^5.4.0",
-        "@vue/cli-plugin-babel": "~5.0.0",
-        "@vue/cli-plugin-eslint": "~5.0.0",
-        "@vue/cli-plugin-typescript": "~5.0.0",
-        "@vue/cli-service": "~5.0.0",
-        "@vue/eslint-config-typescript": "^9.1.0",
-        "eslint": "^7.32.0",
-        "eslint-plugin-vue": "^8.0.3",
-        "game_interface": "file:/../../../savage_framework/frontend/game_interface",
-        "proto_gen": "file:/../../../savage_framework/frontend/proto_gen",
-        "sass": "^1.32.7",
-        "sass-loader": "^12.0.0",
-        "typescript": "~4.5.5"
+        "@babel/types": "^7.24.9",
+        "@types/node": "^20.2.5",
+        "@vitejs/plugin-vue": "^5.0.5",
+        "sass": "^1.77.8",
+        "typescript": "^5.2.2",
+        "vite": "^5.3.4",
+        "vite-plugin-lib-inject-css": "^2.1.1",
+        "vue-tsc": "^2.0.24",
+        
+        "proto_gen": "file:/../../../savage_framework/frontend/proto_gen"
     }
 }

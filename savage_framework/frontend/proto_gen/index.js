@@ -1,10 +1,8 @@
-const fs = require('fs')
-const path = require('path')
-const { exec } = require('child_process')
+import * as fs from 'fs';
+import * as path from 'path';
+import { exec } from 'child_process'; 
 
-const pluginPath = path.resolve(__dirname, './node_modules/.bin/protoc-gen-ts_proto')
-
-exports = module.exports = build_protos_from_dir;
+const pluginPath = path.resolve(import.meta.dirname, './node_modules/.bin/protoc-gen-ts_proto')
 
 async function build_protos_from_dir(buildSourceDir, buildOutputDir) {
     if (!fs.existsSync(buildSourceDir)) {
@@ -15,8 +13,13 @@ async function build_protos_from_dir(buildSourceDir, buildOutputDir) {
         fs.mkdirSync(buildOutputDir, { recursive: true })
     }
 
+    let plugin_arg = `--plugin="${pluginPath}`;
+    if (process.platform === "win32") {
+        plugin_arg = `--plugin=protoc-gen-ts_proto="${pluginPath}.cmd"`;
+    }
+
     const buildCmd =
-        `protoc --plugin="${pluginPath}" --ts_proto_opt=esModuleInterop=true --proto_path="${buildSourceDir}" --ts_proto_out="${buildOutputDir}" "${buildSourceDir}"/*.proto`
+        `protoc ${plugin_arg} --ts_proto_opt=esModuleInterop=true --proto_path="${buildSourceDir}" --ts_proto_out="${buildOutputDir}" "${buildSourceDir}/*.proto"`
 
     await exec(buildCmd, (_err, stdout, stderr) => {
         if (stderr) {
@@ -27,3 +30,5 @@ async function build_protos_from_dir(buildSourceDir, buildOutputDir) {
         }
     })
 }
+
+export { build_protos_from_dir }
