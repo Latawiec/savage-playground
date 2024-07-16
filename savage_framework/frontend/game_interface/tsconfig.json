@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ESNext",
+    "declaration": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "game_interface/proto/*": ["./dist/proto/*"],
+      "game_interface/*": ["./dist/*"]
+    }
+  },
+  "exclude": ["dist", "node_modules","./src/.scripts/*"],
+  "include": ["./src/**/*.ts"]
+}

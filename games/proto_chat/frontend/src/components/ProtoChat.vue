@@ -1,28 +1,36 @@
 <template>
-    <div class="proto-chat-main container-fluid">
+    <!-- Bootstrap needs either data-bs-theme="light" or :root accessor. -->
+    <div data-bs-theme="light" class="container-fluid">
         <h1>ProtoChat</h1>
 
         <div class="row">
-            <div class="input-group m-3">
+            <div class="input-group mb-2">
                 <span class="input-group-text">ws://</span>
                 <input ref="server_address_input" class="form-control" aria-label="Server address">
                 <span class="input-group-text">/</span>
                 <input ref="connect_path_input" class="form-control" aria-label="Server path">
                 <button v-if="!connected" class="btn btn-outline-secondary" type="button" @click="connect">Connect</button>
-                <button v-if="!connected" class="btn btn-danger" type="button" @click="disconnect">Disconnect</button>
+                <button v-if="connected" class="btn btn-danger" type="button" @click="disconnect">Disconnect</button>
             </div>
         </div>
 
-        <div v-if="connected" class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <p v-for="message in chat_messages" :key="message">{{ message }}</p>
-                </div>
-                <div class="input-group col-12">
-                    <textarea class="form-control" aria-label="Type your message here..."></textarea>
-                    <button class="btn btn-success">Send</button>
+        <div v-if="connected">
+
+            <div class="row m-0">
+                <div class="border mb-2 rounded-2 col-12 mh-100" style="overflow: auto; height: 400px; display: flex; flex-direction: column-reverse; overflow-anchor: auto !important;">
+                    <div style="transform: translateZ(0)">
+                        <p v-for="message in chat_messages" class="text-wrap text-start" :key="message" style="transform: translateZ(0)"><b>User {{ message.user_id }}:</b> {{ message.message }}</p>
+                    </div>
                 </div>
             </div>
+
+            <div class="row">
+                <div class="input-group col-12 mb-2" >
+                    <textarea ref="message_input" class="form-control" aria-label="Type your message here..." @keyup.enter="send"></textarea>
+                    <button class="btn btn-success" @click="send">Send</button>
+                </div>
+            </div>
+
         </div>
 
     </div>
@@ -30,15 +38,19 @@
 
 <script lang="ts">
 import 'bootstrap/dist/js/bootstrap.min.js'
-// If variables are not exported globally, they're not visible. So I need to do this.
-// I need to make sure it doesn't leak to any other style though.
-// import './bootstrap-core.scss'
-
 import { defineComponent } from 'vue';
 import { ProtoChatHistory, ProtoChatMessage, ProtoChatRequest, ProtoChatRequestType } from '../.gen/proto/proto_chat'
-import { Any } from 'game_interface/proto/google/protobuf/any'
+import { Any } from 'game_interface/proto/google/protobuf/any';
 
-// require("../../node_modules/bootstrap/dist/css/bootstrap.css")
+class Message {
+    user_id: number;
+    message: string;
+
+    constructor(user_id: number, message: string) {
+        this.user_id = user_id;
+        this.message = message;
+    }
+}
 
 export default defineComponent({
     name: 'ProtoChat',
@@ -47,7 +59,7 @@ export default defineComponent({
             connection_address: undefined as string | undefined,
             connected: false,
             socket: undefined as WebSocket | undefined,
-            chat_messages: [] as string[],
+            chat_messages: [] as Message[],
         }
     },
     methods: {
@@ -63,14 +75,14 @@ export default defineComponent({
             this.socket = new WebSocket(`ws://${server_address}/${connect_path}`);
             this.socket.binaryType = "arraybuffer";
 
-            this.socket.addEventListener("open", event => {
+            this.socket.addEventListener("open", _event => {
                 this.connected = true;
                 this.load_history();
                 (this.$refs.server_address_input as HTMLInputElement).disabled = true;
                 (this.$refs.connect_path_input as HTMLInputElement).disabled = true;
             });
 
-            this.socket.addEventListener("close", event => {
+            this.socket.addEventListener("close", _event => {
                 this.connected = false;
                 this.socket = undefined;
                 (this.$refs.server_address_input as HTMLInputElement).disabled = false;
@@ -85,12 +97,12 @@ export default defineComponent({
                     let chat_history = ProtoChatHistory.decode(new Uint8Array(message.value));
                     this.chat_messages = [];
                     for (var chat_message of chat_history.history) {
-                        this.chat_messages.push(`${chat_message.userId}: ${chat_message.userMessage}`);
+                        this.chat_messages.push(new Message(chat_message.userId as number, chat_message.userMessage as string));
                     }
                 } else
                 if (message.typeUrl === 'proto_chat.message') {
                     let chat_message = ProtoChatMessage.decode(new Uint8Array(message.value));
-                    this.chat_messages.push(`${chat_message.userId}: ${chat_message.userMessage}`);
+                    this.chat_messages.push(new Message(chat_message.userId as number,chat_message.userMessage as string));
                 }
             })
         },
@@ -111,6 +123,25 @@ export default defineComponent({
                 let proto_bytes = Any.encode(proto_msg).finish();
 
                 this.socket.send(proto_bytes);
+            }
+        },
+        send() {
+            if (this.socket) {
+                if (this.$refs.message_input) {
+                    let message = ProtoChatMessage.create();
+                    message.userId = 0;
+                    message.userMessage = (this.$refs.message_input as HTMLTextAreaElement).value;
+
+                    let bytes = ProtoChatMessage.encode(message).finish();
+
+                    let proto_msg = Any.create();
+                    proto_msg.typeUrl = "proto_chat.message";
+                    proto_msg.value = bytes;
+                    let proto_bytes = Any.encode(proto_msg).finish();
+
+                    this.socket.send(proto_bytes);
+                    (this.$refs.message_input as HTMLTextAreaElement).value = "";
+                }
             }
         }
     }

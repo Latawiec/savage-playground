@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import GameView from '@/views/GameView.vue'
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
+import GameView from '../views/GameView.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -8,14 +8,14 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: 'proto_chat',
-        component: () => import('proto_chat/src/components/ProtoChat.vue')
+        component: () => import('proto-chat-frontend').then(module => module.ProtoChat)
       }
     ]
   }
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes
 })
 

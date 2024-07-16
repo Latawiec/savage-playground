@@ -8,14 +8,15 @@
     ],
     "main": "./dist/proto-chat-frontend.umd.cjs",
     "module": "./dist/proto-chat-frontend.js",
+    "types": "./dist/index.d.ts",
     "exports": {
         ".": {
             "import": "./dist/proto-chat-frontend.js",
             "require": "./dist/proto-chat-frontend.umd.cjs",
             "types": "./dist/index.d.ts"
-        }
+        },
+        "./*" : "./dist/*"
     },
-    "types": "./dist/index.d.ts",
     "scripts": {
         "postinstall": "npm run proto",
 

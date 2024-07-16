@@ -8,6 +8,7 @@
     "ts-proto": "^1.181.1"
   },
   "peerDependencies": {
-    "protobufjs": "^7.3.2"
+    "protobufjs": "^7.3.2",
+    "ts-proto": "^1.181.1"
   }
 }

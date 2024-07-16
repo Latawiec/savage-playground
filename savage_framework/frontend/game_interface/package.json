@@ -1,16 +1,37 @@
 {
   "name": "game_interface",
-  "version": "0.1.0",
+  "private": true,
+  "version": "0.0.0",
   "type": "module",
+  "files": [
+    "./dist/**/*",
+    "./dist/**/*.js",
+    "./dist/**/*.d.ts"
+  ],
+  "scripts": {
+    "postinstall": "npm run proto",
+    "proto": "node ./src/.scripts/proto.js ../../../savage_communication/proto/game_interface ./src/proto",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "vite": "^5.3.4"
+  },
   "dependencies": {
-    "proto_gen": "../proto_gen",
+    "protobufjs": "^7.3.2",
+    "proto_gen": "file:/../proto_gen"
+  },
+  "peerDependencies": {
     "protobufjs": "^7.3.2"
   },
-  "scripts": {
-    "proto": "node ./.scripts/proto.js ../../../savage_communication/proto/game_interface ./proto",
-    "prepare": "npm run proto"
-  },
   "exports": {
-    "./proto/*": "./proto/*.ts"
+    "./proto/*": "./dist/proto/*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/*"
+      ]
+    }
   }
 }
