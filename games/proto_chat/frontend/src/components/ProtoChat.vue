@@ -19,7 +19,12 @@
             <div class="row m-0">
                 <div class="border mb-2 rounded-2 col-12 mh-100" style="overflow: auto; height: 400px; display: flex; flex-direction: column-reverse; overflow-anchor: auto !important;">
                     <div style="transform: translateZ(0)">
-                        <p v-for="message in chat_messages" class="text-wrap text-start" :key="message" style="transform: translateZ(0)"><b>User {{ message.user_id }}:</b> {{ message.message }}</p>
+                        <p v-for="message in chat_messages" class="text-wrap text-start" :key="message" style="transform: translateZ(0)">
+                            <hr/>
+                            <b>User {{ message.user_id }}:</b> 
+                            <br>
+                            {{ message.message }}
+                        </p>
                     </div>
                 </div>
             </div>
