@@ -5,9 +5,9 @@
 // source: game_input.proto
 
 /* eslint-disable */
-import Long from "long";
-import _m0 from "protobufjs/minimal";
+import * as _m0 from "protobufjs/minimal";
 import { Any } from "./google/protobuf/any";
+import Long = require("long");
 
 export const protobufPackage = "game_input";
 

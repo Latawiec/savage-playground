@@ -10,16 +10,17 @@
   ],
   "scripts": {
     "postinstall": "npm run proto",
-    "proto": "node ./src/.scripts/proto.js ../../../savage_communication/proto/game_interface ./src/proto",
+    "proto": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --proto_path=../../../savage_communication/proto/game_interface --ts_proto_out=./src/proto ../../../savage_communication/proto/game_interface/*.proto",
     "build": "tsc"
   },
   "devDependencies": {
     "typescript": "^5.2.2",
-    "vite": "^5.3.4"
+    "vite": "^5.3.4",
+    "ts-proto": "^1.181.1"
+
   },
   "dependencies": {
-    "protobufjs": "^7.3.2",
-    "proto_gen": "file:/../proto_gen"
+    "protobufjs": "^7.3.2"
   },
   "peerDependencies": {
     "protobufjs": "^7.3.2"
