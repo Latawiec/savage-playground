@@ -8,13 +8,14 @@ import "vertex_attributes.proto";
 
 message DrawBundle {
     uint32 layer = 1;
+    bool billboard = 2;
 
-    string vertex_shader_asset = 2;
-    VertexAttributes vertex_attributes = 3;
+    string vertex_shader_asset = 3;
+    VertexAttributes vertex_attributes = 4;
 
-    string pixel_shader_asset = 4;
-    UniformAttributes uniform_attributes = 5;
+    string pixel_shader_asset = 5;
+    UniformAttributes uniform_attributes = 6;
 
-    string mesh_asset = 6;
-    repeated Texture textures = 7;
+    string mesh_asset = 7;
+    repeated Texture textures = 8;
 }

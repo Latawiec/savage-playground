@@ -12,8 +12,8 @@ export class MemoryAssetStorage implements IAssetStorage {
         this._fs = memfs().fs;
     }
 
-    async append_from_zip_remote(file_path: string): Promise<void> {
-        const response = await fetch(file_path, {
+    async appendFromZipRemote(filePath: string): Promise<void> {
+        const response = await fetch(filePath, {
             method: 'GET',
             mode: 'cors',
             credentials: 'omit',
@@ -24,22 +24,22 @@ export class MemoryAssetStorage implements IAssetStorage {
         });
 
         if (response.status !== 200 && response.status !== 0) {
-            throw new Error(`Failed to append MemoryAssetStorage from ${file_path}: ${response.statusText}`);
+            throw new Error(`Failed to append MemoryAssetStorage from ${filePath}: ${response.statusText}`);
         }
 
         const file_buffer = await response.arrayBuffer();
-        await MemoryAssetStorage.unpack_to_mem_fs(this._fs, file_buffer);
+        await MemoryAssetStorage.UnpackToMemFs(this._fs, file_buffer);
     }
 
-    async append_from_zip_local(file_path: string): Promise<void> {
-        const fs_read_file = promisify(fs.readFile);
-        const file_buffer = await fs_read_file(file_path);
-        await MemoryAssetStorage.unpack_to_mem_fs(this._fs, file_buffer);
+    async appendFromZipLocal(filePath: string): Promise<void> {
+        const fsReadFile = promisify(fs.readFile);
+        const file_buffer = await fsReadFile(filePath);
+        await MemoryAssetStorage.UnpackToMemFs(this._fs, file_buffer);
     }
 
-    private static async unpack_to_mem_fs(mem_fs: IFs, file_data: ArrayBuffer): Promise<void> {
-        const mem_fs_write_file = promisify(mem_fs.writeFile);
-        const mem_fs_mkdir = promisify<PathLike, { recursive: true }>(mem_fs.mkdir);
+    private static async UnpackToMemFs(mem_fs: IFs, file_data: ArrayBuffer): Promise<void> {
+        const memFsWriteFile = promisify(mem_fs.writeFile);
+        const memFsMkDir = promisify<PathLike, { recursive: true }>(mem_fs.mkdir);
         const file_zip = await unzipper_read.buffer(Buffer.from(file_data));
 
         for (const entry of file_zip.files) {
@@ -49,8 +49,8 @@ export class MemoryAssetStorage implements IAssetStorage {
 
             if (type === "File") {
                 const file_buffer = await entry.buffer();
-                await mem_fs_mkdir(dirname, { recursive: true });
-                await mem_fs_write_file(filepath, file_buffer);
+                await memFsMkDir(dirname, { recursive: true });
+                await memFsWriteFile(filepath, file_buffer);
             }
         }
     }

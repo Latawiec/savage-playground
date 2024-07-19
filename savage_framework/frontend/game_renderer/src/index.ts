@@ -1,12 +1,9 @@
+import type { App } from 'vue';
+import GameRenderer from "./components/GameRenderer.vue";
+import { SceneUpdate } from './.gen/proto/scene_update';
 
-import path from "path";
-import { MemoryAssetStorage } from "./asset_storage/MemoryAssetStorage";
-
-async function main() {
-    const asset_storage = new MemoryAssetStorage();
-    await asset_storage.append_from_zip_local(path.resolve("./test.zip"));
-    const file = await asset_storage.readFile('a/a.txt');
-    console.log(`${file}`);
+function install(app: App) {
+    app.component('GameRenderer', GameRenderer);
 }
 
-main()
+export { SceneUpdate, GameRenderer, install }

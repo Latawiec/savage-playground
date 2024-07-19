@@ -5,12 +5,12 @@ package game_renderer;
 import "types.proto";
 
 message UniformAttributes {
-    map<string, float> float = 1,
+    map<string, FloatArray> float = 1;
     map<string, FloatArray> vec2 = 2;
     map<string, FloatArray> vec3 = 3;
-    map<stirng, FloatArray> vec4 = 4;
+    map<string, FloatArray> vec4 = 4;
 
-    map<string, uint32> int = 5;
+    map<string, Uint32Array> int = 5;
     map<string, Uint32Array> ivec2 = 6;
     map<string, Uint32Array> ivec3 = 7;
     map<string, Uint32Array> ivec4 = 8;
