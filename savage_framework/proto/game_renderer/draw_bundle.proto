@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package game_renderer;
+
+import "types.proto";
+import "uniform_attributes.proto";
+import "vertex_attributes.proto";
+
+message DrawBundle {
+    uint32 layer = 1;
+
+    string vertex_shader_asset = 2;
+    VertexAttributes vertex_attributes = 3;
+
+    string pixel_shader_asset = 4;
+    UniformAttributes uniform_attributes = 5;
+
+    string mesh_asset = 6;
+    repeated Texture textures = 7;
+}

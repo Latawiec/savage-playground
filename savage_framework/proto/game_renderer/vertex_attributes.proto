@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package game_renderer;
+
+message VertexAttributes {
+    map<string, string> named_buffers = 2;
+}

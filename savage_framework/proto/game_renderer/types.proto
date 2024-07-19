@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package game_renderer;
+
+message FloatArray {
+    repeated float values = 1 [packed = true];
+}
+
+message Uint32Array {
+    repeated uint32 values = 1 [packed = true];
+}
+
+message Texture {
+    uint32 bind_offset = 1;
+    string asset = 2;
+}

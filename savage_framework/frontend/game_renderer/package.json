@@ -1,0 +1,21 @@
+{
+  "name": "game_renderer",
+  "version": "1.0.0",
+  "description": "Game Renderer for frontend",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc"
+  },
+  "author": "",
+  "devDependencies": {
+    "@types/node": "^20.14.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "@types/unzipper": "^0.10.9",
+    "memfs": "^4.9.3",
+    "unzipper": "^0.12.2"
+  }
+}
