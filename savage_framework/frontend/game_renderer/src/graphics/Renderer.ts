@@ -3,6 +3,7 @@ import { SceneUpdate, UpdateType } from "../.gen/proto/scene_update";
 import { UniformAttributes } from "../.gen/proto/uniform_attributes";
 import { IAssetStorage } from "../asset_storage/IAssetStorage";
 import { GeneralDrawCommand } from "./command/GeneralDrawCommand";
+import { PresentDrawCommand } from "./command/PresentDrawCommand";
 import { IDrawCommand } from "./command/IDrawCommand";
 import { CommitedResourceStorage } from "./commited_storage/CommitedResourceStorage";
 import { Mesh } from "./commited_storage/MeshStorage";
@@ -11,16 +12,17 @@ import { Texture } from "./commited_storage/TextureStorage";
 import { ShaderValueType } from "./common/GLTypes";
 import { BackBufferTarget } from "./render_target/BackBufferTarget";
 import { MainTarget } from "./render_target/MainTarget";
-import { RenderTarget } from "./render_target/RenderTarget";
+import { loadLocalAssets } from "./assets/LocalAssets";
 
 
 export class Renderer {
     private _gl: WebGLRenderingContext;
     private _resourcesStorage: CommitedResourceStorage;
-    private _backBufferRenderTarget: RenderTarget;
-    private _mainRenderTarget: RenderTarget;
+    private _backBufferRenderTarget: BackBufferTarget;
+    private _mainRenderTarget: MainTarget;
     private _sceneCache: Map<string, DrawBundle>;
     private _drawList: IDrawCommand[];
+    private _initialized = false;
 
     constructor(canvas: HTMLCanvasElement, assets: IAssetStorage) {
         const gl = canvas.getContext('webgl2', {
@@ -39,7 +41,17 @@ export class Renderer {
         this._drawList = [];
     }
 
+    async initialize() {
+        await loadLocalAssets(this._resourcesStorage);
+        this._initialized = true;
+    }
+
     async update(scene_update: SceneUpdate) {
+        if (!this._initialized) {
+            console.warn(`Cannot render yet... Initialization hasn't finished`);
+            return;
+        }
+
         if (scene_update.type === UpdateType.Increment) {
             throw new Error('Increment rendering not yet implemented');
         }
@@ -48,7 +60,7 @@ export class Renderer {
             this._sceneCache.clear();
         }
 
-        const drawCommands = [];
+        const drawCommands = [] as IDrawCommand[];
 
         for (const element of scene_update.elements) {
             const id = element.id;
@@ -87,6 +99,10 @@ export class Renderer {
     }
 
     async render() {
+        if (!this._initialized) {
+            console.warn(`Cannot render yet... Initialization hasn't finished`);
+            return;
+        }
         try {
             await this.clearOutput();
             await this.executeDrawCommands();
@@ -106,23 +122,27 @@ export class Renderer {
     private async clearOutput() {
         const gl = this._gl;
 
-        this._mainRenderTarget.bind();
-        gl.clearColor(0.5, 0.5, 0.5, 1.0);
+        this._backBufferRenderTarget.bind();
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clearDepth(1.0);
-        gl.disable(gl.DEPTH_TEST);
-        gl.disable(gl.BLEND);
+        gl.enable(gl.DEPTH_TEST);
+        gl.enable(gl.BLEND);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     }
 
     private async executeDrawCommands() {
-        this._mainRenderTarget.bind();
+        this._backBufferRenderTarget.bind();
         for (const command of this._drawList) {
             command.draw(this._gl);
         }
     }
 
     private async present() {
-        // For now we're directly drawing to the main buffer.
+        const gl = this._gl;
+        const present_command = await PresentDrawCommand.fromResources(this._resourcesStorage, this._backBufferRenderTarget.colorTexture);
+
+        this._mainRenderTarget.bind();
+        present_command.draw(gl);
     }
 
     private async checkErrors() {

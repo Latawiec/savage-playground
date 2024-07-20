@@ -55,13 +55,13 @@ export class PresentDrawCommand implements IDrawCommand {
     private prepareVertexAttributes(gl: WebGLRenderingContext): void {
         const vertexPositionAttribLoc = gl.getAttribLocation(this._program.glShaderProgram, 'aVertexPosition')
         gl.bindBuffer(gl.ARRAY_BUFFER, this._mesh.glVertexBuffer)
-        gl.vertexAttribPointer(vertexPositionAttribLoc, 3, gl.FLOAT, false, 0, 0)
-        console.log(vertexPositionAttribLoc)
+        gl.vertexAttribPointer(vertexPositionAttribLoc, 2, gl.FLOAT, false, 0, 0)
         gl.enableVertexAttribArray(vertexPositionAttribLoc)
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._mesh.glIndexBuffer)
 
         const uvBuffer = this._mesh.getNamedGlBuffer('uv')
         const uvAttribLoc = gl.getAttribLocation(this._program.glShaderProgram, 'aUvCoord')
+
         if (uvBuffer && uvAttribLoc !== -1) {
             gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer.glBuffer)
             gl.vertexAttribPointer(uvAttribLoc, uvBuffer.size, uvBuffer.glType, uvBuffer.normalize, 0, 0)

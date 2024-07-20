@@ -16,10 +16,11 @@ export default defineComponent({
             required: true,
         }
     },
-    mounted() {
+    async mounted() {
         const canvasElement = this.$refs.gameRendererCanvas as HTMLCanvasElement;
         const assetStorage = this.assetStorage;
         this.renderer = new Renderer(canvasElement, assetStorage);
+        await this.renderer.initialize();
     },
     data() {
         return {

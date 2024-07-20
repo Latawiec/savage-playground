@@ -1,9 +1,11 @@
-attribute vec4 aVertexPosition;
-attribute vec2 aUvCoord;
+#version 300 es
 
-varying lowp vec2 vUvCoord;
+in vec2 aVertexPosition;
+in vec2 aUvCoord;
+
+out vec2 vUvCoord;
 
 void main(void) {
-    gl_Position = vec4(aVertexPosition.xyz, 1);
+    gl_Position = vec4(aVertexPosition.xy, 0.0, 1.0);
     vUvCoord = aUvCoord.xy;
 }
