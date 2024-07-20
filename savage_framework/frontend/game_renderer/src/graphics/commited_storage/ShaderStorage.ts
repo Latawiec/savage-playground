@@ -41,12 +41,13 @@ export class Shader {
             throw new Error('Failed to create shader.')
         }
 
-        gl.shaderSource(shader, source)
-        gl.compileShader(shader)
-
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            const err = new Error(`Failed to compile shader: ${gl.getShaderInfoLog(shader)}`);
             gl.deleteShader(shader)
-            throw new Error(`Failed to compile shader: ${gl.getShaderInfoLog(shader)}`)
+            throw err;
         }
         return shader
     }
@@ -81,7 +82,7 @@ export class ShaderStorage {
         }
 
         try {
-            const shaderSource = (await this._assetStorage.readFile(assetPath)).toString()
+            const shaderSource = (await this._assetStorage.readFile(assetPath)).toString();
             const shader = this.write(assetPath, type, shaderSource)
             return shader
         } catch (e) {

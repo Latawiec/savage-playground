@@ -4,31 +4,40 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { SceneUpdate, UpdateType } from "../.gen/proto/scene_update";
-import { DrawBundle } from "../.gen/proto/draw_bundle";
+import { SceneUpdate } from "../.gen/proto/scene_update";
+import { Renderer } from "../graphics/Renderer";
 import { IAssetStorage } from "../asset_storage/IAssetStorage";
-import { IDrawCommand } from "../graphics/command/IDrawCommand";
 
 export default defineComponent({
     name: 'GameRenderer',
     props: {
-        asset_storage: {
+        assetStorage: {
             type: Object as PropType<IAssetStorage>,
             required: true,
         }
     },
+    mounted() {
+        const canvasElement = this.$refs.gameRendererCanvas as HTMLCanvasElement;
+        const assetStorage = this.assetStorage;
+        this.renderer = new Renderer(canvasElement, assetStorage);
+    },
     data() {
         return {
-            scene: new Map<string, DrawBundle>(),
-            commands: [] as IDrawCommand[],
+            renderer: undefined as undefined | Renderer
         }
     },
     methods: {
-        update(scene_update: SceneUpdate) {
-
+        resolution(width: number, height: number) {
+            const canvas = (this.$refs.gameRendererCanvas as HTMLCanvasElement);
+            canvas.width = width;
+            canvas.height = height;
+            this.renderer?.setResolution(width, height);
         },
-        render() {
-            
+        async update(scene_update: SceneUpdate) {
+            await this.renderer?.update(scene_update);
+        },
+        async render() {
+            await this.renderer?.render();
         }
     }
 })

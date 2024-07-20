@@ -105,15 +105,15 @@ export class Mesh {
     ): Mesh {
         const mesh = new Mesh(gl, Float32Array.from(meshData.vertices), Uint16Array.from(meshData.indices))
         if (meshData.namedBuffers !== undefined) {
-            for (const bufferBame in meshData.namedBuffers) {
-                const bufferContent = meshData.namedBuffers[bufferBame]
+            for (const bufferName in meshData.namedBuffers) {
+                const bufferContent = meshData.namedBuffers[bufferName]
                 const bufferData = JsonMesh.matchBufferByType(bufferContent.type, bufferContent.data)
                 const bufferGlType = JsonMesh.matchGlTypeByType(bufferContent.type)
                 const normalize = bufferContent.normalize ? bufferContent.normalize : false
-
+                
                 mesh.setNamedGlBuffer(
                     gl,
-                    bufferBame,
+                    bufferName,
                     bufferGlType,
                     bufferContent.size,
                     normalize,

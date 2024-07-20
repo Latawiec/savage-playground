@@ -1,4 +1,4 @@
-import { PNG } from 'pngjs'
+import { PNG } from 'pngjs/browser'
 import { IAssetStorage } from '../../asset_storage/IAssetStorage'
 
 type Components = 1 | 2 | 3 | 4; // Grayscale: 1, Gayscale+Alpha: 2 etc...

@@ -92,6 +92,7 @@ export class GeneralDrawCommand implements IDrawCommand {
         const normalize = meshNamedBuffer.normalize
 
         gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer)
+        gl.enableVertexAttribArray(attribLoc)
         gl.vertexAttribPointer(attribLoc, size, glType, normalize, 0, 0)
       }
     }
