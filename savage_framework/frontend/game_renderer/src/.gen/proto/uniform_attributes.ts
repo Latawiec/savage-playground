@@ -6,40 +6,40 @@
 
 /* eslint-disable */
 import * as _m0 from "protobufjs/minimal";
-import { FloatArray, Uint32Array } from "./types";
+import { Float32Array, Uint32Array } from "./types";
 
 export const protobufPackage = "game_renderer";
 
 export interface UniformAttributes {
-  float: { [key: string]: FloatArray };
-  vec2: { [key: string]: FloatArray };
-  vec3: { [key: string]: FloatArray };
-  vec4: { [key: string]: FloatArray };
+  float: { [key: string]: Float32Array };
+  vec2: { [key: string]: Float32Array };
+  vec3: { [key: string]: Float32Array };
+  vec4: { [key: string]: Float32Array };
   int: { [key: string]: Uint32Array };
   ivec2: { [key: string]: Uint32Array };
   ivec3: { [key: string]: Uint32Array };
   ivec4: { [key: string]: Uint32Array };
-  mat4: { [key: string]: FloatArray };
+  mat4: { [key: string]: Float32Array };
 }
 
 export interface UniformAttributes_FloatEntry {
   key: string;
-  value: FloatArray | undefined;
+  value: Float32Array | undefined;
 }
 
 export interface UniformAttributes_Vec2Entry {
   key: string;
-  value: FloatArray | undefined;
+  value: Float32Array | undefined;
 }
 
 export interface UniformAttributes_Vec3Entry {
   key: string;
-  value: FloatArray | undefined;
+  value: Float32Array | undefined;
 }
 
 export interface UniformAttributes_Vec4Entry {
   key: string;
-  value: FloatArray | undefined;
+  value: Float32Array | undefined;
 }
 
 export interface UniformAttributes_IntEntry {
@@ -64,7 +64,7 @@ export interface UniformAttributes_Ivec4Entry {
 
 export interface UniformAttributes_Mat4Entry {
   key: string;
-  value: FloatArray | undefined;
+  value: Float32Array | undefined;
 }
 
 function createBaseUniformAttributes(): UniformAttributes {
@@ -212,26 +212,26 @@ export const UniformAttributes = {
   fromJSON(object: any): UniformAttributes {
     return {
       float: isObject(object.float)
-        ? Object.entries(object.float).reduce<{ [key: string]: FloatArray }>((acc, [key, value]) => {
-          acc[key] = FloatArray.fromJSON(value);
+        ? Object.entries(object.float).reduce<{ [key: string]: Float32Array }>((acc, [key, value]) => {
+          acc[key] = Float32Array.fromJSON(value);
           return acc;
         }, {})
         : {},
       vec2: isObject(object.vec2)
-        ? Object.entries(object.vec2).reduce<{ [key: string]: FloatArray }>((acc, [key, value]) => {
-          acc[key] = FloatArray.fromJSON(value);
+        ? Object.entries(object.vec2).reduce<{ [key: string]: Float32Array }>((acc, [key, value]) => {
+          acc[key] = Float32Array.fromJSON(value);
           return acc;
         }, {})
         : {},
       vec3: isObject(object.vec3)
-        ? Object.entries(object.vec3).reduce<{ [key: string]: FloatArray }>((acc, [key, value]) => {
-          acc[key] = FloatArray.fromJSON(value);
+        ? Object.entries(object.vec3).reduce<{ [key: string]: Float32Array }>((acc, [key, value]) => {
+          acc[key] = Float32Array.fromJSON(value);
           return acc;
         }, {})
         : {},
       vec4: isObject(object.vec4)
-        ? Object.entries(object.vec4).reduce<{ [key: string]: FloatArray }>((acc, [key, value]) => {
-          acc[key] = FloatArray.fromJSON(value);
+        ? Object.entries(object.vec4).reduce<{ [key: string]: Float32Array }>((acc, [key, value]) => {
+          acc[key] = Float32Array.fromJSON(value);
           return acc;
         }, {})
         : {},
@@ -260,8 +260,8 @@ export const UniformAttributes = {
         }, {})
         : {},
       mat4: isObject(object.mat4)
-        ? Object.entries(object.mat4).reduce<{ [key: string]: FloatArray }>((acc, [key, value]) => {
-          acc[key] = FloatArray.fromJSON(value);
+        ? Object.entries(object.mat4).reduce<{ [key: string]: Float32Array }>((acc, [key, value]) => {
+          acc[key] = Float32Array.fromJSON(value);
           return acc;
         }, {})
         : {},
@@ -275,7 +275,7 @@ export const UniformAttributes = {
       if (entries.length > 0) {
         obj.float = {};
         entries.forEach(([k, v]) => {
-          obj.float[k] = FloatArray.toJSON(v);
+          obj.float[k] = Float32Array.toJSON(v);
         });
       }
     }
@@ -284,7 +284,7 @@ export const UniformAttributes = {
       if (entries.length > 0) {
         obj.vec2 = {};
         entries.forEach(([k, v]) => {
-          obj.vec2[k] = FloatArray.toJSON(v);
+          obj.vec2[k] = Float32Array.toJSON(v);
         });
       }
     }
@@ -293,7 +293,7 @@ export const UniformAttributes = {
       if (entries.length > 0) {
         obj.vec3 = {};
         entries.forEach(([k, v]) => {
-          obj.vec3[k] = FloatArray.toJSON(v);
+          obj.vec3[k] = Float32Array.toJSON(v);
         });
       }
     }
@@ -302,7 +302,7 @@ export const UniformAttributes = {
       if (entries.length > 0) {
         obj.vec4 = {};
         entries.forEach(([k, v]) => {
-          obj.vec4[k] = FloatArray.toJSON(v);
+          obj.vec4[k] = Float32Array.toJSON(v);
         });
       }
     }
@@ -347,7 +347,7 @@ export const UniformAttributes = {
       if (entries.length > 0) {
         obj.mat4 = {};
         entries.forEach(([k, v]) => {
-          obj.mat4[k] = FloatArray.toJSON(v);
+          obj.mat4[k] = Float32Array.toJSON(v);
         });
       }
     }
@@ -359,27 +359,27 @@ export const UniformAttributes = {
   },
   fromPartial<I extends Exact<DeepPartial<UniformAttributes>, I>>(object: I): UniformAttributes {
     const message = createBaseUniformAttributes();
-    message.float = Object.entries(object.float ?? {}).reduce<{ [key: string]: FloatArray }>((acc, [key, value]) => {
+    message.float = Object.entries(object.float ?? {}).reduce<{ [key: string]: Float32Array }>((acc, [key, value]) => {
       if (value !== undefined) {
-        acc[key] = FloatArray.fromPartial(value);
+        acc[key] = Float32Array.fromPartial(value);
       }
       return acc;
     }, {});
-    message.vec2 = Object.entries(object.vec2 ?? {}).reduce<{ [key: string]: FloatArray }>((acc, [key, value]) => {
+    message.vec2 = Object.entries(object.vec2 ?? {}).reduce<{ [key: string]: Float32Array }>((acc, [key, value]) => {
       if (value !== undefined) {
-        acc[key] = FloatArray.fromPartial(value);
+        acc[key] = Float32Array.fromPartial(value);
       }
       return acc;
     }, {});
-    message.vec3 = Object.entries(object.vec3 ?? {}).reduce<{ [key: string]: FloatArray }>((acc, [key, value]) => {
+    message.vec3 = Object.entries(object.vec3 ?? {}).reduce<{ [key: string]: Float32Array }>((acc, [key, value]) => {
       if (value !== undefined) {
-        acc[key] = FloatArray.fromPartial(value);
+        acc[key] = Float32Array.fromPartial(value);
       }
       return acc;
     }, {});
-    message.vec4 = Object.entries(object.vec4 ?? {}).reduce<{ [key: string]: FloatArray }>((acc, [key, value]) => {
+    message.vec4 = Object.entries(object.vec4 ?? {}).reduce<{ [key: string]: Float32Array }>((acc, [key, value]) => {
       if (value !== undefined) {
-        acc[key] = FloatArray.fromPartial(value);
+        acc[key] = Float32Array.fromPartial(value);
       }
       return acc;
     }, {});
@@ -407,9 +407,9 @@ export const UniformAttributes = {
       }
       return acc;
     }, {});
-    message.mat4 = Object.entries(object.mat4 ?? {}).reduce<{ [key: string]: FloatArray }>((acc, [key, value]) => {
+    message.mat4 = Object.entries(object.mat4 ?? {}).reduce<{ [key: string]: Float32Array }>((acc, [key, value]) => {
       if (value !== undefined) {
-        acc[key] = FloatArray.fromPartial(value);
+        acc[key] = Float32Array.fromPartial(value);
       }
       return acc;
     }, {});
@@ -427,7 +427,7 @@ export const UniformAttributes_FloatEntry = {
       writer.uint32(10).string(message.key);
     }
     if (message.value !== undefined) {
-      FloatArray.encode(message.value, writer.uint32(18).fork()).ldelim();
+      Float32Array.encode(message.value, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -451,7 +451,7 @@ export const UniformAttributes_FloatEntry = {
             break;
           }
 
-          message.value = FloatArray.decode(reader, reader.uint32());
+          message.value = Float32Array.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -465,7 +465,7 @@ export const UniformAttributes_FloatEntry = {
   fromJSON(object: any): UniformAttributes_FloatEntry {
     return {
       key: isSet(object.key) ? globalThis.String(object.key) : "",
-      value: isSet(object.value) ? FloatArray.fromJSON(object.value) : undefined,
+      value: isSet(object.value) ? Float32Array.fromJSON(object.value) : undefined,
     };
   },
 
@@ -475,7 +475,7 @@ export const UniformAttributes_FloatEntry = {
       obj.key = message.key;
     }
     if (message.value !== undefined) {
-      obj.value = FloatArray.toJSON(message.value);
+      obj.value = Float32Array.toJSON(message.value);
     }
     return obj;
   },
@@ -487,7 +487,7 @@ export const UniformAttributes_FloatEntry = {
     const message = createBaseUniformAttributes_FloatEntry();
     message.key = object.key ?? "";
     message.value = (object.value !== undefined && object.value !== null)
-      ? FloatArray.fromPartial(object.value)
+      ? Float32Array.fromPartial(object.value)
       : undefined;
     return message;
   },
@@ -503,7 +503,7 @@ export const UniformAttributes_Vec2Entry = {
       writer.uint32(10).string(message.key);
     }
     if (message.value !== undefined) {
-      FloatArray.encode(message.value, writer.uint32(18).fork()).ldelim();
+      Float32Array.encode(message.value, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -527,7 +527,7 @@ export const UniformAttributes_Vec2Entry = {
             break;
           }
 
-          message.value = FloatArray.decode(reader, reader.uint32());
+          message.value = Float32Array.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -541,7 +541,7 @@ export const UniformAttributes_Vec2Entry = {
   fromJSON(object: any): UniformAttributes_Vec2Entry {
     return {
       key: isSet(object.key) ? globalThis.String(object.key) : "",
-      value: isSet(object.value) ? FloatArray.fromJSON(object.value) : undefined,
+      value: isSet(object.value) ? Float32Array.fromJSON(object.value) : undefined,
     };
   },
 
@@ -551,7 +551,7 @@ export const UniformAttributes_Vec2Entry = {
       obj.key = message.key;
     }
     if (message.value !== undefined) {
-      obj.value = FloatArray.toJSON(message.value);
+      obj.value = Float32Array.toJSON(message.value);
     }
     return obj;
   },
@@ -563,7 +563,7 @@ export const UniformAttributes_Vec2Entry = {
     const message = createBaseUniformAttributes_Vec2Entry();
     message.key = object.key ?? "";
     message.value = (object.value !== undefined && object.value !== null)
-      ? FloatArray.fromPartial(object.value)
+      ? Float32Array.fromPartial(object.value)
       : undefined;
     return message;
   },
@@ -579,7 +579,7 @@ export const UniformAttributes_Vec3Entry = {
       writer.uint32(10).string(message.key);
     }
     if (message.value !== undefined) {
-      FloatArray.encode(message.value, writer.uint32(18).fork()).ldelim();
+      Float32Array.encode(message.value, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -603,7 +603,7 @@ export const UniformAttributes_Vec3Entry = {
             break;
           }
 
-          message.value = FloatArray.decode(reader, reader.uint32());
+          message.value = Float32Array.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -617,7 +617,7 @@ export const UniformAttributes_Vec3Entry = {
   fromJSON(object: any): UniformAttributes_Vec3Entry {
     return {
       key: isSet(object.key) ? globalThis.String(object.key) : "",
-      value: isSet(object.value) ? FloatArray.fromJSON(object.value) : undefined,
+      value: isSet(object.value) ? Float32Array.fromJSON(object.value) : undefined,
     };
   },
 
@@ -627,7 +627,7 @@ export const UniformAttributes_Vec3Entry = {
       obj.key = message.key;
     }
     if (message.value !== undefined) {
-      obj.value = FloatArray.toJSON(message.value);
+      obj.value = Float32Array.toJSON(message.value);
     }
     return obj;
   },
@@ -639,7 +639,7 @@ export const UniformAttributes_Vec3Entry = {
     const message = createBaseUniformAttributes_Vec3Entry();
     message.key = object.key ?? "";
     message.value = (object.value !== undefined && object.value !== null)
-      ? FloatArray.fromPartial(object.value)
+      ? Float32Array.fromPartial(object.value)
       : undefined;
     return message;
   },
@@ -655,7 +655,7 @@ export const UniformAttributes_Vec4Entry = {
       writer.uint32(10).string(message.key);
     }
     if (message.value !== undefined) {
-      FloatArray.encode(message.value, writer.uint32(18).fork()).ldelim();
+      Float32Array.encode(message.value, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -679,7 +679,7 @@ export const UniformAttributes_Vec4Entry = {
             break;
           }
 
-          message.value = FloatArray.decode(reader, reader.uint32());
+          message.value = Float32Array.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -693,7 +693,7 @@ export const UniformAttributes_Vec4Entry = {
   fromJSON(object: any): UniformAttributes_Vec4Entry {
     return {
       key: isSet(object.key) ? globalThis.String(object.key) : "",
-      value: isSet(object.value) ? FloatArray.fromJSON(object.value) : undefined,
+      value: isSet(object.value) ? Float32Array.fromJSON(object.value) : undefined,
     };
   },
 
@@ -703,7 +703,7 @@ export const UniformAttributes_Vec4Entry = {
       obj.key = message.key;
     }
     if (message.value !== undefined) {
-      obj.value = FloatArray.toJSON(message.value);
+      obj.value = Float32Array.toJSON(message.value);
     }
     return obj;
   },
@@ -715,7 +715,7 @@ export const UniformAttributes_Vec4Entry = {
     const message = createBaseUniformAttributes_Vec4Entry();
     message.key = object.key ?? "";
     message.value = (object.value !== undefined && object.value !== null)
-      ? FloatArray.fromPartial(object.value)
+      ? Float32Array.fromPartial(object.value)
       : undefined;
     return message;
   },
@@ -1035,7 +1035,7 @@ export const UniformAttributes_Mat4Entry = {
       writer.uint32(10).string(message.key);
     }
     if (message.value !== undefined) {
-      FloatArray.encode(message.value, writer.uint32(18).fork()).ldelim();
+      Float32Array.encode(message.value, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -1059,7 +1059,7 @@ export const UniformAttributes_Mat4Entry = {
             break;
           }
 
-          message.value = FloatArray.decode(reader, reader.uint32());
+          message.value = Float32Array.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1073,7 +1073,7 @@ export const UniformAttributes_Mat4Entry = {
   fromJSON(object: any): UniformAttributes_Mat4Entry {
     return {
       key: isSet(object.key) ? globalThis.String(object.key) : "",
-      value: isSet(object.value) ? FloatArray.fromJSON(object.value) : undefined,
+      value: isSet(object.value) ? Float32Array.fromJSON(object.value) : undefined,
     };
   },
 
@@ -1083,7 +1083,7 @@ export const UniformAttributes_Mat4Entry = {
       obj.key = message.key;
     }
     if (message.value !== undefined) {
-      obj.value = FloatArray.toJSON(message.value);
+      obj.value = Float32Array.toJSON(message.value);
     }
     return obj;
   },
@@ -1095,7 +1095,7 @@ export const UniformAttributes_Mat4Entry = {
     const message = createBaseUniformAttributes_Mat4Entry();
     message.key = object.key ?? "";
     message.value = (object.value !== undefined && object.value !== null)
-      ? FloatArray.fromPartial(object.value)
+      ? Float32Array.fromPartial(object.value)
       : undefined;
     return message;
   },

@@ -3,6 +3,7 @@ syntax = "proto3";
 package game_renderer;
 
 import "draw_bundle.proto";
+import "uniform_attributes.proto";
 
 enum UpdateType {
     Full = 0;
@@ -15,6 +16,7 @@ message SceneElement {
 }
 
 message SceneUpdate {
-    UpdateType type = 1;
-    repeated SceneElement elements = 2;
+    optional UpdateType type = 1;
+    optional UniformAttributes shared_attributes = 2;
+    repeated SceneElement elements = 3;
 }

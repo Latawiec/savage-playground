@@ -9,7 +9,7 @@ import * as _m0 from "protobufjs/minimal";
 
 export const protobufPackage = "game_renderer";
 
-export interface FloatArray {
+export interface Float32Array {
   values: number[];
 }
 
@@ -22,12 +22,12 @@ export interface Texture {
   asset: string;
 }
 
-function createBaseFloatArray(): FloatArray {
+function createBaseFloat32Array(): Float32Array {
   return { values: [] };
 }
 
-export const FloatArray = {
-  encode(message: FloatArray, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const Float32Array = {
+  encode(message: Float32Array, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     writer.uint32(10).fork();
     for (const v of message.values) {
       writer.float(v);
@@ -36,10 +36,10 @@ export const FloatArray = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): FloatArray {
+  decode(input: _m0.Reader | Uint8Array, length?: number): Float32Array {
     const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFloatArray();
+    const message = createBaseFloat32Array();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -69,13 +69,13 @@ export const FloatArray = {
     return message;
   },
 
-  fromJSON(object: any): FloatArray {
+  fromJSON(object: any): Float32Array {
     return {
       values: globalThis.Array.isArray(object?.values) ? object.values.map((e: any) => globalThis.Number(e)) : [],
     };
   },
 
-  toJSON(message: FloatArray): unknown {
+  toJSON(message: Float32Array): unknown {
     const obj: any = {};
     if (message.values?.length) {
       obj.values = message.values;
@@ -83,11 +83,11 @@ export const FloatArray = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<FloatArray>, I>>(base?: I): FloatArray {
-    return FloatArray.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<Float32Array>, I>>(base?: I): Float32Array {
+    return Float32Array.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<FloatArray>, I>>(object: I): FloatArray {
-    const message = createBaseFloatArray();
+  fromPartial<I extends Exact<DeepPartial<Float32Array>, I>>(object: I): Float32Array {
+    const message = createBaseFloat32Array();
     message.values = object.values?.map((e) => e) || [];
     return message;
   },

@@ -15,7 +15,7 @@ import { SceneElement, SceneUpdate, UpdateType } from "../.gen/proto/scene_updat
 import { DrawBundle } from "../.gen/proto/draw_bundle";
 import { VertexAttributes } from "../.gen/proto/vertex_attributes";
 import { UniformAttributes } from "../.gen/proto/uniform_attributes";
-import { FloatArray } from "../.gen/proto/types";
+import { Float32Array } from "../.gen/proto/types";
 import { mat4, vec3 } from 'gl-matrix';
 
 const assetStorage = ref<MemoryAssetStorage>();
@@ -34,29 +34,20 @@ onMounted(() => {
 async function draw_asset(mesh_asset: string, translation: vec3, time: number): Promise<SceneElement> {
   var seconds = time;
 
-  const projection = mat4.perspective(mat4.create(), 45 * Math.PI / 180, 1.0, 0.1, 1000); 
-  const projectionFloatArray = FloatArray.create();
-  projectionFloatArray.values = Array.from(projection);
-  
-  const view = mat4.translate(mat4.create(), mat4.create(), vec3.fromValues(0, 0, -10));
-
-  const viewFloatArray = FloatArray.create();
-  viewFloatArray.values = Array.from(view);
-
   const identityMat = [
     1.0, 0.0, 0.0, 0.0,
     0.0, 1.0, 0.0, 0.0,
     0.0, 0.0, 1.0, 0.0,
     0.0, 0.0, 0.0, 1.0
   ];
-  const identityMapFloatArray = FloatArray.create();
+  const identityMapFloatArray = Float32Array.create();
   identityMapFloatArray.values = identityMat;
 
   const phase = (2 * Math.PI / 5.0) * seconds;
   let model = mat4.translate(mat4.create(), mat4.create(), translation);
   model = mat4.rotate(model, model, 2 * phase, vec3.fromValues(0, 1, 0));
   model = mat4.rotate(model, model, phase, vec3.fromValues(1, 1, 0));
-  const modelFloatArray = FloatArray.create();
+  const modelFloatArray = Float32Array.create();
   modelFloatArray.values = Array.from(model);
 
   const draw_bundle = DrawBundle.create();
@@ -72,9 +63,7 @@ async function draw_asset(mesh_asset: string, translation: vec3, time: number): 
   };
   draw_bundle.uniformAttributes = UniformAttributes.create();
   draw_bundle.uniformAttributes.mat4 = {
-    "model": modelFloatArray,
-    "view": viewFloatArray,
-    "projection": projectionFloatArray
+    "model": modelFloatArray
   };
 
   const scene_element = SceneElement.create();
@@ -91,6 +80,22 @@ async function draw() {
   update.type = UpdateType.Full;
 
   var seconds = new Date().getTime() / 1000;
+  const projection = mat4.perspective(mat4.create(), 45 * Math.PI / 180, 1.0, 0.1, 1000); 
+  const projectionFloatArray = Float32Array.create();
+  projectionFloatArray.values = Array.from(projection);
+  
+  const view = mat4.translate(mat4.create(), mat4.create(), vec3.fromValues(0, 0, -10));
+
+  const viewFloatArray = Float32Array.create();
+  viewFloatArray.values = Array.from(view);
+
+  const sharedAttrs = UniformAttributes.create();
+  sharedAttrs.mat4 = {
+    'view': viewFloatArray,
+    'projection': projectionFloatArray
+  };
+
+  update.sharedAttributes = sharedAttrs;
 
   update.elements.push(await draw_asset('/assets/sphere.json', vec3.fromValues(2, 2, 0), seconds));
   update.elements.push(await draw_asset('/assets/torus.json', vec3.fromValues(2, -2, 0), seconds));

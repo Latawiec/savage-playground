@@ -22,6 +22,7 @@ export class Renderer {
     private _mainRenderTarget: MainTarget;
     private _sceneCache: Map<string, DrawBundle>;
     private _drawList: IDrawCommand[];
+    private _sharedAttributes: Map<ShaderValueType, Map<string, number[]>>;
     private _initialized = false;
 
     constructor(canvas: HTMLCanvasElement, assets: IAssetStorage) {
@@ -38,6 +39,7 @@ export class Renderer {
         this._backBufferRenderTarget = new BackBufferTarget(gl, canvas.width, canvas.height);
         this._mainRenderTarget = new MainTarget(gl, canvas.width, canvas.height);
         this._sceneCache = new Map();
+        this._sharedAttributes = new Map();
         this._drawList = [];
     }
 
@@ -58,6 +60,28 @@ export class Renderer {
 
         if (scene_update.type === UpdateType.Full) {
             this._sceneCache.clear();
+            this._sharedAttributes.clear();
+        }
+
+        if (scene_update.sharedAttributes) {
+            const uniforms = scene_update.sharedAttributes
+
+            for (const valueType in uniforms) {
+                const type = valueType as ShaderValueType;
+                const typedUniformsOpt = uniforms[valueType as keyof UniformAttributes]
+
+                if (typedUniformsOpt) {
+                    const typedUniforms = typedUniformsOpt;
+                    const uniformValues = new Map<string, number[]>();
+
+                    for (const uniformName in typedUniforms) {
+                        const uniformValue = typedUniforms[uniformName]
+                        uniformValues.set(uniformName, uniformValue.values)
+                    }
+
+                    this._sharedAttributes.set(type, uniformValues)
+                }
+            }
         }
 
         const drawCommands = [] as IDrawCommand[];
@@ -213,7 +237,19 @@ export class Renderer {
             return undefined
         }
 
-        const uniformsMap: Map<ShaderValueType, Map<string, number[]>> = new Map()
+        const uniformsMap: Map<ShaderValueType, Map<string, number[]>> = new Map();
+
+        // Try to apply global attributes frist.
+        {
+            const uniforms = this._sharedAttributes;
+            for (const [type, attributes] of uniforms) {
+                const uniformValues = new Map<string, number[]>();
+                for (const [attr_name, attr_value] of attributes) {
+                    uniformValues.set(attr_name, attr_value)
+                }
+                uniformsMap.set(type, uniformValues)
+            }
+        }
 
         // Uniforms are not mandatory.
         if (localUniformsOpt) {
@@ -225,13 +261,12 @@ export class Renderer {
 
                 if (typedUniformsOpt) {
                     const typedUniforms = typedUniformsOpt;
-                    const uniformValues = new Map<string, number[]>();
-
+                    const uniformValues = uniformsMap.get(type) ? uniformsMap.get(type)! : new Map<string, number[]>();
+                    
                     for (const uniformName in typedUniforms) {
                         const uniformValue = typedUniforms[uniformName]
                         uniformValues.set(uniformName, uniformValue.values)
                     }
-
                     uniformsMap.set(type, uniformValues)
                 }
             }

@@ -13,50 +13,50 @@ import { VertexAttributes } from "./vertex_attributes";
 export const protobufPackage = "game_renderer";
 
 export interface DrawBundle {
-  layer: number;
-  billboard: boolean;
-  vertexShaderAsset: string;
-  vertexAttributes: VertexAttributes | undefined;
-  pixelShaderAsset: string;
-  uniformAttributes: UniformAttributes | undefined;
-  meshAsset: string;
+  layer?: number | undefined;
+  billboard?: boolean | undefined;
+  vertexShaderAsset?: string | undefined;
+  vertexAttributes?: VertexAttributes | undefined;
+  pixelShaderAsset?: string | undefined;
+  uniformAttributes?: UniformAttributes | undefined;
+  meshAsset?: string | undefined;
   textures: Texture[];
 }
 
 function createBaseDrawBundle(): DrawBundle {
   return {
-    layer: 0,
-    billboard: false,
-    vertexShaderAsset: "",
+    layer: undefined,
+    billboard: undefined,
+    vertexShaderAsset: undefined,
     vertexAttributes: undefined,
-    pixelShaderAsset: "",
+    pixelShaderAsset: undefined,
     uniformAttributes: undefined,
-    meshAsset: "",
+    meshAsset: undefined,
     textures: [],
   };
 }
 
 export const DrawBundle = {
   encode(message: DrawBundle, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.layer !== 0) {
+    if (message.layer !== undefined) {
       writer.uint32(8).uint32(message.layer);
     }
-    if (message.billboard !== false) {
+    if (message.billboard !== undefined) {
       writer.uint32(16).bool(message.billboard);
     }
-    if (message.vertexShaderAsset !== "") {
+    if (message.vertexShaderAsset !== undefined) {
       writer.uint32(26).string(message.vertexShaderAsset);
     }
     if (message.vertexAttributes !== undefined) {
       VertexAttributes.encode(message.vertexAttributes, writer.uint32(34).fork()).ldelim();
     }
-    if (message.pixelShaderAsset !== "") {
+    if (message.pixelShaderAsset !== undefined) {
       writer.uint32(42).string(message.pixelShaderAsset);
     }
     if (message.uniformAttributes !== undefined) {
       UniformAttributes.encode(message.uniformAttributes, writer.uint32(50).fork()).ldelim();
     }
-    if (message.meshAsset !== "") {
+    if (message.meshAsset !== undefined) {
       writer.uint32(58).string(message.meshAsset);
     }
     for (const v of message.textures) {
@@ -139,40 +139,40 @@ export const DrawBundle = {
 
   fromJSON(object: any): DrawBundle {
     return {
-      layer: isSet(object.layer) ? globalThis.Number(object.layer) : 0,
-      billboard: isSet(object.billboard) ? globalThis.Boolean(object.billboard) : false,
-      vertexShaderAsset: isSet(object.vertexShaderAsset) ? globalThis.String(object.vertexShaderAsset) : "",
+      layer: isSet(object.layer) ? globalThis.Number(object.layer) : undefined,
+      billboard: isSet(object.billboard) ? globalThis.Boolean(object.billboard) : undefined,
+      vertexShaderAsset: isSet(object.vertexShaderAsset) ? globalThis.String(object.vertexShaderAsset) : undefined,
       vertexAttributes: isSet(object.vertexAttributes) ? VertexAttributes.fromJSON(object.vertexAttributes) : undefined,
-      pixelShaderAsset: isSet(object.pixelShaderAsset) ? globalThis.String(object.pixelShaderAsset) : "",
+      pixelShaderAsset: isSet(object.pixelShaderAsset) ? globalThis.String(object.pixelShaderAsset) : undefined,
       uniformAttributes: isSet(object.uniformAttributes)
         ? UniformAttributes.fromJSON(object.uniformAttributes)
         : undefined,
-      meshAsset: isSet(object.meshAsset) ? globalThis.String(object.meshAsset) : "",
+      meshAsset: isSet(object.meshAsset) ? globalThis.String(object.meshAsset) : undefined,
       textures: globalThis.Array.isArray(object?.textures) ? object.textures.map((e: any) => Texture.fromJSON(e)) : [],
     };
   },
 
   toJSON(message: DrawBundle): unknown {
     const obj: any = {};
-    if (message.layer !== 0) {
+    if (message.layer !== undefined) {
       obj.layer = Math.round(message.layer);
     }
-    if (message.billboard !== false) {
+    if (message.billboard !== undefined) {
       obj.billboard = message.billboard;
     }
-    if (message.vertexShaderAsset !== "") {
+    if (message.vertexShaderAsset !== undefined) {
       obj.vertexShaderAsset = message.vertexShaderAsset;
     }
     if (message.vertexAttributes !== undefined) {
       obj.vertexAttributes = VertexAttributes.toJSON(message.vertexAttributes);
     }
-    if (message.pixelShaderAsset !== "") {
+    if (message.pixelShaderAsset !== undefined) {
       obj.pixelShaderAsset = message.pixelShaderAsset;
     }
     if (message.uniformAttributes !== undefined) {
       obj.uniformAttributes = UniformAttributes.toJSON(message.uniformAttributes);
     }
-    if (message.meshAsset !== "") {
+    if (message.meshAsset !== undefined) {
       obj.meshAsset = message.meshAsset;
     }
     if (message.textures?.length) {
@@ -186,17 +186,17 @@ export const DrawBundle = {
   },
   fromPartial<I extends Exact<DeepPartial<DrawBundle>, I>>(object: I): DrawBundle {
     const message = createBaseDrawBundle();
-    message.layer = object.layer ?? 0;
-    message.billboard = object.billboard ?? false;
-    message.vertexShaderAsset = object.vertexShaderAsset ?? "";
+    message.layer = object.layer ?? undefined;
+    message.billboard = object.billboard ?? undefined;
+    message.vertexShaderAsset = object.vertexShaderAsset ?? undefined;
     message.vertexAttributes = (object.vertexAttributes !== undefined && object.vertexAttributes !== null)
       ? VertexAttributes.fromPartial(object.vertexAttributes)
       : undefined;
-    message.pixelShaderAsset = object.pixelShaderAsset ?? "";
+    message.pixelShaderAsset = object.pixelShaderAsset ?? undefined;
     message.uniformAttributes = (object.uniformAttributes !== undefined && object.uniformAttributes !== null)
       ? UniformAttributes.fromPartial(object.uniformAttributes)
       : undefined;
-    message.meshAsset = object.meshAsset ?? "";
+    message.meshAsset = object.meshAsset ?? undefined;
     message.textures = object.textures?.map((e) => Texture.fromPartial(e)) || [];
     return message;
   },

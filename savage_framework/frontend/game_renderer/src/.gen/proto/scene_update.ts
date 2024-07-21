@@ -7,6 +7,7 @@
 /* eslint-disable */
 import * as _m0 from "protobufjs/minimal";
 import { DrawBundle } from "./draw_bundle";
+import { UniformAttributes } from "./uniform_attributes";
 
 export const protobufPackage = "game_renderer";
 
@@ -49,7 +50,8 @@ export interface SceneElement {
 }
 
 export interface SceneUpdate {
-  type: UpdateType;
+  type?: UpdateType | undefined;
+  sharedAttributes?: UniformAttributes | undefined;
   elements: SceneElement[];
 }
 
@@ -130,16 +132,19 @@ export const SceneElement = {
 };
 
 function createBaseSceneUpdate(): SceneUpdate {
-  return { type: 0, elements: [] };
+  return { type: undefined, sharedAttributes: undefined, elements: [] };
 }
 
 export const SceneUpdate = {
   encode(message: SceneUpdate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.type !== 0) {
+    if (message.type !== undefined) {
       writer.uint32(8).int32(message.type);
     }
+    if (message.sharedAttributes !== undefined) {
+      UniformAttributes.encode(message.sharedAttributes, writer.uint32(18).fork()).ldelim();
+    }
     for (const v of message.elements) {
-      SceneElement.encode(v!, writer.uint32(18).fork()).ldelim();
+      SceneElement.encode(v!, writer.uint32(26).fork()).ldelim();
     }
     return writer;
   },
@@ -163,6 +168,13 @@ export const SceneUpdate = {
             break;
           }
 
+          message.sharedAttributes = UniformAttributes.decode(reader, reader.uint32());
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
           message.elements.push(SceneElement.decode(reader, reader.uint32()));
           continue;
       }
@@ -176,7 +188,10 @@ export const SceneUpdate = {
 
   fromJSON(object: any): SceneUpdate {
     return {
-      type: isSet(object.type) ? updateTypeFromJSON(object.type) : 0,
+      type: isSet(object.type) ? updateTypeFromJSON(object.type) : undefined,
+      sharedAttributes: isSet(object.sharedAttributes)
+        ? UniformAttributes.fromJSON(object.sharedAttributes)
+        : undefined,
       elements: globalThis.Array.isArray(object?.elements)
         ? object.elements.map((e: any) => SceneElement.fromJSON(e))
         : [],
@@ -185,8 +200,11 @@ export const SceneUpdate = {
 
   toJSON(message: SceneUpdate): unknown {
     const obj: any = {};
-    if (message.type !== 0) {
+    if (message.type !== undefined) {
       obj.type = updateTypeToJSON(message.type);
+    }
+    if (message.sharedAttributes !== undefined) {
+      obj.sharedAttributes = UniformAttributes.toJSON(message.sharedAttributes);
     }
     if (message.elements?.length) {
       obj.elements = message.elements.map((e) => SceneElement.toJSON(e));
@@ -199,7 +217,10 @@ export const SceneUpdate = {
   },
   fromPartial<I extends Exact<DeepPartial<SceneUpdate>, I>>(object: I): SceneUpdate {
     const message = createBaseSceneUpdate();
-    message.type = object.type ?? 0;
+    message.type = object.type ?? undefined;
+    message.sharedAttributes = (object.sharedAttributes !== undefined && object.sharedAttributes !== null)
+      ? UniformAttributes.fromPartial(object.sharedAttributes)
+      : undefined;
     message.elements = object.elements?.map((e) => SceneElement.fromPartial(e)) || [];
     return message;
   },

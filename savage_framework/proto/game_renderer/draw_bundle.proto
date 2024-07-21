@@ -7,15 +7,15 @@ import "uniform_attributes.proto";
 import "vertex_attributes.proto";
 
 message DrawBundle {
-    uint32 layer = 1;
-    bool billboard = 2;
+    optional uint32 layer = 1;
+    optional bool billboard = 2;
 
-    string vertex_shader_asset = 3;
-    VertexAttributes vertex_attributes = 4;
+    optional string vertex_shader_asset = 3;
+    optional VertexAttributes vertex_attributes = 4;
 
-    string pixel_shader_asset = 5;
-    UniformAttributes uniform_attributes = 6;
+    optional string pixel_shader_asset = 5;
+    optional UniformAttributes uniform_attributes = 6;
 
-    string mesh_asset = 7;
+    optional string mesh_asset = 7;
     repeated Texture textures = 8;
 }

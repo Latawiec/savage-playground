@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package game_renderer;
 
-message FloatArray {
+message Float32Array {
     repeated float values = 1 [packed = true];
 }
 
