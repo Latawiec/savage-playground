@@ -11,11 +11,7 @@ import GameRenderer from "../components/GameRenderer.vue"
 import { MemoryAssetStorage } from "../asset_storage/MemoryAssetStorage";
 import test_zip_url from "./test.zip";
 import { onBeforeMount, onMounted, ref } from "vue"
-import { SceneElement, SceneUpdate, UpdateType } from "../.gen/proto/scene_update"
-import { DrawBundle } from "../.gen/proto/draw_bundle";
-import { VertexAttributes } from "../.gen/proto/vertex_attributes";
-import { UniformAttributes } from "../.gen/proto/uniform_attributes";
-import { Float32Array } from "../.gen/proto/types";
+import { SceneElement, SceneUpdate, UpdateType, DrawBundle, VertexAttributes, UniformAttributes, Float32Array } from "../.gen/proto/game_renderer"
 import { mat4, vec3 } from 'gl-matrix';
 
 const assetStorage = ref<MemoryAssetStorage>();
@@ -59,7 +55,8 @@ async function draw_asset(mesh_asset: string, translation: vec3, time: number): 
   draw_bundle.vertexAttributes = VertexAttributes.create();
   draw_bundle.vertexAttributes.vertices = "aPos";
   draw_bundle.vertexAttributes.namedBuffers = {
-    "normals": "aNormal"
+    "normals": "aNormal",
+    "uv": "aUV"
   };
   draw_bundle.uniformAttributes = UniformAttributes.create();
   draw_bundle.uniformAttributes.mat4 = {
@@ -101,6 +98,8 @@ async function draw() {
   update.elements.push(await draw_asset('/assets/torus.json', vec3.fromValues(2, -2, 0), seconds));
   update.elements.push(await draw_asset('/assets/monkey.json', vec3.fromValues(-2, -2, 0), seconds));
   update.elements.push(await draw_asset('/assets/cube.json', vec3.fromValues(-2, 2, 0), seconds));
+
+  update.elements.push(await draw_asset('/assets/plane_y_up.json', vec3.fromValues(0, 0, 0), seconds));
 
   await renderer?.update(update);
   await renderer?.render();

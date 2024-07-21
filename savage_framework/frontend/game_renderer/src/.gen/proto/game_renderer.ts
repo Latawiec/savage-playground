@@ -2,13 +2,58 @@
 // versions:
 //   protoc-gen-ts_proto  v1.181.1
 //   protoc               v3.21.12
-// source: uniform_attributes.proto
+// source: game_renderer.proto
 
 /* eslint-disable */
 import * as _m0 from "protobufjs/minimal";
-import { Float32Array, Uint32Array } from "./types";
 
 export const protobufPackage = "game_renderer";
+
+export enum UpdateType {
+  Full = 0,
+  Increment = 1,
+  UNRECOGNIZED = -1,
+}
+
+export function updateTypeFromJSON(object: any): UpdateType {
+  switch (object) {
+    case 0:
+    case "Full":
+      return UpdateType.Full;
+    case 1:
+    case "Increment":
+      return UpdateType.Increment;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return UpdateType.UNRECOGNIZED;
+  }
+}
+
+export function updateTypeToJSON(object: UpdateType): string {
+  switch (object) {
+    case UpdateType.Full:
+      return "Full";
+    case UpdateType.Increment:
+      return "Increment";
+    case UpdateType.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
+export interface Float32Array {
+  values: number[];
+}
+
+export interface Uint32Array {
+  values: number[];
+}
+
+export interface Texture {
+  bindOffset: number;
+  asset: string;
+}
 
 export interface UniformAttributes {
   float: { [key: string]: Float32Array };
@@ -66,6 +111,255 @@ export interface UniformAttributes_Mat4Entry {
   key: string;
   value: Float32Array | undefined;
 }
+
+export interface VertexAttributes {
+  /** Mandatory */
+  vertices: string;
+  namedBuffers: { [key: string]: string };
+}
+
+export interface VertexAttributes_NamedBuffersEntry {
+  key: string;
+  value: string;
+}
+
+export interface DrawBundle {
+  layer?: number | undefined;
+  billboard?: boolean | undefined;
+  vertexShaderAsset?: string | undefined;
+  vertexAttributes?: VertexAttributes | undefined;
+  pixelShaderAsset?: string | undefined;
+  uniformAttributes?: UniformAttributes | undefined;
+  meshAsset?: string | undefined;
+  textures: Texture[];
+}
+
+export interface SceneElement {
+  id: string;
+  drawBundle?: DrawBundle | undefined;
+}
+
+export interface SceneUpdate {
+  type?: UpdateType | undefined;
+  sharedAttributes?: UniformAttributes | undefined;
+  elements: SceneElement[];
+}
+
+function createBaseFloat32Array(): Float32Array {
+  return { values: [] };
+}
+
+export const Float32Array = {
+  encode(message: Float32Array, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    writer.uint32(10).fork();
+    for (const v of message.values) {
+      writer.float(v);
+    }
+    writer.ldelim();
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): Float32Array {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseFloat32Array();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag === 13) {
+            message.values.push(reader.float());
+
+            continue;
+          }
+
+          if (tag === 10) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.values.push(reader.float());
+            }
+
+            continue;
+          }
+
+          break;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Float32Array {
+    return {
+      values: globalThis.Array.isArray(object?.values) ? object.values.map((e: any) => globalThis.Number(e)) : [],
+    };
+  },
+
+  toJSON(message: Float32Array): unknown {
+    const obj: any = {};
+    if (message.values?.length) {
+      obj.values = message.values;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<Float32Array>, I>>(base?: I): Float32Array {
+    return Float32Array.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<Float32Array>, I>>(object: I): Float32Array {
+    const message = createBaseFloat32Array();
+    message.values = object.values?.map((e) => e) || [];
+    return message;
+  },
+};
+
+function createBaseUint32Array(): Uint32Array {
+  return { values: [] };
+}
+
+export const Uint32Array = {
+  encode(message: Uint32Array, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    writer.uint32(10).fork();
+    for (const v of message.values) {
+      writer.uint32(v);
+    }
+    writer.ldelim();
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): Uint32Array {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUint32Array();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag === 8) {
+            message.values.push(reader.uint32());
+
+            continue;
+          }
+
+          if (tag === 10) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.values.push(reader.uint32());
+            }
+
+            continue;
+          }
+
+          break;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Uint32Array {
+    return {
+      values: globalThis.Array.isArray(object?.values) ? object.values.map((e: any) => globalThis.Number(e)) : [],
+    };
+  },
+
+  toJSON(message: Uint32Array): unknown {
+    const obj: any = {};
+    if (message.values?.length) {
+      obj.values = message.values.map((e) => Math.round(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<Uint32Array>, I>>(base?: I): Uint32Array {
+    return Uint32Array.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<Uint32Array>, I>>(object: I): Uint32Array {
+    const message = createBaseUint32Array();
+    message.values = object.values?.map((e) => e) || [];
+    return message;
+  },
+};
+
+function createBaseTexture(): Texture {
+  return { bindOffset: 0, asset: "" };
+}
+
+export const Texture = {
+  encode(message: Texture, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.bindOffset !== 0) {
+      writer.uint32(8).uint32(message.bindOffset);
+    }
+    if (message.asset !== "") {
+      writer.uint32(18).string(message.asset);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): Texture {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTexture();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.bindOffset = reader.uint32();
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.asset = reader.string();
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Texture {
+    return {
+      bindOffset: isSet(object.bindOffset) ? globalThis.Number(object.bindOffset) : 0,
+      asset: isSet(object.asset) ? globalThis.String(object.asset) : "",
+    };
+  },
+
+  toJSON(message: Texture): unknown {
+    const obj: any = {};
+    if (message.bindOffset !== 0) {
+      obj.bindOffset = Math.round(message.bindOffset);
+    }
+    if (message.asset !== "") {
+      obj.asset = message.asset;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<Texture>, I>>(base?: I): Texture {
+    return Texture.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<Texture>, I>>(object: I): Texture {
+    const message = createBaseTexture();
+    message.bindOffset = object.bindOffset ?? 0;
+    message.asset = object.asset ?? "";
+    return message;
+  },
+};
 
 function createBaseUniformAttributes(): UniformAttributes {
   return { float: {}, vec2: {}, vec3: {}, vec4: {}, int: {}, ivec2: {}, ivec3: {}, ivec4: {}, mat4: {} };
@@ -1097,6 +1391,530 @@ export const UniformAttributes_Mat4Entry = {
     message.value = (object.value !== undefined && object.value !== null)
       ? Float32Array.fromPartial(object.value)
       : undefined;
+    return message;
+  },
+};
+
+function createBaseVertexAttributes(): VertexAttributes {
+  return { vertices: "", namedBuffers: {} };
+}
+
+export const VertexAttributes = {
+  encode(message: VertexAttributes, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.vertices !== "") {
+      writer.uint32(10).string(message.vertices);
+    }
+    Object.entries(message.namedBuffers).forEach(([key, value]) => {
+      VertexAttributes_NamedBuffersEntry.encode({ key: key as any, value }, writer.uint32(18).fork()).ldelim();
+    });
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): VertexAttributes {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVertexAttributes();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.vertices = reader.string();
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          const entry2 = VertexAttributes_NamedBuffersEntry.decode(reader, reader.uint32());
+          if (entry2.value !== undefined) {
+            message.namedBuffers[entry2.key] = entry2.value;
+          }
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): VertexAttributes {
+    return {
+      vertices: isSet(object.vertices) ? globalThis.String(object.vertices) : "",
+      namedBuffers: isObject(object.namedBuffers)
+        ? Object.entries(object.namedBuffers).reduce<{ [key: string]: string }>((acc, [key, value]) => {
+          acc[key] = String(value);
+          return acc;
+        }, {})
+        : {},
+    };
+  },
+
+  toJSON(message: VertexAttributes): unknown {
+    const obj: any = {};
+    if (message.vertices !== "") {
+      obj.vertices = message.vertices;
+    }
+    if (message.namedBuffers) {
+      const entries = Object.entries(message.namedBuffers);
+      if (entries.length > 0) {
+        obj.namedBuffers = {};
+        entries.forEach(([k, v]) => {
+          obj.namedBuffers[k] = v;
+        });
+      }
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<VertexAttributes>, I>>(base?: I): VertexAttributes {
+    return VertexAttributes.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<VertexAttributes>, I>>(object: I): VertexAttributes {
+    const message = createBaseVertexAttributes();
+    message.vertices = object.vertices ?? "";
+    message.namedBuffers = Object.entries(object.namedBuffers ?? {}).reduce<{ [key: string]: string }>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = globalThis.String(value);
+        }
+        return acc;
+      },
+      {},
+    );
+    return message;
+  },
+};
+
+function createBaseVertexAttributes_NamedBuffersEntry(): VertexAttributes_NamedBuffersEntry {
+  return { key: "", value: "" };
+}
+
+export const VertexAttributes_NamedBuffersEntry = {
+  encode(message: VertexAttributes_NamedBuffersEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== "") {
+      writer.uint32(18).string(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): VertexAttributes_NamedBuffersEntry {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVertexAttributes_NamedBuffersEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.key = reader.string();
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.value = reader.string();
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): VertexAttributes_NamedBuffersEntry {
+    return {
+      key: isSet(object.key) ? globalThis.String(object.key) : "",
+      value: isSet(object.value) ? globalThis.String(object.value) : "",
+    };
+  },
+
+  toJSON(message: VertexAttributes_NamedBuffersEntry): unknown {
+    const obj: any = {};
+    if (message.key !== "") {
+      obj.key = message.key;
+    }
+    if (message.value !== "") {
+      obj.value = message.value;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<VertexAttributes_NamedBuffersEntry>, I>>(
+    base?: I,
+  ): VertexAttributes_NamedBuffersEntry {
+    return VertexAttributes_NamedBuffersEntry.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<VertexAttributes_NamedBuffersEntry>, I>>(
+    object: I,
+  ): VertexAttributes_NamedBuffersEntry {
+    const message = createBaseVertexAttributes_NamedBuffersEntry();
+    message.key = object.key ?? "";
+    message.value = object.value ?? "";
+    return message;
+  },
+};
+
+function createBaseDrawBundle(): DrawBundle {
+  return {
+    layer: undefined,
+    billboard: undefined,
+    vertexShaderAsset: undefined,
+    vertexAttributes: undefined,
+    pixelShaderAsset: undefined,
+    uniformAttributes: undefined,
+    meshAsset: undefined,
+    textures: [],
+  };
+}
+
+export const DrawBundle = {
+  encode(message: DrawBundle, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.layer !== undefined) {
+      writer.uint32(8).uint32(message.layer);
+    }
+    if (message.billboard !== undefined) {
+      writer.uint32(16).bool(message.billboard);
+    }
+    if (message.vertexShaderAsset !== undefined) {
+      writer.uint32(26).string(message.vertexShaderAsset);
+    }
+    if (message.vertexAttributes !== undefined) {
+      VertexAttributes.encode(message.vertexAttributes, writer.uint32(34).fork()).ldelim();
+    }
+    if (message.pixelShaderAsset !== undefined) {
+      writer.uint32(42).string(message.pixelShaderAsset);
+    }
+    if (message.uniformAttributes !== undefined) {
+      UniformAttributes.encode(message.uniformAttributes, writer.uint32(50).fork()).ldelim();
+    }
+    if (message.meshAsset !== undefined) {
+      writer.uint32(58).string(message.meshAsset);
+    }
+    for (const v of message.textures) {
+      Texture.encode(v!, writer.uint32(66).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): DrawBundle {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDrawBundle();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.layer = reader.uint32();
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.billboard = reader.bool();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.vertexShaderAsset = reader.string();
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.vertexAttributes = VertexAttributes.decode(reader, reader.uint32());
+          continue;
+        case 5:
+          if (tag !== 42) {
+            break;
+          }
+
+          message.pixelShaderAsset = reader.string();
+          continue;
+        case 6:
+          if (tag !== 50) {
+            break;
+          }
+
+          message.uniformAttributes = UniformAttributes.decode(reader, reader.uint32());
+          continue;
+        case 7:
+          if (tag !== 58) {
+            break;
+          }
+
+          message.meshAsset = reader.string();
+          continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.textures.push(Texture.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DrawBundle {
+    return {
+      layer: isSet(object.layer) ? globalThis.Number(object.layer) : undefined,
+      billboard: isSet(object.billboard) ? globalThis.Boolean(object.billboard) : undefined,
+      vertexShaderAsset: isSet(object.vertexShaderAsset) ? globalThis.String(object.vertexShaderAsset) : undefined,
+      vertexAttributes: isSet(object.vertexAttributes) ? VertexAttributes.fromJSON(object.vertexAttributes) : undefined,
+      pixelShaderAsset: isSet(object.pixelShaderAsset) ? globalThis.String(object.pixelShaderAsset) : undefined,
+      uniformAttributes: isSet(object.uniformAttributes)
+        ? UniformAttributes.fromJSON(object.uniformAttributes)
+        : undefined,
+      meshAsset: isSet(object.meshAsset) ? globalThis.String(object.meshAsset) : undefined,
+      textures: globalThis.Array.isArray(object?.textures) ? object.textures.map((e: any) => Texture.fromJSON(e)) : [],
+    };
+  },
+
+  toJSON(message: DrawBundle): unknown {
+    const obj: any = {};
+    if (message.layer !== undefined) {
+      obj.layer = Math.round(message.layer);
+    }
+    if (message.billboard !== undefined) {
+      obj.billboard = message.billboard;
+    }
+    if (message.vertexShaderAsset !== undefined) {
+      obj.vertexShaderAsset = message.vertexShaderAsset;
+    }
+    if (message.vertexAttributes !== undefined) {
+      obj.vertexAttributes = VertexAttributes.toJSON(message.vertexAttributes);
+    }
+    if (message.pixelShaderAsset !== undefined) {
+      obj.pixelShaderAsset = message.pixelShaderAsset;
+    }
+    if (message.uniformAttributes !== undefined) {
+      obj.uniformAttributes = UniformAttributes.toJSON(message.uniformAttributes);
+    }
+    if (message.meshAsset !== undefined) {
+      obj.meshAsset = message.meshAsset;
+    }
+    if (message.textures?.length) {
+      obj.textures = message.textures.map((e) => Texture.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DrawBundle>, I>>(base?: I): DrawBundle {
+    return DrawBundle.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DrawBundle>, I>>(object: I): DrawBundle {
+    const message = createBaseDrawBundle();
+    message.layer = object.layer ?? undefined;
+    message.billboard = object.billboard ?? undefined;
+    message.vertexShaderAsset = object.vertexShaderAsset ?? undefined;
+    message.vertexAttributes = (object.vertexAttributes !== undefined && object.vertexAttributes !== null)
+      ? VertexAttributes.fromPartial(object.vertexAttributes)
+      : undefined;
+    message.pixelShaderAsset = object.pixelShaderAsset ?? undefined;
+    message.uniformAttributes = (object.uniformAttributes !== undefined && object.uniformAttributes !== null)
+      ? UniformAttributes.fromPartial(object.uniformAttributes)
+      : undefined;
+    message.meshAsset = object.meshAsset ?? undefined;
+    message.textures = object.textures?.map((e) => Texture.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseSceneElement(): SceneElement {
+  return { id: "", drawBundle: undefined };
+}
+
+export const SceneElement = {
+  encode(message: SceneElement, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.drawBundle !== undefined) {
+      DrawBundle.encode(message.drawBundle, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): SceneElement {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSceneElement();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.drawBundle = DrawBundle.decode(reader, reader.uint32());
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SceneElement {
+    return {
+      id: isSet(object.id) ? globalThis.String(object.id) : "",
+      drawBundle: isSet(object.drawBundle) ? DrawBundle.fromJSON(object.drawBundle) : undefined,
+    };
+  },
+
+  toJSON(message: SceneElement): unknown {
+    const obj: any = {};
+    if (message.id !== "") {
+      obj.id = message.id;
+    }
+    if (message.drawBundle !== undefined) {
+      obj.drawBundle = DrawBundle.toJSON(message.drawBundle);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<SceneElement>, I>>(base?: I): SceneElement {
+    return SceneElement.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<SceneElement>, I>>(object: I): SceneElement {
+    const message = createBaseSceneElement();
+    message.id = object.id ?? "";
+    message.drawBundle = (object.drawBundle !== undefined && object.drawBundle !== null)
+      ? DrawBundle.fromPartial(object.drawBundle)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseSceneUpdate(): SceneUpdate {
+  return { type: undefined, sharedAttributes: undefined, elements: [] };
+}
+
+export const SceneUpdate = {
+  encode(message: SceneUpdate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.type !== undefined) {
+      writer.uint32(8).int32(message.type);
+    }
+    if (message.sharedAttributes !== undefined) {
+      UniformAttributes.encode(message.sharedAttributes, writer.uint32(18).fork()).ldelim();
+    }
+    for (const v of message.elements) {
+      SceneElement.encode(v!, writer.uint32(26).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): SceneUpdate {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSceneUpdate();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.type = reader.int32() as any;
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.sharedAttributes = UniformAttributes.decode(reader, reader.uint32());
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.elements.push(SceneElement.decode(reader, reader.uint32()));
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SceneUpdate {
+    return {
+      type: isSet(object.type) ? updateTypeFromJSON(object.type) : undefined,
+      sharedAttributes: isSet(object.sharedAttributes)
+        ? UniformAttributes.fromJSON(object.sharedAttributes)
+        : undefined,
+      elements: globalThis.Array.isArray(object?.elements)
+        ? object.elements.map((e: any) => SceneElement.fromJSON(e))
+        : [],
+    };
+  },
+
+  toJSON(message: SceneUpdate): unknown {
+    const obj: any = {};
+    if (message.type !== undefined) {
+      obj.type = updateTypeToJSON(message.type);
+    }
+    if (message.sharedAttributes !== undefined) {
+      obj.sharedAttributes = UniformAttributes.toJSON(message.sharedAttributes);
+    }
+    if (message.elements?.length) {
+      obj.elements = message.elements.map((e) => SceneElement.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<SceneUpdate>, I>>(base?: I): SceneUpdate {
+    return SceneUpdate.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<SceneUpdate>, I>>(object: I): SceneUpdate {
+    const message = createBaseSceneUpdate();
+    message.type = object.type ?? undefined;
+    message.sharedAttributes = (object.sharedAttributes !== undefined && object.sharedAttributes !== null)
+      ? UniformAttributes.fromPartial(object.sharedAttributes)
+      : undefined;
+    message.elements = object.elements?.map((e) => SceneElement.fromPartial(e)) || [];
     return message;
   },
 };

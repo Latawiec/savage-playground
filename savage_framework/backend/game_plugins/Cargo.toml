@@ -6,8 +6,10 @@ edition = "2021"
 
 [dependencies]
 bevy = { version="*", optional = true, features = ["dynamic_linking"] }
-tokio = { version="*", optional = true }
+tokio = { version="*", optional = true, features = ["io-util", "rt", "time", "sync", "io-std"]}
+game_renderer = { workspace=true, optional=true }
 
 [features]
 time_sliced_io = [ "dep:bevy", "dep:tokio" ]
 self_destruct = [ "dep:bevy" ]
+game_renderer = [ "dep:bevy", "dep:game_renderer"]

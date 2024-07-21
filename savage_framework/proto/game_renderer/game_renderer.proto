@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package game_renderer;
+
+// Types
+
+message Float32Array {
+    repeated float values = 1 [packed = true];
+}
+
+message Uint32Array {
+    repeated uint32 values = 1 [packed = true];
+}
+
+message Texture {
+    uint32 bind_offset = 1;
+    string asset = 2;
+}
+
+message UniformAttributes {
+    map<string, Float32Array> float = 1;
+    map<string, Float32Array> vec2 = 2;
+    map<string, Float32Array> vec3 = 3;
+    map<string, Float32Array> vec4 = 4;
+
+    map<string, Uint32Array> int = 5;
+    map<string, Uint32Array> ivec2 = 6;
+    map<string, Uint32Array> ivec3 = 7;
+    map<string, Uint32Array> ivec4 = 8;
+    
+    map<string, Float32Array> mat4 = 9;
+}
+
+message VertexAttributes {
+    string vertices = 1; // Mandatory
+    map<string, string> named_buffers = 2;
+}
+
+// Draw Bundle
+
+message DrawBundle {
+    optional uint32 layer = 1;
+    optional bool billboard = 2;
+    optional bool hidden = 3;
+
+    optional string vertex_shader_asset = 4;
+    optional VertexAttributes vertex_attributes = 5;
+
+    optional string pixel_shader_asset = 6;
+    optional UniformAttributes uniform_attributes = 7;
+
+    optional string mesh_asset = 8;
+    repeated Texture textures = 9;
+}
+
+// Scene Update
+
+enum UpdateType {
+    Full = 0;
+    Increment = 1;
+}
+
+message SceneElement {
+    uint64 id = 1;
+    optional DrawBundle draw_bundle = 2;
+    optional UpdateType update_type = 3;
+}
+
+message SceneUpdate {
+    uint64 index = 1;
+    optional UniformAttributes shared_attributes = 2;
+    repeated SceneElement elements = 3;
+}
+

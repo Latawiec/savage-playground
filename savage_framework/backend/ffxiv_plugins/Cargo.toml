@@ -1,0 +1,11 @@
+[package]
+name = "ffxiv_plugins"
+version = "0.1.0"
+description = "Provides a set of premade elements to create a Bevy-based FFXIV game for Savage Playground."
+edition = "2021"
+
+[dependencies]
+bevy = { version = "*", features = ["dynamic_linking"] }
+bevy_rapier2d = { version = "*", features = ["debug-render-2d", "simd-stable"] }
+game_plugins = { workspace = true, features = ["time_sliced_io", "self_destruct", "game_renderer"] }
+game_interface.workspace = true

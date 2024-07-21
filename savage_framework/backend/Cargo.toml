@@ -1,8 +1,10 @@
 [workspace]
 members = [
+    "ffxiv_plugins",
     "game_config",
     "game_interface",
     "game_plugins",
+    "game_renderer",
     "utility/build_io",
     "utility/proto_gen",
     "utility/schema_gen"
@@ -13,3 +15,6 @@ resolver="2"
 build_io = { path = "utility/build_io" }
 proto_gen = { path = "utility/proto_gen" }
 schema_gen = { path = "utility/schema_gen" }
+game_interface = { path = "./game_interface" }
+game_renderer = { path = "./game_renderer" }
+game_plugins = { path = "./game_plugins" }

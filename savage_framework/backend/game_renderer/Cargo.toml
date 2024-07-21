@@ -1,0 +1,12 @@
+[package]
+name = "game_renderer"
+description = "Defines types used for game renderer."
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+prost = "*"
+prost-types = "*"
+
+[build-dependencies]
+proto_gen.workspace = true

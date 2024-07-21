@@ -1,6 +1,4 @@
-import { DrawBundle } from "../.gen/proto/draw_bundle";
-import { SceneUpdate, UpdateType } from "../.gen/proto/scene_update";
-import { UniformAttributes } from "../.gen/proto/uniform_attributes";
+import { SceneUpdate, UpdateType, DrawBundle, UniformAttributes } from "../.gen/proto/game_renderer";
 import { IAssetStorage } from "../asset_storage/IAssetStorage";
 import { GeneralDrawCommand } from "./command/GeneralDrawCommand";
 import { PresentDrawCommand } from "./command/PresentDrawCommand";
