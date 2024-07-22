@@ -6,7 +6,7 @@ use std::{
     sync::{atomic::AtomicBool, Arc, Mutex},
 };
 use arc_swap::ArcSwap;
-use game_interface::proto::{game_input::ClientInput, game_output::{GameMessage, GameOutput}};
+use game_interface::proto::{game_input::{ClientInput, GameInput}, game_output::{GameMessage, GameOutput}};
 use rocket_ws::stream::DuplexStream;
 use tokio::task::JoinHandle;
 
@@ -126,7 +126,13 @@ impl GameRoom {
                 // Channel closed...
                 break;
             }
-            game_instance_input.send_many(&client_input_buffer).await;
+            for client_input in client_input_buffer.drain(..) {
+                let game_input_proto = GameInput {
+                    client_input: Some(client_input),
+                    room_input: None
+                };
+                game_instance_input.send(&game_input_proto).await;
+            }
             println!("Sent");
             client_input_buffer.clear();
         }

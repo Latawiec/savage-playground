@@ -12,6 +12,9 @@ members = [
 resolver="2"
 
 [workspace.dependencies]
+prost = "*"
+prost-types = "*"
+tracing = "*"
 build_io = { path = "utility/build_io" }
 proto_gen = { path = "utility/proto_gen" }
 schema_gen = { path = "utility/schema_gen" }

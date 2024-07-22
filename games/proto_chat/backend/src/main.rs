@@ -4,7 +4,7 @@ use std::io::{self, Read, Write};
 mod proto_chat;
 
 use game_config::game_args::GameArgs;
-use game_interface::proto::{game_input::ClientInput, game_output::{GameDirectOutput, GameMessage, GameOutput}};
+use game_interface::proto::{game_input::GameInput, game_output::{GameDirectOutput, GameMessage, GameOutput}};
 use prost::Message;
 use prost_types::Any;
 use proto_chat::proto_chat::{ProtoChatHistory, ProtoChatMessage};
@@ -38,9 +38,10 @@ fn main() {
 
         info!("Read {} bytes of data.", input_message_buff.len());
 
-        let instance_input_proto = ClientInput::decode(input_message_buff.as_slice()).unwrap();
-        let client_id = instance_input_proto.sender_id;
-        let client_msg = instance_input_proto.game_input_message.unwrap();
+        let game_input_proto = GameInput::decode(input_message_buff.as_slice()).unwrap();
+        let client_input_proto = game_input_proto.client_input.unwrap();
+        let client_id = client_input_proto.sender_id;
+        let client_msg = client_input_proto.game_input_message.unwrap();
         let client_msg_type = client_msg.type_url.clone();
 
         let mut client_output_proto = GameOutput::default();

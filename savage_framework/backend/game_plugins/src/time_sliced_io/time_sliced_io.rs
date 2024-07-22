@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
 use tokio::{
     io::{self, AsyncReadExt, AsyncWriteExt},
     sync::mpsc,
@@ -20,11 +20,15 @@ impl TimeSlicedIO {
     const STDERR_CHANNEL_CAPACITY: usize = 16;
 
     pub fn stdout(&mut self, data: Vec<u8>) {
-        self.stdout_channel.blocking_send(data);
+        if let Err(error) = self.stdout_channel.blocking_send(data) {
+            tracing::error!("Failed to write to stdout: {}", error);
+        }
     }
 
     pub fn stderr(&mut self, data: Vec<u8>) {
-        self.stderr_channel.blocking_send(data);
+        if let Err(error) = self.stderr_channel.blocking_send(data) {
+            tracing::error!("Failed to write to stdout: {}", error);
+        }
     }
 
     pub fn stdin(&mut self) -> Option<Vec<u8>> {
@@ -32,7 +36,10 @@ impl TimeSlicedIO {
             Ok(data) => Some(data),
             Err(e) => match e {
                 mpsc::error::TryRecvError::Empty => None,
-                mpsc::error::TryRecvError::Disconnected => panic!("Channel died."),
+                mpsc::error::TryRecvError::Disconnected => {
+                    tracing::error!("Channel for stdin has disconnected.");
+                    panic!("Channel for stdin has disconnected.");
+                },
             },
         }
     }
@@ -44,18 +51,32 @@ impl TimeSlicedIO {
     async fn task_stdout(mut channel: mpsc::Receiver<Vec<u8>>) {
         let mut stdout = io::stdout();
         while let Some(msg) = channel.recv().await {
-            let message_size_data = msg.len().to_ne_bytes();
-            let _ = stdout.write_all(&message_size_data).await;
-            let _ = stdout.write_all(&msg).await;
+            let data_len = msg.len();
+            if let Err(error) = stdout.write_u64(data_len as u64).await {
+                tracing::error!("Failed to send message length to stdout: {}", error);
+            }
+            if let Err(error) = stdout.write_all(&msg).await {
+                tracing::error!("Failed to send message data to stdout: {}", error);
+            }
+        }
+        if let Err(error) = stdout.flush().await {
+            tracing::error!("Failed to flush stdout: {}", error);
         }
     }
 
     async fn task_stderr(mut channel: mpsc::Receiver<Vec<u8>>) {
         let mut stderr = io::stderr();
         while let Some(msg) = channel.recv().await {
-            let message_size_data = msg.len().to_ne_bytes();
-            stderr.write_all(&message_size_data).await;
-            stderr.write_all(&msg).await;
+            let data_len = msg.len();
+            if let Err(error) = stderr.write_u64(data_len as u64).await {
+                tracing::error!("Failed to send message length to stderr: {}", error);
+            }
+            if let Err(error) = stderr.write_all(&msg).await {
+                tracing::error!("Failed to send message data to stderr: {}", error);
+            }
+        }
+        if let Err(error) = stderr.flush().await {
+            tracing::error!("Failed to flush stderr: {}", error);
         }
     }
 
@@ -63,10 +84,14 @@ impl TimeSlicedIO {
         let mut stdin: io::Stdin = io::stdin();
         let mut buffer: Vec<u8> = vec![0; 512];
         loop {
-            let message_size = stdin.read_u64().await.unwrap();
-            buffer.resize(message_size as usize, 0);
-            stdin.read_exact(&mut buffer).await;
-            channel.send(buffer.clone()).await;
+            let data_len = stdin.read_u64().await.unwrap();
+            buffer.resize(data_len as usize, 0);
+            if let Err(error) = stdin.read_exact(&mut buffer).await {
+                tracing::error!("Failed to read from stdin: {}", error);
+            }
+            if let Err(error) = channel.send(buffer.clone()).await {
+                tracing::error!("Failed to send stdin message to the channel: {}", error);
+            }
         }
     }
 }
@@ -96,9 +121,4 @@ impl Default for TimeSlicedIO {
             rt,
         }
     }
-}
-
-#[cfg(test)]
-mod test {
-    // TODO tests
 }

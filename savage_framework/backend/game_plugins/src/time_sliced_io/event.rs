@@ -1,7 +1,8 @@
 use bevy::prelude::Event;
+use game_interface::proto::{game_input::ClientInput, game_output::GameMessage};
 
 #[derive(Event)]
-pub struct GameInputMessage(pub Vec<u8>);
+pub struct ClientInputEvent(pub ClientInput);
 
 #[derive(Event)]
-pub struct GameOutputMessage(pub Vec<u8>);
+pub struct GameOutputEvent(pub GameMessage);

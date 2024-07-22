@@ -22,7 +22,7 @@
 
         "dev": "vite",
         "proto": "mkdir -p ./src/.gen/proto && protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --proto_path=../proto --ts_proto_out=./src/.gen/proto ../proto/*.proto",
-        "proto:win32": "protoc --plugin=",
+        "proto:win32": "protoc --plugin=protoc-gen-ts_proto=.\\node_modules\\.bin\\protoc-gen-ts_proto.cmd --proto_path=../proto --ts_proto_out=./src/.gen/proto ../proto/*.proto",
         "types": "vue-tsc",
         "build": "npm run proto && vite build && vue-tsc --emitDeclarationOnly",
         "preview": "vite preview"

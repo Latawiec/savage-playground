@@ -3,7 +3,17 @@ import "google/protobuf/any.proto";
 
 package game_input;
 
+message GameInput {
+    optional ClientInput client_input = 1;
+    optional RoomInput room_input = 2;
+}
+
 message ClientInput {
     uint64 sender_id = 1;
     google.protobuf.Any game_input_message = 2;
+}
+
+message RoomInput {
+    repeated uint64 players_joined = 1;
+    repeated uint64 players_left = 2;
 }
