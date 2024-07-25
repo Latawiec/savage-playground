@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package ffxiv_toolkit;
+
+import "game_renderer/game_renderer.proto";
+
+message FFXIVGameOutput {
+    optional game_renderer.SceneUpdate scene_update = 1;
+}

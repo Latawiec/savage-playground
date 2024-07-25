@@ -1,7 +1,7 @@
 use bevy::prelude::Component;
 
 #[derive(Component)]
-pub struct PlayerIdentity {
+pub struct PlayerInfo {
     pub player_id: u64,
     pub player_name: Optional<String>,
 }

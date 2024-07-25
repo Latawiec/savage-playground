@@ -5,7 +5,12 @@ description = "Provides a set of premade elements to create a Bevy-based FFXIV g
 edition = "2021"
 
 [dependencies]
-bevy = { version = "*", features = ["dynamic_linking"] }
+bevy.workspace = true
 bevy_rapier2d = { version = "*", features = ["debug-render-2d", "simd-stable"] }
 game_plugins = { workspace = true, features = ["time_sliced_io", "self_destruct", "game_renderer"] }
 game_interface.workspace = true
+prost-types.workspace = true
+prost.workspace = true
+
+[build-dependencies]
+proto_gen.workspace = true

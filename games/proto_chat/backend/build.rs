@@ -11,6 +11,7 @@ fn main() -> Result<()> {
     build_protos_from_dir(
         &local_proto_dir,
         &output_dir,
+        &[]
     )?;
 
     Ok(())

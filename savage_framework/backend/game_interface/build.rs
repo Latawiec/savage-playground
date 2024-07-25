@@ -11,7 +11,7 @@ fn main() -> Result<()> {
     let protos_dir = std::path::absolute(communication_dir.join("game_interface")).unwrap();
     let output_dir = std::path::absolute(project_dir.join("src/.gen/proto")).unwrap();
 
-    build_protos_from_dir(&protos_dir, &output_dir)?;
+    build_protos_from_dir(&protos_dir, &output_dir, &[])?;
 
     Ok(())
 }

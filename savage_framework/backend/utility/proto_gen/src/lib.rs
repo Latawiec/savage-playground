@@ -14,7 +14,7 @@ pub fn generate_mod_file(proto_files: &[PathBuf], output_dir: &Path) -> Result<(
     Ok(())
 }
 
-pub fn build_protos_from_dir(source_rel_dir: &Path, output_rel_dir: &Path) -> Result<()> {
+pub fn build_protos_from_dir(source_rel_dir: &Path, output_rel_dir: &Path, include_rel_dirs: &[&Path]) -> Result<()> {
     // Check source exists.
     assert!(source_rel_dir.is_dir());
 
@@ -36,9 +36,13 @@ pub fn build_protos_from_dir(source_rel_dir: &Path, output_rel_dir: &Path) -> Re
     }
 
     // I think this is proto-path
-    let includes_list = [
+    let mut includes_list = vec![
         std::path::absolute(source_rel_dir)?
     ];
+
+    for include_dir in include_rel_dirs {
+        includes_list.push(std::path::absolute(include_dir.to_path_buf())?)
+    }
 
     println!("Includes list: {:?}", &includes_list);
 
