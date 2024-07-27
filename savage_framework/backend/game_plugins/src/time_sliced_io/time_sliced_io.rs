@@ -2,7 +2,6 @@ use std::time::Duration;
 use tokio::{
     io::{self, AsyncReadExt, AsyncWriteExt},
     sync::mpsc,
-    task::LocalSet,
     time,
 };
 
@@ -10,7 +9,6 @@ pub struct TimeSlicedIO {
     stdin_channel: mpsc::Receiver<Vec<u8>>,
     stdout_channel: mpsc::Sender<Vec<u8>>,
     stderr_channel: mpsc::Sender<Vec<u8>>,
-    workpool: LocalSet,
     rt: tokio::runtime::Runtime,
 }
 
@@ -45,7 +43,8 @@ impl TimeSlicedIO {
     }
 
     pub fn run_for(&self, duration: Duration) {
-        self.workpool.block_on(&self.rt, time::sleep(duration));
+        let _guard = &self.rt.enter();
+        let _ = &self.rt.block_on(time::sleep(duration));
     }
 
     async fn task_stdout(mut channel: mpsc::Receiver<Vec<u8>>) {
@@ -107,17 +106,15 @@ impl Default for TimeSlicedIO {
             .build()
             .unwrap();
 
-        let workpool = LocalSet::new();
-
-        workpool.spawn_local(TimeSlicedIO::task_stdin(stdin_sender));
-        workpool.spawn_local(TimeSlicedIO::task_stdout(stdout_receiver));
-        workpool.spawn_local(TimeSlicedIO::task_stderr(stderr_receiver));
+        let _guard = rt.enter();
+        rt.spawn(TimeSlicedIO::task_stdin(stdin_sender));
+        rt.spawn(TimeSlicedIO::task_stdout(stdout_receiver));
+        rt.spawn(TimeSlicedIO::task_stderr(stderr_receiver));
 
         Self {
             stdin_channel: stdin_receiver,
             stdout_channel: stdout_sender,
             stderr_channel: stderr_sender,
-            workpool,
             rt,
         }
     }

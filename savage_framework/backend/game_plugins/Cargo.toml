@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 bevy = { workspace=true, optional = true }
-tokio = { version="*", optional = true, features = ["io-util", "rt", "time", "sync", "io-std"]}
+tokio = { version = "*", optional = true, features = ["io-util", "rt", "time", "sync", "io-std"]}
 prost.workspace = true
 tracing.workspace = true
 game_renderer = { workspace=true, optional=true }

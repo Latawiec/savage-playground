@@ -1,0 +1,14 @@
+[package]
+name = "ffxiv_toolkit_debug"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "*" }
+bevy_rapier3d = { version = "*", features = ["debug-render-3d"]}
+prost = "*"
+prost-types = "*"
+tracing = "*"
+game_interface = { path = "../../../savage_framework/backend/game_interface" }
+game_config = { path = "../../../savage_framework/backend/game_config", features = ["log_to_file"] }
+ffxiv_toolkit = { path = "../../../savage_framework/backend/ffxiv_toolkit" }

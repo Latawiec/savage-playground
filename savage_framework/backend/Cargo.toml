@@ -15,7 +15,7 @@ resolver="2"
 prost = "*"
 prost-types = "*"
 tracing = "*"
-bevy = { version = "*", default-features = false, features = ["dynamic_linking", "multi_threaded", "bevy_scene", "bevy_sprite", "bevy_state",  "bevy_animation", "bevy_color", "bevy_core_pipeline" ]}
+bevy = { version = "*", default-features = false, features = ["dynamic_linking", "multi_threaded", "bevy_render", "bevy_asset", "bevy_scene", "bevy_state", "bevy_color"]}
 proto_gen = { path = "utility/proto_gen" }
 game_interface = { path = "./game_interface" }
 game_renderer = { path = "./game_renderer" }

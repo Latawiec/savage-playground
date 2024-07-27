@@ -1,8 +1,9 @@
 {
     "rust-analyzer.linkedProjects": [
-        "./savage_framework/backend/Cargo.toml",
-        "./savage_backend/Cargo.toml",
-        "./games/proto_chat/backend/Cargo.toml"
+        "${workspaceFolder}/savage_framework/backend/Cargo.toml",
+        "${workspaceFolder}/savage_backend/Cargo.toml",
+        "${workspaceFolder}/games/proto_chat/backend/Cargo.toml",
+        "${workspaceFolder}/games/ffxiv_toolkit_debug/backend/Cargo.toml"
     ],
     "rust-analyzer.showUnlinkedFileNotification": false
 }

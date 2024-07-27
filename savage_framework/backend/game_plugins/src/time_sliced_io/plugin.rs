@@ -1,8 +1,9 @@
-use bevy::{app::{MainScheduleOrder, PostUpdate, PreUpdate}, ecs::schedule::ScheduleLabel, prelude::Plugin};
+use std::time::Duration;
+
+use bevy::{app::{MainScheduleOrder, PostUpdate, PreUpdate}, ecs::schedule::ScheduleLabel, prelude::Plugin, time::TimePlugin};
 
 use super::{
-    event::{ClientInputEvent, GameOutputEvent},
-    system::{client_input_system, game_output_system, io_exchange_system},
+    event::{ClientInputEvent, GameOutputEvent}, resource::TimeSlicedIoConfig, system::{client_input_system, game_output_system, io_exchange_system}, time_sliced_io::TimeSlicedIO
 };
 
 #[derive(ScheduleLabel, Debug, Clone, PartialEq, Eq, Hash)]
@@ -22,6 +23,13 @@ impl Plugin for IOPlugin {
             .init_schedule(InputRead)
             .init_schedule(OutputWrite)
             .init_schedule(IoExchange);
+
+        app
+            .insert_resource(TimeSlicedIoConfig {
+                io_exchange_duration: Duration::from_millis(3),
+            })
+            .insert_non_send_resource(TimeSlicedIO::default());
+            
 
         let mut scheduler = app.world_mut().resource_mut::<MainScheduleOrder>();
         scheduler.insert_after(PreUpdate, InputRead);
