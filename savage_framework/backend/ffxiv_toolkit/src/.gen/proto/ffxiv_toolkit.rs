@@ -5,3 +5,9 @@ pub struct FfxivGameOutput {
     #[prost(message, optional, tag = "1")]
     pub scene_update: ::core::option::Option<super::game_renderer::SceneUpdate>,
 }
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct FfxivGameInput {
+    #[prost(uint64, optional, tag = "1")]
+    pub input_actions_set: ::core::option::Option<u64>,
+}

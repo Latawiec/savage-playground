@@ -1,4 +1,4 @@
-use bevy_rapier2d::geometry::Group;
+use bevy_rapier3d::geometry::Group;
 
 pub type CollisionGroup = u32;
 

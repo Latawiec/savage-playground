@@ -6,13 +6,13 @@ use super::{
 };
 
 #[derive(ScheduleLabel, Debug, Clone, PartialEq, Eq, Hash)]
-struct InputRead;
+pub struct InputRead;
 
 #[derive(ScheduleLabel, Debug, Clone, PartialEq, Eq, Hash)]
-struct OutputWrite;
+pub struct OutputWrite;
 
 #[derive(ScheduleLabel, Debug, Clone, PartialEq, Eq, Hash)]
-struct IoExchange;
+pub struct IoExchange;
 
 #[derive(Default)]
 pub struct IOPlugin;

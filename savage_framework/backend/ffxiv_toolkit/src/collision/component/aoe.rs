@@ -1,5 +1,5 @@
 use bevy::{prelude::{Bundle, Component}, transform::bundles::TransformBundle};
-use bevy_rapier2d::geometry::{Collider, Sensor};
+use bevy_rapier3d::geometry::{Collider, Sensor};
 
 #[derive(Component)]
 pub struct AreaOfEffect;

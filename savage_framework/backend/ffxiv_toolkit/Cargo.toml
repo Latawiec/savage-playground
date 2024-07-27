@@ -6,11 +6,12 @@ edition = "2021"
 
 [dependencies]
 bevy.workspace = true
-bevy_rapier2d = { version = "*", features = ["debug-render-2d", "simd-stable"] }
+bevy_rapier3d = { version = "*", features = ["debug-render-3d", "simd-stable"] }
 game_plugins = { workspace = true, features = ["time_sliced_io", "self_destruct", "game_renderer"] }
 game_interface.workspace = true
 prost-types.workspace = true
 prost.workspace = true
+tracing.workspace = true
 
 [build-dependencies]
 proto_gen.workspace = true

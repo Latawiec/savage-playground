@@ -4,6 +4,10 @@ package ffxiv_toolkit;
 
 import "game_renderer/game_renderer.proto";
 
-message FFXIVGameOutput {
+message FfxivGameOutput {
     optional game_renderer.SceneUpdate scene_update = 1;
+}
+
+message FfxivGameInput {
+    optional uint64 input_actions_set = 1;
 }

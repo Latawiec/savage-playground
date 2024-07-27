@@ -1,13 +1,19 @@
 use std::{io::Result, path::{Path, PathBuf}, fs};
 
-pub fn generate_mod_file(proto_files: &[PathBuf], output_dir: &Path) -> Result<()> {
-    fs::create_dir_all(&output_dir)?;
+// This doesn't actually care about what files were generated.
+// It will iterate over all files in the output dir, look for .rs files and make a module of them.
+pub fn generate_mod_file(output_dir: &Path) -> Result<()> {
     let mut contents = String::new();
-    for proto_path in proto_files {
-        println!("cargo:warning={:?}", proto_path);
-        let proto_file_name = proto_path.file_name().unwrap().to_str().unwrap().to_owned();
-        let module_name = proto_file_name.strip_suffix(".proto").unwrap();
-        contents.push_str(&format!("pub mod {module_name};\n"));
+    for entry in fs::read_dir(&output_dir).unwrap() {
+        let entry = entry.unwrap();
+        if !entry.metadata().unwrap().is_file() {
+            continue;
+        }
+
+        let file_name = entry.file_name().into_string().unwrap();
+        if file_name.ends_with(".rs") && file_name.ne("mod.rs") {
+            contents.push_str(&format!("pub mod {};\n", file_name.strip_suffix(".rs").unwrap()));
+        }
     }
 
     fs::write(output_dir.join("mod.rs"), &contents)?;
@@ -54,7 +60,7 @@ pub fn build_protos_from_dir(source_rel_dir: &Path, output_rel_dir: &Path, inclu
     protos_config.out_dir(&output_dir);
     protos_config.compile_protos(&protos_list, &includes_list)?;
 
-    generate_mod_file(&protos_list, &output_dir)?;
+    generate_mod_file(&output_dir)?;
 
     Ok(())
 }
