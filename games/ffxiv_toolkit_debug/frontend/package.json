@@ -1,0 +1,38 @@
+{
+  "name": "ffxiv-toolkit-debug-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/ffxiv-toolkit-debug-frontend.umd.cjs",
+  "module": "./dist/ffxiv-toolkit-debug-frontend.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+      ".": {
+          "import": "./dist/ffxiv-toolkit-debug-frontend.js",
+          "require": "./dist/ffxiv-toolkit-debug-frontend.umd.cjs",
+          "types": "./dist/index.d.ts"
+      },
+      "./*" : "./dist/*"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && vue-tsc --emitDeclarationOnly",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.31",
+    "ffxiv-toolkit-frontend": "file:../../../savage_framework/frontend/ffxiv_toolkit"
+  },
+  "devDependencies": {
+    "@babel/types": "^7.24.9",
+    "@types/node": "^20.2.5",
+    "@vitejs/plugin-vue": "^5.0.5",
+    "typescript": "^5.2.2",
+    "vite": "^5.3.4",
+    "vue-tsc": "^2.0.24",
+    "vite-plugin-lib-inject-css": "^2.1.1"
+  }
+}

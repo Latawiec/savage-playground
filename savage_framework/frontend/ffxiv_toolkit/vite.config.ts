@@ -11,24 +11,11 @@ export default defineConfig({
         fs: 'memfs', // Since `fs` is not supported in browsers, we can use the `memfs` package to polyfill it.
       },
     })],
-  assetsInclude: [
-    "**/*.glsl",
-    "**/*.ps.glsl",
-    "**/*.vs.glsl",
-    "**/*.zip",
-    "./src/graphics/assets/**/*.json",
-  ],
-  resolve: {
-    alias: {
-      'unzipper': resolve(__dirname, 'node_modules/unzipper'),
-      'memjs': resolve(__dirname, 'node_modules/memjs')
-    }
-  },
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
-      name: "GameRendererFrontend",
-      fileName: "game-renderer-frontend"
+      name: "FfxivToolkitFrontend",
+      fileName: "ffxiv-toolkit-frontend"
     },
     rollupOptions: {
       external: ["vue"],

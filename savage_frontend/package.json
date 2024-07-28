@@ -11,7 +11,9 @@
   "dependencies": {
     "vue": "^3.4.31",
     "vue-router": "^4.4.0",
-    "proto-chat-frontend": "file:/../games/proto_chat/frontend"
+
+    "proto-chat-frontend": "file:/../games/proto_chat/frontend",
+    "ffxiv-toolkit-debug-frontend": "file:/../games/ffxiv_toolkit_debug/frontend"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.5",

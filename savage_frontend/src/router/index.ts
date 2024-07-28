@@ -9,6 +9,10 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'proto_chat',
         component: () => import('proto-chat-frontend').then(module => module.ProtoChat)
+      },
+      {
+        path: 'ffxiv_toolkit_debug',
+        component: () => import('ffxiv-toolkit-debug-frontend').then(module => module.FfxivToolkitDebug)
       }
     ]
   }

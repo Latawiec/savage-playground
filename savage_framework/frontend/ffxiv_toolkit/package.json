@@ -1,17 +1,17 @@
 {
-    "name": "game-renderer-frontend",
+    "name": "ffxiv-toolkit-frontend",
     "private": true,
     "version": "1.0.0",
     "files": [
         "dist"
     ],
-    "main": "./dist/game-renderer-frontend.umd.cjs",
-    "module": "./dist/game-renderer-frontend.mjs",
+    "main": "./dist/ffxiv-toolkit-frontend.umd.cjs",
+    "module": "./dist/ffxiv-toolkit-frontend.mjs",
     "types": "./dist/index.d.ts",
     "exports": {
         ".": {
-            "import": "./dist/game-renderer-frontend.mjs",
-            "require": "./dist/game-renderer-frontend.umd.cjs",
+            "import": "./dist/ffxiv-toolkit-frontend.mjs",
+            "require": "./dist/ffxiv-toolkit-frontend.umd.cjs",
             "types": "./dist/index.d.ts"
         },
         "./*": "./dist/*"
@@ -19,12 +19,11 @@
     "description": "Game Renderer frontend",
     "scripts": {
         "postinstall": "npm run proto",
-        "proto": "mkdir -p ./src/.gen/proto && protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --proto_path=../../proto/game_renderer --ts_proto_out=./src/.gen/proto ../../proto/game_renderer/*.proto",
-        "proto:win32": "mkdir -p ./src/.gen/proto && protoc --plugin=protoc-gen-ts_proto=.\\node_modules\\.bin\\protoc-gen-ts_proto.cmd --proto_path=../../proto/game_renderer --ts_proto_out=./src/.gen/proto ../../proto/game_renderer/*.proto",
+        "proto": "mkdir -p ./src/.gen/proto && protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --proto_path=../../proto/ffxiv_toolkit --proto_path=../../proto --ts_proto_out=./src/.gen/proto ../../proto/ffxiv_toolkit/*.proto",
+        "proto:win32": "mkdir -p ./src/.gen/proto && protoc --plugin=protoc-gen-ts_proto=.\\node_modules\\.bin\\protoc-gen-ts_proto.cmd --proto_path=../../proto/ffxiv_toolkit --proto_path=../../proto --ts_proto_out=./src/.gen/proto ../../proto/ffxiv_toolkit/*.proto",
         "dev": "vite",
         "build": "npm run proto && vite build && vue-tsc --emitDeclarationOnly",
-        "preview": "vite preview",
-        "test_assets": "cd ./src/.test/ && zip -r test.zip assets"
+        "preview": "vite preview"
     },
     "author": "",
     "devDependencies": {
@@ -46,6 +45,9 @@
         "memfs": "^4.9.3",
         "pngjs": "^7.0.0",
         "unzipper": "^0.12.2",
-        "vue": "^3.4.31"
+        "vue": "^3.4.31",
+
+        "game_interface": "file:/../game_interface",
+        "game-renderer-frontend": "file:/../game_renderer"
     }
 }

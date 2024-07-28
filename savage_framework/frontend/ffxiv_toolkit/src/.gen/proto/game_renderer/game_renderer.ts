@@ -2,7 +2,7 @@
 // versions:
 //   protoc-gen-ts_proto  v1.181.1
 //   protoc               v3.21.12
-// source: game_renderer.proto
+// source: game_renderer/game_renderer.proto
 
 /* eslint-disable */
 import * as _m0 from "protobufjs/minimal";
