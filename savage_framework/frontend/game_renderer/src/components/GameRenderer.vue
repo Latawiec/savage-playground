@@ -4,7 +4,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { SceneUpdate } from "../.gen/proto/scene_update";
+import { SceneUpdate } from "../.gen/proto/game_renderer";
 import { Renderer } from "../graphics/Renderer";
 import { IAssetStorage } from "../asset_storage/IAssetStorage";
 

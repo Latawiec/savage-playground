@@ -1,7 +1,12 @@
 {
     "proto_chat": {
         "cwd": "",
-        "exe": "target/debug/proto_chat",
+        "exe": "games/debug/proto_chat",
         "args": ["--log_file", "./.logs/proto_chat/proto_chat_log_file.txt"]
+    },
+    "ffxiv_toolkit_debug": {
+        "cwd": "",
+        "exe": "games/debug/ffxiv_toolkit_debug",
+        "args": ["--log_file", "./.logs/ffxiv_toolkit_debug_log_file.txt"]
     }
 }

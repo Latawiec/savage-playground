@@ -1,5 +1,6 @@
 import { CommitedResourceStorage } from '../commited_storage/CommitedResourceStorage';
 
+//@ts-ignore
 import MESH_SCREEN_SPACE_RECT_URL from './mesh/screen_space_rect.json?url';
 import SHADER_BLIT_TEXTURE_PS_URL from './shader/blit_texture.ps.glsl';
 import SHADER_BLIT_TEXTURE_VS_URL from './shader/blit_texture.vs.glsl';

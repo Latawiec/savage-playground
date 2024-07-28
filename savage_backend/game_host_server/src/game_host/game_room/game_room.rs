@@ -133,7 +133,6 @@ impl GameRoom {
                 };
                 game_instance_input.send(&game_input_proto).await;
             }
-            println!("Sent");
             client_input_buffer.clear();
         }
     }

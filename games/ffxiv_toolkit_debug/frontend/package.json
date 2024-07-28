@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "vue": "^3.4.31",
+    "game_interface": "file:/../../../savage_framework/frontend/game_interface",
     "ffxiv-toolkit-frontend": "file:../../../savage_framework/frontend/ffxiv_toolkit"
   },
   "devDependencies": {

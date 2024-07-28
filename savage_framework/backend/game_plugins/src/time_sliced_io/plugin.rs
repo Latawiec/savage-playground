@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::{app::{MainScheduleOrder, PostUpdate, PreUpdate}, ecs::schedule::ScheduleLabel, prelude::Plugin, time::TimePlugin};
 
 use super::{
-    event::{ClientInputEvent, GameOutputEvent}, resource::TimeSlicedIoConfig, system::{client_input_system, game_output_system, io_exchange_system}, time_sliced_io::TimeSlicedIO
+    event::{ClientInputEvent, GameOutputEvent, RoomInputEvent}, resource::TimeSlicedIoConfig, system::{game_input_system, game_output_system, io_exchange_system}, time_sliced_io::TimeSlicedIO
 };
 
 #[derive(ScheduleLabel, Debug, Clone, PartialEq, Eq, Hash)]
@@ -38,8 +38,9 @@ impl Plugin for IOPlugin {
 
         app
             .add_event::<ClientInputEvent>()
+            .add_event::<RoomInputEvent>()
             .add_event::<GameOutputEvent>()
-            .add_systems(InputRead, client_input_system)
+            .add_systems(InputRead, game_input_system)
             .add_systems(OutputWrite, game_output_system)
             .add_systems(IoExchange, io_exchange_system);
     }

@@ -1,8 +1,12 @@
 import type { App } from 'vue';
 import FfxivToolkitDebug from "./components/FfxivToolkitDebug.vue";
+import FfxivToolkitFrontend from "ffxiv-toolkit-frontend";
 
-function install(app: App) {
-    app.component('FfxivToolkitDebug', FfxivToolkitDebug);
+export default {
+    install(app: App) {
+        FfxivToolkitFrontend.install(app);
+        app.component('FfxivToolkitDebug', FfxivToolkitDebug);
+    }
 }
 
-export { FfxivToolkitDebug, install }
+export { FfxivToolkitDebug }

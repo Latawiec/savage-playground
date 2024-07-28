@@ -5,4 +5,7 @@ use game_interface::proto::{game_input::ClientInput, game_output::GameMessage};
 pub struct ClientInputEvent(pub ClientInput);
 
 #[derive(Event)]
+pub struct RoomInputEvent();
+
+#[derive(Event)]
 pub struct GameOutputEvent(pub GameMessage);

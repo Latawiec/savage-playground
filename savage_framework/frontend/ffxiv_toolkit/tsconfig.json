@@ -7,16 +7,22 @@
   ],
   "compilerOptions": {
     "baseUrl": ".",
+    "paths": {
+      "ffxiv-toolkit-frontend/*": ["./dist/*"]
+    },
+
     "outDir": "dist",
     "esModuleInterop": true,
     "declaration": true,
     "downlevelIteration": true,
 
     /* Linting */
+    "skipLibCheck": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-  }
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"]
 }
 

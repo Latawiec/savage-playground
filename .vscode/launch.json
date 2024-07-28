@@ -1,7 +1,11 @@
 {
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387\
+
+    // To launch Backend and run games I need to pass LD_LIBRARY_PATH for now:
+    // LD_LIBRARY_PATH=/mnt/UbuntuNVMe/Programing/RustTesting/savage_playground/.build/games/debug/deps/:/home/lukasz/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib cargo r
+    // I don't know how to fix it.
     "version": "0.2.0",
     "configurations": [
         {

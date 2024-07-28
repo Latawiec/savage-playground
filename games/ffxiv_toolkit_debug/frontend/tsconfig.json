@@ -7,12 +7,17 @@
   ],
   "compilerOptions": {
     "baseUrl": ".",
+    "paths": {
+      "ffxiv-toolkit-debug-frontend/*": ["./dist/*"]
+    },
+
     "outDir": "dist",
     "esModuleInterop": true,
     "declaration": true,
     "downlevelIteration": true,
     
     /* Linting */
+    "skipLibCheck": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

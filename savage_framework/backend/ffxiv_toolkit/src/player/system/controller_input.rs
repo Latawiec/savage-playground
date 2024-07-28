@@ -1,13 +1,13 @@
-use bevy::prelude::{EventReader, Query};
+use bevy::prelude::{EventReader, Query, With};
 
 use crate::{
     input::event::FFXIVGameInputEvent,
-    player::component::{PlayerController, PlayerInfo},
+    player::component::{PlayerController, PlayerInfo, PlayerTag},
 };
 
 pub fn player_controller_input_system(
     mut ev_ffxiv_game_input_writer: EventReader<FFXIVGameInputEvent>,
-    mut query_players: Query<(&mut PlayerController, &PlayerInfo)>,
+    mut query_players: Query<(&mut PlayerController, &PlayerInfo), With<PlayerTag>>,
 ) {
     for game_input in ev_ffxiv_game_input_writer.read() {
         if let Some(input_actions) = game_input.input_data.input_actions_set {

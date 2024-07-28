@@ -1,3 +1,6 @@
+use tokio::io::AsyncReadExt;
+use tracing::error;
+
 use super::proto_pipe::{ProtoStderr, ProtoStdin, ProtoStdout};
 use crate::{game_launcher::error::GameLauncherError, instance::instance::Instance};
 use std::path::Path;
@@ -29,14 +32,23 @@ impl GameInstance {
             .take_stdout()
             .map(|stdout| ProtoStdout::new(stdout));
         let stderr = instance
-            .take_stderr()
-            .map(|stderr| ProtoStderr::new(stderr));
+            .take_stderr();
+
+        // TODO: Fix this to properly display errors.
+        tokio::spawn(async {
+            if let Some(mut stderr) = stderr {
+                let mut output = String::new();
+                while let Ok(size) = stderr.read_to_string(&mut output).await {
+                    println!("Process error: {}", output);
+                }
+            }
+        });
 
         Ok(GameInstance {
             _instance: instance,
             stdin,
             stdout,
-            stderr,
+            stderr: None,
         })
     }
 

@@ -19,8 +19,8 @@
     "description": "Game Renderer frontend",
     "scripts": {
         "postinstall": "npm run proto",
-        "proto": "mkdir -p ./src/.gen/proto && protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --proto_path=../../proto/ffxiv_toolkit --proto_path=../../proto --ts_proto_out=./src/.gen/proto ../../proto/ffxiv_toolkit/*.proto",
-        "proto:win32": "mkdir -p ./src/.gen/proto && protoc --plugin=protoc-gen-ts_proto=.\\node_modules\\.bin\\protoc-gen-ts_proto.cmd --proto_path=../../proto/ffxiv_toolkit --proto_path=../../proto --ts_proto_out=./src/.gen/proto ../../proto/ffxiv_toolkit/*.proto",
+        "proto": "mkdir -p ./src/.gen/proto && protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_opt=esModuleInterop=true --proto_path=../../proto/ffxiv_toolkit --proto_path=../../proto --ts_proto_out=./src/.gen/proto ../../proto/ffxiv_toolkit/*.proto",
+        "proto:win32": "mkdir -p ./src/.gen/proto && protoc --plugin=protoc-gen-ts_proto=.\\node_modules\\.bin\\protoc-gen-ts_proto.cmd --ts_proto_opt=esModuleInterop=true --proto_path=../../proto/ffxiv_toolkit --proto_path=../../proto --ts_proto_out=./src/.gen/proto ../../proto/ffxiv_toolkit/*.proto",
         "dev": "vite",
         "build": "npm run proto && vite build && vue-tsc --emitDeclarationOnly",
         "preview": "vite preview"

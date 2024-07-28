@@ -1,5 +1,6 @@
 <template>
-    <!-- Nothing -->
+    <div>huh</div>
+    <a>HELLOOO</a>
 </template>
 
 <script lang="ts">
@@ -16,7 +17,7 @@ const DEFAULT_INPUT_MAP: Map<string, number> = new Map([
 export default defineComponent({
     name: 'InputHandler',
     emits: {
-        input_changed: (input_set) => { return true }
+        input_changed: (_input_set: number) => { return true }
     },
     props: {
         inputMap: {
@@ -33,14 +34,28 @@ export default defineComponent({
     methods: {
         getInputSet() {
             return this.input_set;
+        },
+        emit_input_changed() {
+            this.$emit('input_changed', this.input_set);
         }
     },
-    onMounted() {
+    mounted() {
+        console.log("mounted");
         addEventListener('keydown', (event) => {
+            if (event.repeat) return;
             for (let [key, input_value] of this.$props.inputMap) {
                 if (event.code === key) {
-                    this.input_set &= input_value;
-                    this.$emit('input_changed', this._input_set);
+                    this.input_set |= input_value;
+                    this.emit_input_changed();
+                    return;
+                }
+            }
+        })
+        addEventListener('keyup', (event) => {
+            for (let [key, input_value] of this.$props.inputMap) {
+                if (event.code === key) {
+                    this.input_set &= ~input_value;
+                    this.emit_input_changed();
                     return;
                 }
             }

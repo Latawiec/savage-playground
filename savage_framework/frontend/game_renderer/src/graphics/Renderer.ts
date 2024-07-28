@@ -1,4 +1,4 @@
-import { SceneUpdate, UpdateType, DrawBundle, UniformAttributes } from "../.gen/proto/game_renderer";
+import { SceneUpdate, DrawBundle, UniformAttributes } from "../.gen/proto/game_renderer";
 import { IAssetStorage } from "../asset_storage/IAssetStorage";
 import { GeneralDrawCommand } from "./command/GeneralDrawCommand";
 import { PresentDrawCommand } from "./command/PresentDrawCommand";
@@ -18,7 +18,7 @@ export class Renderer {
     private _resourcesStorage: CommitedResourceStorage;
     private _backBufferRenderTarget: BackBufferTarget;
     private _mainRenderTarget: MainTarget;
-    private _sceneCache: Map<string, DrawBundle>;
+    // private _sceneCache: Map<string, DrawBundle>;
     private _drawList: IDrawCommand[];
     private _sharedAttributes: Map<ShaderValueType, Map<string, number[]>>;
     private _initialized = false;
@@ -36,7 +36,7 @@ export class Renderer {
         this._resourcesStorage = new CommitedResourceStorage(gl, assets);
         this._backBufferRenderTarget = new BackBufferTarget(gl, canvas.width, canvas.height);
         this._mainRenderTarget = new MainTarget(gl, canvas.width, canvas.height);
-        this._sceneCache = new Map();
+        // this._sceneCache = new Map();
         this._sharedAttributes = new Map();
         this._drawList = [];
     }
@@ -50,15 +50,6 @@ export class Renderer {
         if (!this._initialized) {
             console.warn(`Cannot render yet... Initialization hasn't finished`);
             return;
-        }
-
-        if (scene_update.type === UpdateType.Increment) {
-            throw new Error('Increment rendering not yet implemented');
-        }
-
-        if (scene_update.type === UpdateType.Full) {
-            this._sceneCache.clear();
-            this._sharedAttributes.clear();
         }
 
         if (scene_update.sharedAttributes) {
