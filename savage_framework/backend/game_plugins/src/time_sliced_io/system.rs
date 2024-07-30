@@ -1,5 +1,5 @@
 use bevy::{ecs::system::NonSendMut, prelude::{EventReader, EventWriter, NonSend, Res}};
-use game_interface::proto::game_input::{ClientInput, GameInput};
+use game_interface::proto::game_input::GameInput;
 use prost::Message;
 
 use super::{

@@ -1,4 +1,4 @@
-use crate::{game_host::{handle_gen::HandleGenerator, interface::schema::game_config::GameConfig, types::ClientHandle}, game_launcher::game_instance::{game_instance::GameInstance, proto_pipe::{ProtoStdin, ProtoStdout}}};
+use crate::{game_host::{handle_gen::HandleGenerator, interface::schema::game_config::GameConfig, types::ClientHandle}, game_launcher::game_instance::{game_instance::GameInstance, proto_pipe::{ProtoStderr, ProtoStdin, ProtoStdout}}};
 
 use super::{connection::GameRoomConnectionHandle, disconnect_reason::GameRoomDisconnectReason};
 use std::{
@@ -8,7 +8,8 @@ use std::{
 use arc_swap::ArcSwap;
 use game_interface::proto::{game_input::{ClientInput, GameInput}, game_output::{GameMessage, GameOutput}};
 use rocket_ws::stream::DuplexStream;
-use tokio::task::JoinHandle;
+use tokio::{io::AsyncReadExt, task::JoinHandle, time::Instant};
+use tracing::{trace, trace_span, warn, error, Instrument};
 
 pub struct GameRoom {
     _game_room_config: GameConfig,
@@ -16,6 +17,7 @@ pub struct GameRoom {
 
     client_input_task: JoinHandle<()>,
     game_output_task: JoinHandle<()>,
+    game_error_task: JoinHandle<()>,
 
     client_handle_gen: HandleGenerator<ClientHandle>,
     client_input_sender: tokio::sync::mpsc::Sender<ClientInput>,
@@ -25,12 +27,20 @@ pub struct GameRoom {
     lock_open_senders: Arc<Mutex<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<GameMessage>>>>,
 
     closed: AtomicBool,
+    span: tracing::span::Span,
+    created: Instant,
 }
 
 impl Drop for GameRoom {
     fn drop(&mut self) {
         self.client_input_task.abort();
         self.game_output_task.abort();
+        self.game_error_task.abort();
+        self.span.in_scope(|| {
+            let destroy_time = Instant::now();
+            let lifetime = destroy_time.duration_since(self.created);
+            trace!(lifetime_ms = lifetime.as_millis(), "destroyed");
+        });
     }
 }
 
@@ -46,25 +56,38 @@ impl GameRoom {
             ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<GameMessage>>>,
         > = Default::default();
 
+        let game_id = game_room_config.game_id.clone().unwrap_or("UNKNOWN".to_owned());
+        let game_room_span = trace_span!("game_room", game_id, "Game Room Lifetime Span");
+
         let client_input_task = tokio::spawn(Self::client_input_task(
             client_input_receiver,
             game_instance.stdin.take().unwrap(),
-        ));
+        ).instrument(game_room_span.clone()));
         let game_output_task = tokio::spawn(Self::game_output_task(
             shared_open_senders.clone(),
             game_instance.stdout.take().unwrap(),
-        ));
+        ).instrument(game_room_span.clone()));
+        let game_error_task = tokio::spawn(Self::game_error_task(
+            game_instance.stderr.take().unwrap(),
+        ).instrument(game_room_span.clone()));
+
+        game_room_span.in_scope(|| {
+            trace!("created");
+        });
 
         GameRoom {
             _game_room_config: game_room_config,
             _game_instance: game_instance,
             client_input_task,
             game_output_task,
+            game_error_task,
             client_handle_gen: Default::default(),
             client_input_sender,
             shared_open_senders,
             lock_open_senders: Default::default(),
             closed: AtomicBool::new(false),
+            span: game_room_span,
+            created: Instant::now(),
         }
     }
 
@@ -124,8 +147,10 @@ impl GameRoom {
                 == 0
             {
                 // Channel closed...
+                trace!("input channel has been closed");
                 break;
             }
+            trace!(messages_count = client_input_buffer.len(), "client input");
             for client_input in client_input_buffer.drain(..) {
                 let game_input_proto = GameInput {
                     client_input: Some(client_input),
@@ -144,22 +169,23 @@ impl GameRoom {
         mut game_instance_output: ProtoStdout,
     ) {
         while let Some(game_output) = game_instance_output.read::<GameOutput>().await {
-            println!("Received");
             let output_senders = client_output_sender.load();
             // Broadcast
+            trace!(clients_count = output_senders.len(), "game output broadcast");
             if let Some(broadcast_msg) = game_output.broadcast {
                 for (_client_handle, sender) in output_senders.iter() {
                     let _ = sender.send(broadcast_msg.clone()).await;
-                }    
+                }
             }
 
             // Direct messages
+            trace!(messages_count = output_senders.len(), "game output direct message");
             for direct_message in game_output.direct_messages {
                 let client_id = direct_message.receiver_id;
                 let message = direct_message.game_output;
 
                 if message.is_none() {
-                    tracing::warn!("Direct message without body");
+                    warn!("Direct message without body");
                     continue;
                 }
                 let message = message.unwrap();
@@ -168,6 +194,16 @@ impl GameRoom {
                     let _ = sender.send(message).await;
                 }
             }
+        }
+    }
+
+    async fn game_error_task(
+        mut game_instance_error: ProtoStderr,
+    ) {
+        let mut string_buf = String::new();
+        while let Ok(_size) = game_instance_error.raw_reader().read_to_string(&mut string_buf).await {
+            error!("{}", string_buf);
+            string_buf.clear();
         }
     }
 }

@@ -1,5 +1,5 @@
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt, BufReader},
+    io::{AsyncRead, AsyncReadExt, AsyncWriteExt, BufReader},
     process::{ChildStderr, ChildStdin, ChildStdout},
 };
 
@@ -74,5 +74,9 @@ impl ProtoStderr {
 
         let message = T::decode(data.as_slice());
         return Some(message.unwrap());
+    }
+
+    pub fn raw_reader(&mut self) -> &mut impl AsyncRead {
+        &mut self.stderr
     }
 }

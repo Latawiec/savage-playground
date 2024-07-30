@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{app::{MainScheduleOrder, PostUpdate, PreUpdate}, ecs::schedule::ScheduleLabel, prelude::Plugin, time::TimePlugin};
+use bevy::{app::{MainScheduleOrder, PostUpdate, PreUpdate}, ecs::schedule::ScheduleLabel, prelude::Plugin};
 
 use super::{
     event::{ClientInputEvent, GameOutputEvent, RoomInputEvent}, resource::TimeSlicedIoConfig, system::{game_input_system, game_output_system, io_exchange_system}, time_sliced_io::TimeSlicedIO
