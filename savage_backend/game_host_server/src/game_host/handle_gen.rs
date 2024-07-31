@@ -1,6 +1,5 @@
 use std::{marker::PhantomData, sync::atomic::AtomicU64};
 
-#[derive(Default)]
 pub struct HandleGenerator<T>
 where
     T: From<u64>,
@@ -18,5 +17,11 @@ where
             self.counter
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed),
         )
+    }
+}
+
+impl<T: From<u64>> Default for HandleGenerator<T> {
+    fn default() -> Self {
+        Self { _type: Default::default(), counter: AtomicU64::new(1) }
     }
 }

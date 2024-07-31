@@ -5,7 +5,7 @@ use std::{
 };
 use tokio::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Error {
     StartupError { reason: String },
     ProcessError { reason: String },

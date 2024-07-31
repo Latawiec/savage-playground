@@ -9,7 +9,7 @@ use arc_swap::ArcSwap;
 use game_interface::proto::{game_input::{ClientInput, GameInput}, game_output::{GameMessage, GameOutput}};
 use rocket_ws::stream::DuplexStream;
 use tokio::{io::AsyncReadExt, task::JoinHandle, time::Instant};
-use tracing::{trace, trace_span, warn, error, Instrument};
+use tracing::{error, info_span, trace, warn, Instrument};
 
 pub struct GameRoom {
     _game_room_config: GameConfig,
@@ -48,16 +48,13 @@ impl GameRoom {
     const CLIENT_MESSAGE_RECEIVER_CAPACITY: usize = 1024;
     const CLIENT_MESSAGE_SENDER_CAPACITY: usize = 128;
 
-    pub fn new(mut game_instance: GameInstance, game_room_config: GameConfig) -> GameRoom {
+    pub fn new(mut game_instance: GameInstance, game_room_config: GameConfig, game_room_span: tracing::Span) -> GameRoom {
         let (client_input_sender, client_input_receiver) =
             tokio::sync::mpsc::channel(Self::CLIENT_MESSAGE_RECEIVER_CAPACITY);
 
         let shared_open_senders: Arc<
             ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<GameMessage>>>,
         > = Default::default();
-
-        let game_id = game_room_config.game_id.clone().unwrap_or("UNKNOWN".to_owned());
-        let game_room_span = trace_span!("game_room", game_id, "lifetime");
 
         let client_input_task = tokio::spawn(Self::client_input_task(
             client_input_receiver,
@@ -102,7 +99,13 @@ impl GameRoom {
         let input_sender = self.client_input_sender.clone();
 
         let client_connection_handle =
-            GameRoomConnectionHandle::new(client_handle, ws_stream, input_sender, output_receiver);
+            GameRoomConnectionHandle::new(
+                client_handle,
+                ws_stream,
+                input_sender,
+                output_receiver,
+                info_span!(parent: &self.span, "game_room_connection")
+            );
 
         {
             let mut lock = self.lock_open_senders.lock().unwrap();
@@ -201,9 +204,11 @@ impl GameRoom {
         mut game_instance_error: ProtoStderr,
     ) {
         let mut string_buf = String::new();
-        while let Ok(_size) = game_instance_error.raw_reader().read_to_string(&mut string_buf).await {
-            error!("{}", string_buf);
-            string_buf.clear();
+        while let Ok(size) = game_instance_error.raw_reader().read_to_string(&mut string_buf).await {
+            if size != 0 {
+                error!("game error: {}", string_buf);
+                string_buf.clear();
+            }
         }
     }
 }

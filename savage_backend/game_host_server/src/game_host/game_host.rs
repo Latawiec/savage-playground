@@ -1,4 +1,5 @@
 use rocket_ws::stream::DuplexStream;
+use tracing::info_span;
 use std::{
     collections::BTreeMap,
     sync::{Arc, RwLock},
@@ -31,15 +32,47 @@ impl GameHost {
         game_launcher: &GameLauncher,
     ) -> Option<RoomHandle> {
         let room_handle = self.room_handle_gen.next();
-        let game_id = game_config.game_id.as_ref()?;
-        let game_instance = game_launcher.launch_game(game_id);
-        if let Ok(game_instance) = game_instance {
-            let game_room = GameRoom::new(game_instance, game_config);
-            if let Ok(mut wlock) = self.game_rooms.write() {
-                let _ = wlock.insert(room_handle, game_room);
-            }
+        let game_id = game_config.game_id.clone()?;
+        let game_instance = game_launcher.launch_game(&game_id, &["--id", &room_handle.0.to_string()]);
+
+        if let Err(game_launcher_error) = game_instance {
+            use crate::game_launcher::error::GameLauncherError;
+
+            let error_msg = match game_launcher_error {
+                GameLauncherError::GameMappingFileError { reason } => {
+                    format!("game launch failed: {}", reason)
+                }
+                GameLauncherError::GameMappingFileIllFormed { reason } => {
+                    format!("game launch failed: {}", reason)
+                }
+                GameLauncherError::GameNotFound { game_id: _ } => {
+                    format!("game launch failed: game not found")
+                }
+                GameLauncherError::InstanceStartupError { reason } => {
+                    format!("game launch failed: {}", reason)
+                }
+                GameLauncherError::InstanceKillError { reason } => {
+                    format!("game launch failed: {}", reason)
+                }
+            };
+            tracing::error!(name: "create_room", target: "game_host", room_id = room_handle.0, game_id, "{}", error_msg);
+            return None;
         }
 
+        let game_instance = game_instance.unwrap();
+        let game_room_span = info_span!("game_room", room_id = room_handle.0, game_id);
+        let game_room = GameRoom::new(game_instance, game_config, game_room_span);
+        match self.game_rooms.write() {
+            Ok(mut wlock) => {
+                let _ = wlock.insert(room_handle, game_room);
+            }
+            Err(err) => {
+                tracing::error!(name: "create_room", target: "game_host", room_id = room_handle.0, "rwlock error: {}", err);
+                return None;
+            }
+        };
+
+        tracing::info!(name: "create_room", target: "game_host", room_id = room_handle.0, game_id, "created");
         Some(room_handle)
     }
 
@@ -53,18 +86,37 @@ impl GameHost {
                 Some(room) => Some(room.connect(ws_stream)),
                 None => return GameRoomDisconnectReason::RoomDoesNotExist,
             },
-            Err(err) => return GameRoomDisconnectReason::UnexpectedError(err.to_string()),
+            Err(err) => {
+                tracing::error!(name: "join_room", target: "game_host", room_id = room_handle.0, "rwlock error: {}", err);
+                return GameRoomDisconnectReason::UnexpectedError(err.to_string());
+            }
         };
-        game_room_connection_handle.unwrap().wait().await
+        let game_room_connection_handle = game_room_connection_handle.unwrap();
+
+        tracing::info!(name: "join_room", target: "game_host", room_id = room_handle.0, client_id = game_room_connection_handle.client_id(), "connected");
+        let disconnect_reason = game_room_connection_handle.wait().await;
+        tracing::info!(name: "join_room", target: "game_host", room_id = room_handle.0, client_id = game_room_connection_handle.client_id(), "disconnected: {}", disconnect_reason);
+
+        return disconnect_reason;
     }
 
     pub fn delete_room(&self, room_handle: RoomHandle) -> Option<()> {
-        if let Ok(mut wlock) = self.game_rooms.write() {
-            let _ = wlock.remove(&room_handle);
-            tracing::info!(room_id = room_handle.0, "Room deleted.");
-            return Some(());
-        } 
-        tracing::info!(room_id = room_handle.0, "Couldn't delete room. Not found");
-        None
+        match self.game_rooms.write() {
+            Ok(mut wlock) => match wlock.remove(&room_handle) {
+                Some(game_room) => {
+                    drop(game_room);
+                    tracing::info!(name: "delete_room", target: "game_host", room_id = room_handle.0, "room deleted");
+                    return Some(());
+                }
+                None => {
+                    tracing::warn!(name: "delete_room", target: "game_host", room_id = room_handle.0, "couldn't delete room - room not found");
+                    return None;
+                }
+            },
+            Err(err) => {
+                tracing::error!(name: "delete_room", target: "game_host", room_id = room_handle.0, "rwlock error: {}", err);
+                return None;
+            }
+        }
     }
 }

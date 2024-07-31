@@ -28,6 +28,8 @@ impl GameLauncher {
         let games_mapping_file = games_mapping_file.to_owned();
         let game_mapping = GameMapping::new(&games_mapping_file)?;
 
+        tracing::info!(name: "game_launcher", root_dir = format!("{:?}", games_root_directory), mapping_file = format!("{:?}", games_mapping_file), "created");
+
         Ok(GameLauncher {
             games_root_directory,
             _games_mapping_file: games_mapping_file,
@@ -44,17 +46,22 @@ impl GameLauncher {
     pub fn launch_game(
         &self,
         game_id: &str,
+        args: &[&str],
     ) -> Result<GameInstance, GameLauncherError> {
         let game_info = self.game_mapping.get_game_info(game_id)?;
         let game_cwd = self.games_root_directory.join(game_info.cwd);
         let game_exe = self.games_root_directory.join(game_info.exe);
-        let game_args = game_info.args.unwrap_or(Vec::new());
-        println!("cwd: {:?}, exe: {:?}, args: {:?}", &game_cwd, &game_exe, &game_args);
+        let game_args = { 
+            let mut result = game_info.args.unwrap_or(Vec::new());
+            result.extend(args.iter().map(|&str| str.to_owned()));
+            result
+        };
+        tracing::info!(name: "game_launcher", game_id, cwd = format!("{:?}", game_cwd), exe = format!("{:?}", game_exe), args = format!("{:?}", game_args), "game is launching");
         
         match GameInstance::new(&game_cwd, &game_exe, &game_args) {
             Ok(ok) => Ok(ok),
             Err(err) => {
-                println!("Err: {:?}", err);
+                tracing::error!(name: "game_launcher", game_id, cwd = format!("{:?}", game_cwd), exe = format!("{:?}", game_exe), args = format!("{:?}", game_args), "game failed to launch: {:?}", err);
                 Err(err)
             },
         }

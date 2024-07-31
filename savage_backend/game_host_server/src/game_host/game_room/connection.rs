@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::game_host::types::ClientHandle;
+use crate::{game_host::types::ClientHandle, util::OnceNotify};
 use futures_util::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
@@ -12,42 +12,9 @@ use tokio::task::JoinHandle;
 
 use super::disconnect_reason::GameRoomDisconnectReason;
 
-struct OnceNotify<T: Clone> {
-    notify: tokio::sync::Notify,
-    value: tokio::sync::OnceCell<T>,
-}
-
-impl<T: Clone> OnceNotify<T> {
-    pub async fn notified(&self) -> T {
-        let notified_fut = self.notify.notified();
-        if let Some(value) = self.value.get() {
-            return value.clone();
-        }
-
-        notified_fut.await;
-        self.value
-            .get()
-            .expect("Notified without result set.")
-            .clone()
-    }
-
-    pub fn notify(&self, value: T) {
-        let _ = self.value.set(value);
-        self.notify.notify_waiters();
-    }
-}
-
-impl<T: Clone> Default for OnceNotify<T> {
-    fn default() -> Self {
-        Self {
-            notify: Default::default(),
-            value: Default::default(),
-        }
-    }
-}
-
 #[derive(Clone, Default)]
 pub struct GameRoomConnectionHandle {
+    client_handle: ClientHandle,
     close_notify: Arc<OnceNotify<GameRoomDisconnectReason>>,
     _actor: Arc<Option<GameRoomConnectionActor>>,
 }
@@ -58,17 +25,20 @@ impl GameRoomConnectionHandle {
         client_connection: DuplexStream,
         client_message_tx: tokio::sync::mpsc::Sender<ClientInput>,
         client_message_rx: tokio::sync::mpsc::Receiver<GameMessage>,
+        connection_span: tracing::Span,
     ) -> GameRoomConnectionHandle {
         let (rx, tx) = client_connection.split();
         let close_notify = Arc::new(OnceNotify::<GameRoomDisconnectReason>::default());
 
         let client_reader_task = tokio::spawn({
             let close_notify = close_notify.clone();
+            let connection_span = connection_span.clone();
             async move {
                 let close_reason = GameRoomConnectionActor::client_reader_task(
                     client_handle.clone(),
                     tx,
                     client_message_tx,
+                    connection_span
                 )
                 .await;
                 close_notify.notify(close_reason);
@@ -77,11 +47,13 @@ impl GameRoomConnectionHandle {
 
         let client_sender_task = tokio::spawn({
             let close_notify = close_notify.clone();
+            let connection_span = connection_span.clone();
             async move {
                 let close_reason = GameRoomConnectionActor::client_writer_task(
                     client_handle.clone(),
                     rx,
                     client_message_rx,
+                    connection_span
                 )
                 .await;
                 close_notify.notify(close_reason);
@@ -94,15 +66,21 @@ impl GameRoomConnectionHandle {
         }));
 
         GameRoomConnectionHandle {
+            client_handle,
             close_notify,
             _actor,
         }
+    }
+
+    pub fn client_id(&self) -> u64 {
+        self.client_handle.0
     }
 
     pub fn new_closed(close_reason: GameRoomDisconnectReason) -> GameRoomConnectionHandle {
         let close_notify = Arc::new(OnceNotify::<GameRoomDisconnectReason>::default());
         close_notify.notify(close_reason);
         GameRoomConnectionHandle {
+            client_handle: ClientHandle(0),
             close_notify,
             _actor: Default::default(),
         }
@@ -141,16 +119,17 @@ impl GameRoomConnectionActor {
         _client_handle: ClientHandle,
         mut client_message_rx: SplitSink<DuplexStream, rocket_ws::Message>,
         mut game_to_client_receiver: tokio::sync::mpsc::Receiver<GameMessage>,
+        connection_span: tracing::Span,
     ) -> GameRoomDisconnectReason {
         let mut encoding_buffer = Vec::<u8>::new();
         while let Some(msg) = game_to_client_receiver.recv().await {
             if let None = &msg.message {
-                tracing::error!("Ill formed message - message content missing");
+                tracing::warn!(name: "client_writer_task", target: module_path!(), parent: &connection_span, "message is empty");
                 continue;
             }
 
             if let Err(error) = msg.message.unwrap().encode(&mut encoding_buffer) {
-                tracing::error!("Message encoding error: {}", error);
+                tracing::error!(name: "client_writer_task", target: module_path!(), parent: &connection_span, "message encoding error: {}", error);
                 continue;
             }
 
@@ -158,10 +137,13 @@ impl GameRoomConnectionActor {
                 .send(rocket_ws::Message::Binary(encoding_buffer.clone()))
                 .await
             {
-                tracing::error!("Failed to send ClientOutput message: {}", error);
+                tracing::error!(name: "client_writer_task", target: module_path!(), parent: &connection_span, "failed to send message to client: {}", error);
                 return GameRoomDisconnectReason::ClientDisconnected;
             }
+            tracing::trace!(name: "client_writer_task", target: module_path!(), parent: &connection_span, bytes = encoding_buffer.len(), "message sent to client");
+            encoding_buffer.clear();
         }
+        tracing::info!(name: "client_writer_task", target: module_path!(), parent: &connection_span, "channel is closed");
         GameRoomDisconnectReason::ConnectionClosedByHost
     }
 
@@ -173,18 +155,21 @@ impl GameRoomConnectionActor {
         client_handle: ClientHandle,
         mut client_message_tx: SplitStream<DuplexStream>,
         client_to_game_sender: tokio::sync::mpsc::Sender<ClientInput>,
+        connection_span: tracing::Span,
     ) -> GameRoomDisconnectReason {
         while let Some(message) = client_message_tx.next().await {
             if let Err(error) = &message {
-                tracing::error!("{}", error);
+                tracing::error!(name: "client_reader_task", target: module_path!(), parent: &connection_span, "failed to receive client message: {}", error);
                 return GameRoomDisconnectReason::UnexpectedError(error.to_string());
             }
+            let message = message.unwrap();
+            tracing::trace!(name: "client_reader_task", target: module_path!(), parent: &connection_span, bytes = message.len(), "message read from client");
 
-            match message.unwrap() {
+            match message {
                 rocket_ws::Message::Binary(data) => {
                     let proto_msg = match prost_types::Any::decode(data.as_slice()) {
                         Err(error) => {
-                            tracing::warn!("Message decoding failed: {}", error);
+                            tracing::error!(name: "client_reader_task", target: module_path!(), parent: &connection_span, "message decoding error: {}", error);
                             continue;
                         }
                         Ok(msg) => msg,
@@ -196,7 +181,7 @@ impl GameRoomConnectionActor {
                     };
 
                     if let Err(error) = client_to_game_sender.send(proto_client_input).await {
-                        tracing::error!("Failed to send ClientInput message: {}", error);
+                        tracing::error!(name: "client_reader_task", target: module_path!(), parent: &connection_span, "failed to send message to game room: {}", error);
                         continue;
                     }
                 }
@@ -204,10 +189,11 @@ impl GameRoomConnectionActor {
                     return GameRoomDisconnectReason::ClientClosedConnection;
                 }
                 _ => {
-                    tracing::warn!("Unexpected message type.");
+                    tracing::error!(name: "client_reader_task", target: module_path!(), parent: &connection_span, "unexpected message type");
                 }
             }
         }
+        tracing::info!(name: "client_reader_task", target: module_path!(), parent: &connection_span, "channel is closed");
         GameRoomDisconnectReason::ClientDisconnected
     }
 }

@@ -1,8 +1,5 @@
-use tokio::io::AsyncReadExt;
-use tracing::error;
-
 use super::proto_pipe::{ProtoStderr, ProtoStdin, ProtoStdout};
-use crate::{game_launcher::error::GameLauncherError, instance::instance::Instance};
+use crate::{game_launcher::error::GameLauncherError, instance::{self, instance::Instance}};
 use std::path::Path;
 
 pub struct GameInstance {
@@ -41,6 +38,23 @@ impl GameInstance {
             stdout,
             stderr,
         })
+    }
+
+    pub async fn wait(&mut self) -> Result<(), instance::instance::Error>{
+        match self._instance.wait().await {
+            Ok(exit_status) => {
+                if exit_status.success() {
+                    return Ok(())
+                } else {
+                    tracing::error!(name: "game_instance", "game instance exited with status: {}", exit_status.to_string());
+                    return Err(instance::instance::Error::ProcessError { reason: exit_status.to_string() });
+                }
+            },
+            Err(err) => {
+                tracing::error!(name: "game_instance", "game instance exited with error: {:?}", err);
+                return Err(err)
+            },
+        }
     }
 
     pub async fn kill(mut self) -> Result<(), GameLauncherError> {

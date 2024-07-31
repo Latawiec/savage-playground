@@ -3,6 +3,7 @@ mod config;
 mod game_host;
 mod game_launcher;
 mod instance;
+mod util;
 
 use rocket::http::Method;
 use rocket::{routes, Config};

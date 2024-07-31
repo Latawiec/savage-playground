@@ -1,4 +1,4 @@
-use clap::{command, ArgMatches, Command, ValueEnum};
+use clap::{arg, command, value_parser, ArgMatches, Command, ValueEnum};
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 enum LogVerbosity {
@@ -12,18 +12,26 @@ enum LogVerbosity {
 }
 
 pub struct GameArgs {
+    name: String,
     matches: ArgMatches,
 }
 
 impl GameArgs {
-    pub fn new(about: &str) -> GameArgs {
+    pub fn new(name: &str, about: &str) -> GameArgs {
         let command = command!().about(about.to_owned());
-        Self::new_from_command(command)
+        Self::new_from_command(name.to_owned(), command)
     }
 
-    pub fn new_from_command(mut command: Command) -> GameArgs {
-        command = command.after_help("Made by Some Dinosaur@Zodiark\ne-mail: some.dinosaur@pm.me]");
-
+    pub fn new_from_command(name: String, mut command: Command) -> GameArgs {
+        command = command.arg(
+            arg!(
+                -i --id <ID> "Set id (easier to track game instance from logs)"
+            )
+            .value_parser(value_parser!(u64))
+            .default_value("0")
+        );
+        command = command.after_help("Made by Some Dinosaur@Zodiark\ne-mail: some.dinosaur@pm.me");
+        
         #[cfg(feature = "log_verbosity")]
         {
             use clap::{arg, value_parser};
@@ -61,6 +69,7 @@ impl GameArgs {
         }
 
         GameArgs {
+            name,
             matches: command.get_matches(),
         }
     }
@@ -90,6 +99,9 @@ impl GameArgs {
             };
 
             registry.init();
+        }
+        if let Some(game_id) = self.matches.get_one::<u64>("id") {
+            tracing::info!(game_name = self.name, game_id, "start");
         }
 
         Ok(())

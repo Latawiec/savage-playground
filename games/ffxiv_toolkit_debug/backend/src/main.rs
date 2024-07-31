@@ -7,7 +7,7 @@ use game_config::game_args::GameArgs;
 use tracing::info;
 
 fn main() {
-    let game_args = GameArgs::new("FFXIV Toolkit Debug - debugging Bevy-based game.");
+    let game_args = GameArgs::new("FFXIV Toolkit Debug - debugging Bevy-based game.", "FFXIV Toolkit Debug");
     if let Err(err) = game_args.process() {
         eprintln!("Error: {:?}", err);
         return;

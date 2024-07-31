@@ -18,12 +18,14 @@ pub fn create_room(
     game_launcher: &State<Arc<GameLauncher>>,
     game_host_state: &State<Arc<GameHost>>,
 ) -> Result<rocket_ws::Channel<'static>, APIError> {
+
     let game_host = game_host_state.inner().clone();
     let room_handle = match game_host.create_room(game_room_config.0, game_launcher) {
         Some(ok) => ok,
-        None => return Err(APIError::Bad("Couldn't create the room".to_owned())),
+        None => {
+            return Err(APIError::Bad("Couldn't create the room".to_owned()))
+        }
     };
-
     join_room(remote_addr, ws, room_handle.0, game_host_state)
 }
 
@@ -38,12 +40,8 @@ pub fn join_room(
 
     Ok(ws.channel(move |stream| {
         Box::pin(async move {
-            match game_host.join_room(room_id.into(), stream).await {
-                reason => {
-                    println!("Disconnected: {:?}", reason);
-                    Ok(())
-                }
-            }
+            game_host.join_room(room_id.into(), stream).await;
+            Ok(())
         })
     }))
 }
