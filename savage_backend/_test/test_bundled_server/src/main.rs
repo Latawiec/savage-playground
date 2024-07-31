@@ -6,6 +6,12 @@ use tokio::task::JoinSet;
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::TRACE)
+        .with_target(false)
+        .init();
+
+
     let root: PathBuf = std::env::var("CARGO_MANIFEST_DIR").unwrap().into();
     let asset_root_directory = root.join("assets/");
     let games_root_directory: PathBuf = std::env::var("GAMES_ROOT_DIR").unwrap().into();
@@ -32,12 +38,12 @@ async fn main() {
     let asset_server = GameAssetServer::new(asset_server_config);
 
     if let Err(err) = host_server {
-        eprintln!("Failed to start up host server: {:?}", err);
+        tracing::error!("Failed to start up host server: {:?}", err);
         return;
     }
 
     if let Err(err) = asset_server {
-        eprintln!("Failed to start up asset server: {:?}", err);
+        tracing::error!("Failed to start up asset server: {:?}", err);
         return;
     }
 

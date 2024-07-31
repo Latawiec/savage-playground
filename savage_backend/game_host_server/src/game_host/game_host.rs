@@ -61,8 +61,10 @@ impl GameHost {
     pub fn delete_room(&self, room_handle: RoomHandle) -> Option<()> {
         if let Ok(mut wlock) = self.game_rooms.write() {
             let _ = wlock.remove(&room_handle);
+            tracing::info!(room_id = room_handle.0, "Room deleted.");
             return Some(());
-        }
+        } 
+        tracing::info!(room_id = room_handle.0, "Couldn't delete room. Not found");
         None
     }
 }

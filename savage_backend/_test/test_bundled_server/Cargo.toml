@@ -6,5 +6,7 @@ description = "Test Bundled Server. It spins up both game-host and game-asset se
 
 [dependencies]
 tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber = "*"
 game_asset_server = { path = "../../game_asset_server" }
 game_host_server = { path = "../../game_host_server" }

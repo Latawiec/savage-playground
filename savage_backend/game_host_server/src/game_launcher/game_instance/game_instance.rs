@@ -32,23 +32,14 @@ impl GameInstance {
             .take_stdout()
             .map(|stdout| ProtoStdout::new(stdout));
         let stderr = instance
-            .take_stderr();
-
-        // TODO: Fix this to properly display errors.
-        tokio::spawn(async {
-            if let Some(mut stderr) = stderr {
-                let mut output = String::new();
-                while let Ok(size) = stderr.read_to_string(&mut output).await {
-                    println!("Process error: {}", output);
-                }
-            }
-        });
+            .take_stderr()
+            .map(|stderr| ProtoStderr::new(stderr));
 
         Ok(GameInstance {
             _instance: instance,
             stdin,
             stdout,
-            stderr: None,
+            stderr,
         })
     }
 

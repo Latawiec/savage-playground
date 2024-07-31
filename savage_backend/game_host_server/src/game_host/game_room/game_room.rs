@@ -57,7 +57,7 @@ impl GameRoom {
         > = Default::default();
 
         let game_id = game_room_config.game_id.clone().unwrap_or("UNKNOWN".to_owned());
-        let game_room_span = trace_span!("game_room", game_id, "Game Room Lifetime Span");
+        let game_room_span = trace_span!("game_room", game_id, "lifetime");
 
         let client_input_task = tokio::spawn(Self::client_input_task(
             client_input_receiver,
