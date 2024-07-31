@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use rocket::serde::json::Json;
 use rocket::{delete, get, State};
+use rocket_ws::result::Error;
 
 use crate::game_host::game_host::GameHost;
 use crate::game_host::interface::schema::game_config::GameConfig;
@@ -40,8 +41,19 @@ pub fn join_room(
 
     Ok(ws.channel(move |stream| {
         Box::pin(async move {
-            game_host.join_room(room_id.into(), stream).await;
-            Ok(())
+            let result = game_host.join_room(room_id.into(), stream).await;
+            match result {
+                // TODO: Figure out how to do these errors better than this.
+                crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::Ok => Ok(()),
+                crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::ConnectionClosedByHost => Err(Error::AlreadyClosed),
+                crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::ClientDisconnected => Err(Error::AlreadyClosed),
+                crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::ClientClosedConnection => Err(Error::AlreadyClosed),
+                crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::ClientConnectionDestroyed => Err(Error::AlreadyClosed),
+                crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::GameCrashed => Err(Error::AlreadyClosed),
+                crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::RoomClosed => Err(Error::AlreadyClosed),
+                crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::RoomDoesNotExist => Err(Error::AlreadyClosed),
+                crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::UnexpectedError(_) => Err(Error::AlreadyClosed),
+            }
         })
     }))
 }
