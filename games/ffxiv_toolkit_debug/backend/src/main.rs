@@ -40,7 +40,7 @@ fn setup_player(mut commands: Commands) {
                 grounded: false,
             },
             info: PlayerInfo {
-                player_id: 1,
+                player_id: 2,
                 player_name: Some("Test guy".to_owned()),
                 active: true,
             },
