@@ -1,0 +1,57 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+package ffxiv_toolkit_components;
+
+message FfxivCharacterSelectionInput {
+    optional uint64 select_character_id = 1;
+    optional uint64 select_role_id = 2;
+
+    optional bool ready = 10;
+
+    optional bool please_repeat = 20;
+
+    optional google.protobuf.Any internal = 90;
+}
+
+message FfxivCharacterSelection {
+    repeated FfxivPlayerCharacter characters_data = 1;
+    repeated FfxivPlayerRaidRole raid_roles_data = 2;
+
+    repeated uint64 taken_raid_role_ids = 10;
+
+    optional uint64 selected_character_id = 20;
+    optional uint64 selected_role_id = 21;
+
+    optional bool correct = 30;
+    optional string user_message = 31;
+    optional string user_warning = 32;
+    optional string user_error = 33;
+
+    optional google.protobuf.Any internal = 90;
+}
+
+message FfxivPlayerCharacter {
+    uint64 id = 1;
+    string name = 2;
+    string avatar_asset = 3;
+    string description = 4;
+    FfxivPlayerJob job = 5;
+}
+
+message FfxivPlayerRaidRole {
+    uint64 id = 1;
+    string name = 2;
+    string name_short = 3;
+    string class = 4;
+}
+
+message FfxivPlayerJob {
+    uint64 id = 1;
+    string name = 2;
+    string name_short = 3;
+    string class = 4;
+    string icon_asset = 5;
+    string description = 6;
+    repeated uint64 fit_raid_role_ids = 7;
+}

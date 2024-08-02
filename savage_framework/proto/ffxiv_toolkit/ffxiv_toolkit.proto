@@ -3,49 +3,17 @@ syntax = "proto3";
 package ffxiv_toolkit;
 
 import "game_renderer/game_renderer.proto";
+import "components/character_selection.proto";
+
+message FfxivGameUiOutput {
+    optional ffxiv_toolkit_components.FfxivCharacterSelection character_selection = 2;
+}
 
 message FfxivGameOutput {
     optional game_renderer.SceneUpdate scene_update = 1;
+    optional FfxivGameUiOutput ui_update = 2;
 }
 
 message FfxivGameInput {
     optional uint64 input_actions_set = 1;
-}
-
-message FfxivGameSetupOutput {
-    repeated FfxivPlayerCharacter playable_characters = 1;
-    repeated FfxivPlayerRole playable_roles = 2;
-
-    // Required settings
-    optional uint64 selected_character = 3;
-    optional uint64 selected_role = 4;
-
-    // Optional settings
-
-    // Results
-    optional bool is_ok = 5;
-    optional string user_message = 6;
-    optional string user_warning = 7;
-    optional string user_error = 8;
-}
-
-message FfxivGameSetupInput {
-    optional uint64 player_character_id = 1;
-    optional uint64 player_role_id = 2;
-}
-
-message FfxivPlayerCharacter {
-    uint64 id = 1;
-    string name = 2;
-    string class = 3;
-    string job = 4;
-    string job_short = 5;
-    string avatar_asset = 6;
-    string description = 7;
-}
-
-message FfxivPlayerRole {
-    uint64 id = 1;
-    string name = 2;
-    string name_short = 3;
 }
