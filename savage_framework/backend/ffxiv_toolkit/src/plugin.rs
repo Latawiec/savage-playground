@@ -2,7 +2,7 @@ use bevy::{app::{MainScheduleOrder, Plugin, Update}, ecs::schedule::ScheduleLabe
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use game_plugins::time_sliced_io::plugin::{IOPlugin, InputRead};
 
-use crate::{input::event::FFXIVGameInputEvent, player::system::{controller_input::player_controller_input_system, player_motion::player_motion_system}};
+use crate::{input::event::FFXIVGameInputEvent, player::system::{controller_input::player_controller_input_system, player_motion::player_motion_system}, settings::{event::{PlayerJoinedEvent, PlayerLeftEvent}, resource::GameSettings, system::settings_input_system}};
 
 use crate::input::system::ffxiv_game_input_system;
 
@@ -28,13 +28,18 @@ impl Plugin for FfxivToolkitPlugin {
         scheduler.insert_after(InputRead, FfxivToolkitInputRead);
 
         app.add_event::<FFXIVGameInputEvent>();
+        app.add_event::<PlayerJoinedEvent>();
+        app.add_event::<PlayerLeftEvent>();
+
+        app.insert_resource(GameSettings::default());
 
         app
             .add_systems(
                 FfxivToolkitInputRead,
                 (
                     ffxiv_game_input_system,
-                    player_controller_input_system.after(ffxiv_game_input_system)
+                    player_controller_input_system.after(ffxiv_game_input_system),
+                    settings_input_system.after(ffxiv_game_input_system)
                 )
             )
             .add_systems(Update, player_motion_system);

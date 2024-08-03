@@ -22,4 +22,6 @@ pub struct RoomInput {
     pub players_joined: ::prost::alloc::vec::Vec<u64>,
     #[prost(uint64, repeated, tag = "2")]
     pub players_left: ::prost::alloc::vec::Vec<u64>,
+    #[prost(uint64, optional, tag = "3")]
+    pub game_master_id: ::core::option::Option<u64>,
 }

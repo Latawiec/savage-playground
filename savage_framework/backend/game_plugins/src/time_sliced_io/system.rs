@@ -19,8 +19,8 @@ pub fn game_input_system(
                     let client_input = ClientInputEvent(client_input);
                     ev_client_input_writer.send(client_input);
                 }
-                if let Some(_room_input) = game_input.room_input {
-                    let room_input = RoomInputEvent();
+                if let Some(room_input) = game_input.room_input {
+                    let room_input = RoomInputEvent(room_input);
                     ev_room_input_writer.send(room_input);
                 }
             },

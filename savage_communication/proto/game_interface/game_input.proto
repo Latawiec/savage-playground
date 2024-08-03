@@ -16,4 +16,5 @@ message ClientInput {
 message RoomInput {
     repeated uint64 players_joined = 1;
     repeated uint64 players_left = 2;
+    optional uint64 game_master_id = 3;
 }

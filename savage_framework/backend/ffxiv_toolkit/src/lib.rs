@@ -6,3 +6,4 @@ pub mod character;
 pub mod collision;
 pub mod mechanic;
 pub mod player;
+pub mod settings;

@@ -6,10 +6,15 @@ use std::{
     sync::{atomic::AtomicBool, Arc, Mutex},
 };
 use arc_swap::ArcSwap;
-use game_interface::proto::{game_input::{ClientInput, GameInput}, game_output::{GameMessage, GameOutput}};
+use game_interface::proto::{game_input::{ClientInput, GameInput, RoomInput}, game_output::{GameMessage, GameOutput}};
 use rocket_ws::stream::DuplexStream;
 use tokio::{io::AsyncReadExt, task::JoinHandle, time::Instant};
 use tracing::{error, info_span, trace, warn, Instrument};
+
+#[derive(Default)]
+struct GameRoomSettings {
+    pub game_master_id: Mutex<Option<ClientHandle>>,
+}
 
 pub struct GameRoom {
     _game_room_config: GameConfig,
@@ -21,6 +26,10 @@ pub struct GameRoom {
 
     client_handle_gen: HandleGenerator<ClientHandle>,
     client_input_sender: tokio::sync::mpsc::Sender<ClientInput>,
+    room_input_sender: tokio::sync::mpsc::Sender<RoomInput>,
+
+    room_settings: Arc<GameRoomSettings>,
+
 
     shared_open_senders:
         Arc<ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<GameMessage>>>>,
@@ -47,17 +56,21 @@ impl Drop for GameRoom {
 impl GameRoom {
     const CLIENT_MESSAGE_RECEIVER_CAPACITY: usize = 1024;
     const CLIENT_MESSAGE_SENDER_CAPACITY: usize = 128;
+    const ROOM_MESSAGE_SENDER_CAPACITY: usize = 128;
 
     pub fn new(mut game_instance: GameInstance, game_room_config: GameConfig, game_room_span: tracing::Span) -> GameRoom {
         let (client_input_sender, client_input_receiver) =
             tokio::sync::mpsc::channel(Self::CLIENT_MESSAGE_RECEIVER_CAPACITY);
+        let (room_input_sender, room_input_receiver) = 
+            tokio::sync::mpsc::channel(Self::ROOM_MESSAGE_SENDER_CAPACITY);
 
         let shared_open_senders: Arc<
             ArcSwap<BTreeMap<ClientHandle, tokio::sync::mpsc::Sender<GameMessage>>>,
         > = Default::default();
 
-        let client_input_task = tokio::spawn(Self::client_input_task(
+        let client_input_task = tokio::spawn(Self::game_input_task(
             client_input_receiver,
+            room_input_receiver,
             game_instance.stdin.take().unwrap(),
         ).instrument(game_room_span.clone()));
         let game_output_task = tokio::spawn(Self::game_output_task(
@@ -80,6 +93,8 @@ impl GameRoom {
             game_error_task,
             client_handle_gen: Default::default(),
             client_input_sender,
+            room_input_sender,
+            room_settings: Default::default(),
             shared_open_senders,
             lock_open_senders: Default::default(),
             closed: AtomicBool::new(false),
@@ -135,33 +150,49 @@ impl GameRoom {
     }
 
     // private:
-    async fn client_input_task(
+    async fn game_input_task(
         mut client_input_receiver: tokio::sync::mpsc::Receiver<ClientInput>,
+        mut room_input_receiver: tokio::sync::mpsc::Receiver<RoomInput>,
         mut game_instance_input: ProtoStdin,
     ) {
-        const CLIENT_INPUT_BUFFER_CAPACITY: usize = 256;
+        const CLIENT_INPUT_BUFFER_CAPACITY: usize = 64;
+        const ROOM_INPUT_BUFFER_CAPACITY: usize = 32;
         let mut client_input_buffer =
             Vec::<ClientInput>::with_capacity(CLIENT_INPUT_BUFFER_CAPACITY);
-
+        let mut room_input_buffer =
+            Vec::<RoomInput>::with_capacity(ROOM_INPUT_BUFFER_CAPACITY);
         loop {
-            if client_input_receiver
-                .recv_many(&mut client_input_buffer, CLIENT_INPUT_BUFFER_CAPACITY)
-                .await
-                == 0
-            {
-                // Channel closed...
-                trace!("input channel has been closed");
-                break;
-            }
-            trace!(messages_count = client_input_buffer.len(), "client input");
-            for client_input in client_input_buffer.drain(..) {
-                let game_input_proto = GameInput {
-                    client_input: Some(client_input),
-                    room_input: None
-                };
-                game_instance_input.send(&game_input_proto).await;
-            }
-            client_input_buffer.clear();
+            tokio::select! {
+                client_input_bytes = client_input_receiver.recv_many(&mut client_input_buffer, CLIENT_INPUT_BUFFER_CAPACITY) => {
+                    if client_input_bytes == 0
+                    {
+                        // Channel closed...
+                        trace!("input channel has been closed");
+                        break;
+                    }
+                    trace!(messages_count = client_input_buffer.len(), "client input");
+                    for client_input in client_input_buffer.drain(..) {
+                        let game_input_proto = GameInput {
+                            client_input: Some(client_input),
+                            room_input: None
+                        };
+                        game_instance_input.send(&game_input_proto).await;
+                    }
+                    client_input_buffer.clear();
+                },
+                room_input_bytes = room_input_receiver.recv_many(&mut room_input_buffer, ROOM_INPUT_BUFFER_CAPACITY) => {
+                    if room_input_bytes == 0
+                    {
+                        trace!("input channel has been closed");
+                        break;
+                    }
+                    trace!(messages_coutn = room_input_buffer.len(), "room input");
+                    for room_input in room_input_buffer.drain(..) {
+                        game_instance_input.send(&room_input).await;
+                    }
+                    room_input_buffer.clear();
+                }
+            };
         }
     }
 
