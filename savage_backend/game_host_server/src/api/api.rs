@@ -51,6 +51,7 @@ pub fn join_room(
                 crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::ClientConnectionDestroyed => Err(Error::AlreadyClosed),
                 crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::GameCrashed => Err(Error::AlreadyClosed),
                 crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::RoomClosed => Err(Error::AlreadyClosed),
+                crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::RoomFull => Err(Error::AlreadyClosed),
                 crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::RoomDoesNotExist => Err(Error::AlreadyClosed),
                 crate::game_host::game_room::disconnect_reason::GameRoomDisconnectReason::UnexpectedError(_) => Err(Error::AlreadyClosed),
             }

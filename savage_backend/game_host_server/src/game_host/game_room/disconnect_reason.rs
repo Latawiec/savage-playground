@@ -10,6 +10,7 @@ pub enum GameRoomDisconnectReason {
     ClientConnectionDestroyed,
     GameCrashed,
     RoomClosed,
+    RoomFull,
     RoomDoesNotExist,
     UnexpectedError(String),
 }
@@ -24,6 +25,7 @@ impl Display for GameRoomDisconnectReason {
             GameRoomDisconnectReason::ClientConnectionDestroyed => f.write_str("client connection destroyed"),
             GameRoomDisconnectReason::GameCrashed => f.write_str("game crashed"),
             GameRoomDisconnectReason::RoomClosed => f.write_str("room closed"),
+            GameRoomDisconnectReason::RoomFull => f.write_str("room full"),
             GameRoomDisconnectReason::RoomDoesNotExist => f.write_str("room does not exist"),
             GameRoomDisconnectReason::UnexpectedError(err) => f.write_fmt(format_args!("unexpected error: {}", err)),
         }

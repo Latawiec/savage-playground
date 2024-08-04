@@ -90,7 +90,7 @@ impl GameRoomConnectionHandle {
         self.close_notify.notified().await
     }
 
-    fn close(&mut self, reason: GameRoomDisconnectReason) {
+    pub fn close(&self, reason: GameRoomDisconnectReason) {
         self.close_notify.notify(reason);
     }
 }
