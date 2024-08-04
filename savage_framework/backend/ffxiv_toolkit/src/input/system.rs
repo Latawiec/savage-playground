@@ -13,7 +13,6 @@ pub fn ffxiv_game_input_system(
     mut ev_ffxiv_game_input_writer: EventWriter<FFXIVGameInputEvent>
 ) {
     for game_input in ev_game_input_reader.read() {
-        tracing::info!("Got something!");
         let game_input = &game_input.0;
         let sender_id = game_input.sender_id;
         let message = &game_input.game_input_message;

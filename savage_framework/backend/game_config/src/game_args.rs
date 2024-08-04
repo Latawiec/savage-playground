@@ -1,4 +1,5 @@
 use clap::{arg, command, value_parser, ArgMatches, Command, ValueEnum};
+use tracing_subscriber::EnvFilter;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 enum LogVerbosity {
@@ -14,15 +15,17 @@ enum LogVerbosity {
 pub struct GameArgs {
     name: String,
     matches: ArgMatches,
+    level: tracing::Level,
+    filter: String,
 }
 
 impl GameArgs {
-    pub fn new(name: &str, about: &str) -> GameArgs {
+    pub fn new(name: &str, about: &str, level: tracing::Level, filter: &str) -> GameArgs {
         let command = command!().about(about.to_owned());
-        Self::new_from_command(name.to_owned(), command)
+        Self::new_from_command(name.to_owned(), command, level, filter)
     }
 
-    pub fn new_from_command(name: String, mut command: Command) -> GameArgs {
+    pub fn new_from_command(name: String, mut command: Command, level: tracing::Level, filter: &str) -> GameArgs {
         command = command.arg(
             arg!(
                 -i --id <ID> "Set id (easier to track game instance from logs)"
@@ -71,6 +74,8 @@ impl GameArgs {
         GameArgs {
             name,
             matches: command.get_matches(),
+            level,
+            filter: filter.to_owned()
         }
     }
 
@@ -79,10 +84,15 @@ impl GameArgs {
     }
 
     pub fn process(&self) -> Result<(), String> {
+        let default_filter = { format!("{},{}", self.level, self.filter) };
+        let filter_layer = EnvFilter::try_from_default_env()
+            .or_else(|_| EnvFilter::try_new(&default_filter))
+            .unwrap();
+
         #[cfg(feature = "log_verbosity")]
         {
             use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-            let registry = tracing_subscriber::registry();
+            let registry = tracing_subscriber::registry().with(filter_layer);
 
             #[cfg(feature = "log_to_file")]
             let registry =

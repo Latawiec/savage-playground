@@ -46,6 +46,6 @@ pub fn io_exchange_system(
     time_sliced_io_config: Res<TimeSlicedIoConfig>,
     io: NonSend<TimeSlicedIO>,
 ) {
-    tracing::info!("Running IO Exchange for {:?}", time_sliced_io_config.io_exchange_duration);
+    tracing::trace!("Running IO Exchange for {:?}", time_sliced_io_config.io_exchange_duration);
     io.run_for(time_sliced_io_config.io_exchange_duration);
 }
