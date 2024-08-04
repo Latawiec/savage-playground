@@ -12,7 +12,12 @@ use tracing::info;
 
 
 fn main() {
-    let game_args = GameArgs::new("Proto Chat - communicator that exchanges protobuf messages across stdin/stdout pipes.", "Proto Chat", tracing::Level::DEBUG, "");
+    let game_args = GameArgs::new(
+        "Proto Chat - communicator that exchanges protobuf messages across stdin/stdout pipes.",
+        "Proto Chat",
+        tracing::Level::DEBUG,
+        ""
+    );
     if let Err(err) = game_args.process() {
         eprintln!("Error: {:?}", err);
         return;
