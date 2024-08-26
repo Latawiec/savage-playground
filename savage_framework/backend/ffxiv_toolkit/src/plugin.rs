@@ -1,4 +1,4 @@
-use bevy::{app::{MainScheduleOrder, Plugin, Update}, ecs::schedule::ScheduleLabel, prelude::IntoSystemConfigs, time::TimePlugin};
+use bevy::{app::{MainScheduleOrder, Plugin, Update}, ecs::schedule::ScheduleLabel, prelude::{IntoSystemConfigs, States}, time::TimePlugin};
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use game_plugins::time_sliced_io::plugin::{IOPlugin, InputRead};
 
@@ -8,6 +8,20 @@ use crate::input::system::ffxiv_game_input_system;
 
 #[derive(ScheduleLabel, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FfxivToolkitInputRead;
+
+#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum FfxivGameState {
+    InitializationScreen,
+    LoadingScreen,
+    InGame,
+    SummaryScreen,
+}
+
+#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum FfxivPauseState {
+    Paused,
+    Running
+}
 
 pub struct FfxivToolkitPlugin;
 impl Plugin for FfxivToolkitPlugin {

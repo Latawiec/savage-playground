@@ -24,6 +24,7 @@ export interface ClientInput {
 export interface RoomInput {
   playersJoined: number[];
   playersLeft: number[];
+  gameMasterId?: number | undefined;
 }
 
 function createBaseGameInput(): GameInput {
@@ -181,7 +182,7 @@ export const ClientInput = {
 };
 
 function createBaseRoomInput(): RoomInput {
-  return { playersJoined: [], playersLeft: [] };
+  return { playersJoined: [], playersLeft: [], gameMasterId: undefined };
 }
 
 export const RoomInput = {
@@ -196,6 +197,9 @@ export const RoomInput = {
       writer.uint64(v);
     }
     writer.ldelim();
+    if (message.gameMasterId !== undefined) {
+      writer.uint32(24).uint64(message.gameMasterId);
+    }
     return writer;
   },
 
@@ -240,6 +244,13 @@ export const RoomInput = {
           }
 
           break;
+        case 3:
+          if (tag !== 24) {
+            break;
+          }
+
+          message.gameMasterId = longToNumber(reader.uint64() as Long);
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -257,6 +268,7 @@ export const RoomInput = {
       playersLeft: globalThis.Array.isArray(object?.playersLeft)
         ? object.playersLeft.map((e: any) => globalThis.Number(e))
         : [],
+      gameMasterId: isSet(object.gameMasterId) ? globalThis.Number(object.gameMasterId) : undefined,
     };
   },
 
@@ -268,6 +280,9 @@ export const RoomInput = {
     if (message.playersLeft?.length) {
       obj.playersLeft = message.playersLeft.map((e) => Math.round(e));
     }
+    if (message.gameMasterId !== undefined) {
+      obj.gameMasterId = Math.round(message.gameMasterId);
+    }
     return obj;
   },
 
@@ -278,6 +293,7 @@ export const RoomInput = {
     const message = createBaseRoomInput();
     message.playersJoined = object.playersJoined?.map((e) => e) || [];
     message.playersLeft = object.playersLeft?.map((e) => e) || [];
+    message.gameMasterId = object.gameMasterId ?? undefined;
     return message;
   },
 };

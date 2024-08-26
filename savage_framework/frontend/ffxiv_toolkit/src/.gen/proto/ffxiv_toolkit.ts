@@ -7,26 +7,98 @@
 /* eslint-disable */
 import Long from "long";
 import _m0 from "protobufjs/minimal";
+import { FfxivCharacterSelection } from "./components/character_selection";
 import { SceneUpdate } from "./game_renderer/game_renderer";
 
 export const protobufPackage = "ffxiv_toolkit";
 
+export interface FfxivGameUiOutput {
+  characterSelection?: FfxivCharacterSelection | undefined;
+}
+
 export interface FfxivGameOutput {
   sceneUpdate?: SceneUpdate | undefined;
+  uiUpdate?: FfxivGameUiOutput | undefined;
 }
 
 export interface FfxivGameInput {
   inputActionsSet?: number | undefined;
 }
 
+function createBaseFfxivGameUiOutput(): FfxivGameUiOutput {
+  return { characterSelection: undefined };
+}
+
+export const FfxivGameUiOutput = {
+  encode(message: FfxivGameUiOutput, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.characterSelection !== undefined) {
+      FfxivCharacterSelection.encode(message.characterSelection, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): FfxivGameUiOutput {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseFfxivGameUiOutput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.characterSelection = FfxivCharacterSelection.decode(reader, reader.uint32());
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): FfxivGameUiOutput {
+    return {
+      characterSelection: isSet(object.characterSelection)
+        ? FfxivCharacterSelection.fromJSON(object.characterSelection)
+        : undefined,
+    };
+  },
+
+  toJSON(message: FfxivGameUiOutput): unknown {
+    const obj: any = {};
+    if (message.characterSelection !== undefined) {
+      obj.characterSelection = FfxivCharacterSelection.toJSON(message.characterSelection);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<FfxivGameUiOutput>, I>>(base?: I): FfxivGameUiOutput {
+    return FfxivGameUiOutput.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<FfxivGameUiOutput>, I>>(object: I): FfxivGameUiOutput {
+    const message = createBaseFfxivGameUiOutput();
+    message.characterSelection = (object.characterSelection !== undefined && object.characterSelection !== null)
+      ? FfxivCharacterSelection.fromPartial(object.characterSelection)
+      : undefined;
+    return message;
+  },
+};
+
 function createBaseFfxivGameOutput(): FfxivGameOutput {
-  return { sceneUpdate: undefined };
+  return { sceneUpdate: undefined, uiUpdate: undefined };
 }
 
 export const FfxivGameOutput = {
   encode(message: FfxivGameOutput, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.sceneUpdate !== undefined) {
       SceneUpdate.encode(message.sceneUpdate, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.uiUpdate !== undefined) {
+      FfxivGameUiOutput.encode(message.uiUpdate, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -45,6 +117,13 @@ export const FfxivGameOutput = {
 
           message.sceneUpdate = SceneUpdate.decode(reader, reader.uint32());
           continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.uiUpdate = FfxivGameUiOutput.decode(reader, reader.uint32());
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -55,13 +134,19 @@ export const FfxivGameOutput = {
   },
 
   fromJSON(object: any): FfxivGameOutput {
-    return { sceneUpdate: isSet(object.sceneUpdate) ? SceneUpdate.fromJSON(object.sceneUpdate) : undefined };
+    return {
+      sceneUpdate: isSet(object.sceneUpdate) ? SceneUpdate.fromJSON(object.sceneUpdate) : undefined,
+      uiUpdate: isSet(object.uiUpdate) ? FfxivGameUiOutput.fromJSON(object.uiUpdate) : undefined,
+    };
   },
 
   toJSON(message: FfxivGameOutput): unknown {
     const obj: any = {};
     if (message.sceneUpdate !== undefined) {
       obj.sceneUpdate = SceneUpdate.toJSON(message.sceneUpdate);
+    }
+    if (message.uiUpdate !== undefined) {
+      obj.uiUpdate = FfxivGameUiOutput.toJSON(message.uiUpdate);
     }
     return obj;
   },
@@ -73,6 +158,9 @@ export const FfxivGameOutput = {
     const message = createBaseFfxivGameOutput();
     message.sceneUpdate = (object.sceneUpdate !== undefined && object.sceneUpdate !== null)
       ? SceneUpdate.fromPartial(object.sceneUpdate)
+      : undefined;
+    message.uiUpdate = (object.uiUpdate !== undefined && object.uiUpdate !== null)
+      ? FfxivGameUiOutput.fromPartial(object.uiUpdate)
       : undefined;
     return message;
   },
